@@ -6,8 +6,9 @@ defmodule KeenAuthPermissions.Processor do
   @impl true
   def process(conn, provider, %{user: user} = oauth_response) do
     db_context = Config.get_db_context()
+    tenant_id = Config.get_tenant_id_resolver().(conn)
 
-    with {:ok, db_user} <- ensure_user(db_context, user, provider),
+    with {:ok, db_user} <- ensure_user(db_context, tenant_id, user, provider),
          {:ok, roles_and_permissions} <- update_user_roles(db_context, user, db_user, provider),
          user <- enrich_user(user, db_user, roles_and_permissions) do
       oauth_response = Map.put(oauth_response, :user, user)
@@ -32,8 +33,8 @@ defmodule KeenAuthPermissions.Processor do
     end
   end
 
-  def ensure_user(db_context, user, provider) do
-    case db_context.ensure_user(user["preferred_username"], user["email"], user["display_name"], provider) do
+  def ensure_user(db_context, tenant_id, user, provider) do
+    case db_context.ensure_user(tenant_id, user["preferred_username"], user["email"], user["display_name"], provider) do
       {:ok, [user]} ->
         {:ok, user}
 

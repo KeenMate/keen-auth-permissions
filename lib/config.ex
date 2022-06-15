@@ -1,14 +1,30 @@
 defmodule KeenAuthPermissions.Config do
   @moduledoc """
-  ## Configuration
   This package requires `db_context` to be provided with module name pointing to the generated ecto_gen `DbContext`
   which contains following introspected stored procedures:
-
   - ensure_user(username, email, display_name, provider)
   - update_roles_and_permissions()
+
+  ### Tenant ID
+  If provided (may be function (`{mod, fun}`) accepting conn and returning tenant id) or straight tenant id
   """
 
   def get_db_context() do
     Application.fetch_env!(:keen_auth_permissions, :db_context)
+  end
+
+  def get_tenant_id_resolver() do
+    tenant_id = Application.get_env(:keen_auth_permissions, :tenant_id)
+
+    case tenant_id do
+      {mod, fun} when is_atom(mod) and is_atom(fun) ->
+        fn conn -> apply(mod, fun, [conn]) end
+
+      tenant_id when is_binary(tenant_id) or is_integer(tenant_id) ->
+        fn _conn -> tenant_id end
+
+      nil ->
+        fn _conn -> nil end
+    end
   end
 end
