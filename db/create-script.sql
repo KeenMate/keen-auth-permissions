@@ -59,6 +59,17 @@ begin
 end
 $$;
 
+create function auth.get_user_random_code()
+returns text
+language sql
+stable
+immutable
+cost 1
+as
+$$
+	select helpers.random_string(8);
+$$;
+
 /***
  *    ████████╗███████╗███╗---███╗██████╗-██╗------█████╗-████████╗███████╗███████╗
  *    ╚══██╔══╝██╔════╝████╗-████║██╔══██╗██║-----██╔══██╗╚══██╔══╝██╔════╝██╔════╝
@@ -126,7 +137,7 @@ create table tenant
 create table user_info
 (
     user_id       bigint generated always as identity not null primary key,
-    code          text                                not null default helpers.random_string(8), -- if you need this kind of identifier, it's ready for you
+    code          text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
     uuid          uuid                                not null default ext.uuid_generate_v4(),   -- if you need this kind of identifier, it's ready for you
     can_login     bool                                not null default true,
     username      text                                not null check (length(username) <= 255 ),
@@ -977,7 +988,7 @@ begin
 end;
 $$;
 
-create function auth.ensure_user_data(_created_by text, _user_id bigint, _provider text, _user_data jsonb)
+create function auth.update_user_data(_created_by text, _user_id bigint, _provider text, _user_data jsonb)
     returns table
             (
                 __user_id      bigint,
