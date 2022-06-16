@@ -2,8 +2,7 @@ defmodule KeenAuthPermissions.Config do
   @moduledoc """
   This package requires `db_context` to be provided with module name pointing to the generated ecto_gen `DbContext`
   which contains following introspected stored procedures:
-  - ensure_user(username, email, display_name, provider)
-  - update_roles_and_permissions()
+  - auth_ensure_user_from_provider(created_by, provider, provider_uid, username, display_name, email, user_data)
 
   ### Tenant ID
   If provided (may be function (`{mod, fun}`) accepting conn and returning tenant id) or straight tenant id
