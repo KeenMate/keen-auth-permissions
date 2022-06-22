@@ -172,7 +172,7 @@ create table user_identity
 (
     user_identity_id bigint generated always as identity not null primary key,
     provider         text                                not null,
-    uid              text                                not null,
+    uid              text,
     user_id          bigint references user_info (user_id) on delete cascade,
     user_data        jsonb
 ) inherits (_template_timestamps);

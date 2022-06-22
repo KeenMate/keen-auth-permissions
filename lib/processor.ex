@@ -8,7 +8,7 @@ defmodule KeenAuthPermissions.Processor do
     db_context = Config.get_db_context()
     # tenant_id = Config.get_tenant_id_resolver().(conn)
 
-    with {:ok, db_user} <- ensure_user(db_context, user, provider),
+    with {:ok, db_user} <- ensure_user(user, provider, db_context),
         #  :ok <- update_user_data(db_context, user, db_user, provider),
         #  {:ok, roles_and_permissions} <- update_user_roles(db_context, user, db_user, provider),
          user <- enrich_user(user, db_user, %{}) do
@@ -44,13 +44,16 @@ defmodule KeenAuthPermissions.Processor do
     end
   end
 
-  def ensure_user(db_context, user, provider) do
-    case db_context.auth_ensure_user_from_provider("system", Atom.to_string(provider), user.id, user.username, user.display_name, user.email, nil) do
-      {:ok, [user]} ->
-        {:ok, user}
-
-      {:error, reason} ->
-        {:error, reason}
+  def ensure_user(user, user_data \\ nil, provider, db_context) do
+    with {:ok, [user]} <- db_context.auth_ensure_user_from_provider("system",
+      Atom.to_string(provider),
+      user.id,
+      user.username,
+      user.display_name,
+      user.email,
+      Jason.encode!(user_data)
+    ) do
+      {:ok, user}
     end
   end
 end
