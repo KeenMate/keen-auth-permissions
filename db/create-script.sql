@@ -20,20 +20,20 @@ create extension if not exists unaccent schema ext;
  */
 
 create function helpers.random_string(len integer DEFAULT 36) returns text
-    stable cost 1
-    language sql as
+	stable cost 1
+	language sql as
 $$
 select upper(substring(md5(random() :: text), 0, len + 1));
 
 $$;
 
 create
-    or replace function helpers.get_code(_title text, _separator text default '-') returns text
-    stable returns null on null input
-    language sql as
+	or replace function helpers.get_code(_title text, _separator text default '-') returns text
+	stable returns null on null input
+	language sql as
 $$
 
-    -- removes accents (diacritic signs) from a given string --
+	-- removes accents (diacritic signs) from a given string --
 with _unaccented as (select ext.unaccent(_title) as _title),
 -- lowercases the string
      _lowercase as (select lower(_title) as _title
@@ -51,22 +51,22 @@ from _trimmed;
 $$;
 
 create function helpers.ltree_parent(path ext.ltree, levels integer DEFAULT 1) returns ext.ltree
-    language plpgsql as
+	language plpgsql as
 $$
 begin
-    return ext.subpath(path, 0, ext.nlevel(path) - levels);
+	return ext.subpath(path, 0, ext.nlevel(path) - levels);
 
 end
 $$;
 
 create function auth.get_user_random_code()
-returns text
-language sql
-immutable
-cost 1
+	returns text
+	language sql
+	immutable
+	cost 1
 as
 $$
-	select helpers.random_string(8);
+select helpers.random_string(8);
 $$;
 
 /***
@@ -81,14 +81,14 @@ $$;
 
 create table public._template_created
 (
-    created    timestamp with time zone               default now()             not null,
-    created_by text check (length(created_by) <= 250) default 'unknown' :: text not null
+	created    timestamp with time zone               default now()             not null,
+	created_by text check (length(created_by) <= 250) default 'unknown' :: text not null
 );
 
 create table public._template_timestamps
 (
-    modified    timestamp with time zone                default now()             not null,
-    modified_by text check (length(modified_by) <= 250) default 'unknown' :: text not null
+	modified    timestamp with time zone                default now()             not null,
+	modified_by text check (length(modified_by) <= 250) default 'unknown' :: text not null
 ) inherits (_template_created);
 
 /***
@@ -102,14 +102,14 @@ create table public._template_timestamps
  */
 
 CREATE
-    OR REPLACE FUNCTION helpers.trg_generate_code_from_title()
-    RETURNS trigger
-    LANGUAGE plpgsql AS
+	OR REPLACE FUNCTION helpers.trg_generate_code_from_title()
+	RETURNS trigger
+	LANGUAGE plpgsql AS
 $$
 BEGIN
-    NEW.code := helpers.get_code(NEW.title, '_');
+	NEW.code := helpers.get_code(NEW.title, '_');
 
-    RETURN NEW;
+	RETURN NEW;
 END
 $$;
 
@@ -125,157 +125,157 @@ $$;
 
 create table tenant
 (
-    tenant_id     int generated always as identity not null primary key,
-    uuid          uuid                             not null default ext.uuid_generate_v4(), -- if you need this kind of identifier, it's ready for you
-    name          text                             not null,
-    code          text                             not null,
-    is_removable  bool                             not null default true,
-    is_assignable bool                             not null default true
+	tenant_id     int generated always as identity not null primary key,
+	uuid          uuid                             not null default ext.uuid_generate_v4(), -- if you need this kind of identifier, it's ready for you
+	name          text                             not null,
+	code          text                             not null,
+	is_removable  bool                             not null default true,
+	is_assignable bool                             not null default true
 ) inherits (_template_timestamps);
 
 create table user_info
 (
-    user_id       bigint generated always as identity not null primary key,
-    code          text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
-    uuid          uuid                                not null default ext.uuid_generate_v4(),   -- if you need this kind of identifier, it's ready for you
-    can_login     bool                                not null default true,
-    username      text                                not null check (length(username) <= 255 ),
-    email         text check (length(email) <= 255 ),
-    display_name  text                                not null check (length(display_name) <= 255 ),
-    password_hash text
+	user_id       bigint generated always as identity not null primary key,
+	code          text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
+	uuid          uuid                                not null default ext.uuid_generate_v4(),      -- if you need this kind of identifier, it's ready for you
+	can_login     bool                                not null default true,
+	username      text                                not null check (length(username) <= 255 ),
+	email         text check (length(email) <= 255 ),
+	display_name  text                                not null check (length(display_name) <= 255 ),
+	password_hash text
 ) inherits (_template_timestamps);
 
 create unique index uq_user_info on user_info (email);
 
 create table user_permission_cache
 (
-    upc_id      bigint generated always as identity not null primary key,
-    user_id     bigint                              not null references user_info (user_id),
-    tenant_id   int                                 not null references tenant (tenant_id),
-    groups      text[]                              not null default '{}',
-    permissions text[]                              not null default '{}'
+	upc_id      bigint generated always as identity not null primary key,
+	user_id     bigint                              not null references user_info (user_id),
+	tenant_id   int                                 not null references tenant (tenant_id),
+	groups      text[]                              not null default '{}',
+	permissions text[]                              not null default '{}'
 ) inherits (_template_timestamps);
 
 
 -- can be replaced with your version on user data
 create table user_data
 (
-    user_data_id bigint generated always as identity not null primary key,
-    user_id      bigint                              not null references user_info (user_id) on delete cascade,
-    first_name   text,
-    middle_name  text,
-    last_name    text
+	user_data_id bigint generated always as identity not null primary key,
+	user_id      bigint                              not null references user_info (user_id) on delete cascade,
+	first_name   text,
+	middle_name  text,
+	last_name    text
 
 ) inherits (_template_timestamps);
 
 create table user_identity
 (
-    user_identity_id bigint generated always as identity not null primary key,
-    provider         text                                not null,
-    uid              text,
-    user_id          bigint references user_info (user_id) on delete cascade,
-    user_data        jsonb
+	user_identity_id bigint generated always as identity not null primary key,
+	provider         text                                not null,
+	uid              text,
+	user_id          bigint references user_info (user_id) on delete cascade,
+	user_data        jsonb
 ) inherits (_template_timestamps);
 
 create unique index uq_user_identity on user_identity (uid, provider);
 
 create table public.permission
 (
-    permission_id int generated always as identity not null primary key,
-    is_assignable bool                             not null default true,
-    title         text                             not null,
-    code          text,
-    full_code     ext.ltree,
-    node_path     ext.ltree,
-    has_children  bool                             not null default false,
-    full_title    text
+	permission_id int generated always as identity not null primary key,
+	is_assignable bool                             not null default true,
+	title         text                             not null,
+	code          text,
+	full_code     ext.ltree,
+	node_path     ext.ltree,
+	has_children  bool                             not null default false,
+	full_title    text
 ) inherits (_template_timestamps);
 
 create index ix_permission_node_path on permission using GIST (node_path);
 
 create table tenant_user
 (
-    tenant_user_id bigint generated always as identity not null primary key,
-    tenant_id      int                                 not null references tenant (tenant_id) on delete cascade,
-    user_id        int                                 not null references user_info (user_id) on delete cascade
+	tenant_user_id bigint generated always as identity not null primary key,
+	tenant_id      int                                 not null references tenant (tenant_id) on delete cascade,
+	user_id        int                                 not null references user_info (user_id) on delete cascade
 ) inherits (_template_created);
 
 create table perm_set
 (
-    perm_set_id   int generated always as identity not null primary key,
-    tenant_id     int                              not null references tenant (tenant_id) on delete cascade,
-    title         text                             not null,
-    code          text                             not null unique, -- set with trigger
-    is_system     bool                             not null default false,
-    is_assignable bool                             not null default true
+	perm_set_id   int generated always as identity not null primary key,
+	tenant_id     int                              not null references tenant (tenant_id) on delete cascade,
+	title         text                             not null,
+	code          text                             not null unique, -- set with trigger
+	is_system     bool                             not null default false,
+	is_assignable bool                             not null default true
 ) inherits (_template_timestamps);
 
 create trigger c_perm_set_code
-    before insert
-    on perm_set
-    for each row
+	before insert
+	on perm_set
+	for each row
 execute procedure helpers.trg_generate_code_from_title();
 
 create table perm_set_perm
 (
-    psp_id        int generated always as identity not null primary key,
-    perm_set_id   int                              not null references perm_set (perm_set_id) on delete cascade,
-    permission_id int                              not null references permission (permission_id) on delete cascade
+	psp_id        int generated always as identity not null primary key,
+	perm_set_id   int                              not null references perm_set (perm_set_id) on delete cascade,
+	permission_id int                              not null references permission (permission_id) on delete cascade
 ) inherits (_template_created);
 
 create table user_group
 (
-    user_group_id   int generated always as identity not null primary key,
-    tenant_id       int                              not null references tenant (tenant_id),
-    title           text                             not null,
-    aad_group_title text,
-    aad_group_sid   int unique,
-    is_default      bool                             not null default false,
-    is_system       bool                             not null default false,
-    is_assignable   bool                             not null default true,
-    is_active       bool                             not null default true
+	user_group_id   int generated always as identity not null primary key,
+	tenant_id       int                              not null references tenant (tenant_id),
+	title           text                             not null,
+	aad_group_title text,
+	aad_group_sid   int unique,
+	is_default      bool                             not null default false,
+	is_system       bool                             not null default false,
+	is_assignable   bool                             not null default true,
+	is_active       bool                             not null default true
 ) inherits (_template_timestamps);
 
 create table user_group_mapping
 (
-    ug_mapping_id      int generated always as identity not null primary key,
-    group_id           int                              not null references user_group (user_group_id),
-    mapped_object_id   text                             not null,
-    mapped_object_name text                             not null
+	ug_mapping_id      int generated always as identity not null primary key,
+	group_id           int                              not null references user_group (user_group_id),
+	mapped_object_id   text                             not null,
+	mapped_object_name text                             not null
 ) inherits (_template_created);
 
 create unique index uq_user_group_mapping on user_group_mapping (group_id, mapped_object_id);
 
 create table user_group_member
 (
-    member_id        int generated always as identity not null primary key,
-    group_id         int                              not null references user_group (user_group_id) on delete cascade,
-    user_id          int                              not null references user_info (user_id) on delete cascade,
-    mapping_id       int references user_group_mapping (ug_mapping_id) on delete cascade,
-    adhoc_assignment bool                             not null default false
+	member_id        int generated always as identity not null primary key,
+	group_id         int                              not null references user_group (user_group_id) on delete cascade,
+	user_id          int                              not null references user_info (user_id) on delete cascade,
+	mapping_id       int references user_group_mapping (ug_mapping_id) on delete cascade,
+	adhoc_assignment bool                             not null default false
 ) inherits (_template_created);
 
 create unique index uq_user_group_member ON user_group_member (group_id, user_id, mapping_id);
 
 create table user_group_assignment
 (
-    uga_id      int generated always as identity not null primary key,
-    group_id    int                              not null references user_group (user_group_id),
-    perm_set_id int                              not null references perm_set (perm_set_id)
+	uga_id      int generated always as identity not null primary key,
+	group_id    int                              not null references user_group (user_group_id),
+	perm_set_id int                              not null references perm_set (perm_set_id)
 ) inherits (_template_created);
 
 create unique index uq_user_group_assignment ON user_group_assignment (group_id, perm_set_id);
 
 create table journal
 (
-    journal_id     bigint generated always as identity not null,
-    tenant_id      int                                 not null references tenant (tenant_id),
-    data_group     text,
-    data_object_id bigint,
-    event_id       int,
-    user_id        bigint                              references user_info (user_id) on delete set null,
-    message        text                                not null,
-    data_payload   jsonb
+	journal_id     bigint generated always as identity not null,
+	tenant_id      int                                 not null references tenant (tenant_id),
+	data_group     text,
+	data_object_id bigint,
+	event_id       int,
+	user_id        bigint                              references user_info (user_id) on delete set null,
+	message        text                                not null,
+	data_payload   jsonb
 ) inherits (_template_created);
 
 create index ix_journal on journal (tenant_id, data_group, data_object_id);
@@ -323,30 +323,30 @@ create index ix_journal on journal (tenant_id, data_group, data_object_id);
 create or replace function add_journal_msg_jsonb(_created_by text, _tenant_id int, _user_id bigint, _msg text,
                                                  _data_group text default 'system',
                                                  _data_object_id bigint default null
-    , _payload jsonb default null
-    , _event_id int default null)
-    returns setof journal
-    language plpgsql
-    rows 1
+	, _payload jsonb default null
+	, _event_id int default null)
+	returns setof journal
+	language plpgsql
+	rows 1
 as
 $$
 begin
-    return query
-        insert into journal (created_by, tenant_id, data_group, data_object_id, event_id, user_id, message,
-                             data_payload)
-            values (_created_by, _tenant_id, _data_group, _data_object_id, _event_id, _user_id, _msg,
-                    case when _payload is not null then _payload end)
-            returning *;
+	return query
+		insert into journal (created_by, tenant_id, data_group, data_object_id, event_id, user_id, message,
+		                     data_payload)
+			values (_created_by, _tenant_id, _data_group, _data_object_id, _event_id, _user_id, _msg,
+			        case when _payload is not null then _payload end)
+			returning *;
 end;
 $$;
 
 create or replace function add_journal_msg(_created_by text, _tenant_id int, _user_id bigint, _msg text,
                                            _data_group text default 'system',
                                            _data_object_id bigint default null
-    , _payload text[] default null
-    , _event_id int default null)
-    returns setof journal
-    language sql
+	, _payload text[] default null
+	, _event_id int default null)
+	returns setof journal
+	language sql
 as
 $$
 
@@ -355,60 +355,60 @@ $$
 select *
 from add_journal_msg_jsonb(_created_by, _tenant_id, _user_id, _msg, _data_group, _data_object_id,
                            case when _payload is null then null else jsonb_build_object(variadic _payload) end
-    , _event_id)
+	, _event_id)
 $$;
 
 create or replace function get_journal_msgs(_tenant_id int, _user_id int, _from timestamptz, _to timestamptz)
-    returns table
-            (
-                __journal_id     bigint,
-                __created        timestamptz,
-                __created_by     text,
-                __data_group     text,
-                __data_object_id bigint,
-                __user_id        bigint,
-                __msg            text
-            )
-    language plpgsql
-    stable
+	returns table
+	        (
+		        __journal_id     bigint,
+		        __created        timestamptz,
+		        __created_by     text,
+		        __data_group     text,
+		        __data_object_id bigint,
+		        __user_id        bigint,
+		        __msg            text
+	        )
+	language plpgsql
+	stable
 as
 $$
 begin
-    perform has_permission(_tenant_id, _user_id, 'system.journal.read_journal');
+	perform has_permission(_tenant_id, _user_id, 'system.journal.read_journal');
 
-    select journal_id
-         , created
-         , created_by
-         , data_group
-         , data_object_id
-         , user_id
-         , message
-    from journal
-    where tenant_id = _tenant_id
-      and created between _from and _to;
+	select journal_id
+			 , created
+			 , created_by
+			 , data_group
+			 , data_object_id
+			 , user_id
+			 , message
+	from journal
+	where tenant_id = _tenant_id
+		and created between _from and _to;
 end;
 $$;
 
 create or replace function get_journal_payload(_tenant_id int, _user_id int, _journal_id bigint)
-    returns table
-            (
-                __journal_id bigint,
-                __payload    text
-            )
-    language plpgsql
-    stable
-    rows 1
+	returns table
+	        (
+		        __journal_id bigint,
+		        __payload    text
+	        )
+	language plpgsql
+	stable
+	rows 1
 as
 $$
 begin
-    perform has_permission(_tenant_id, _user_id, 'system.journal.get_payload');
+	perform has_permission(_tenant_id, _user_id, 'system.journal.get_payload');
 
-    return query
-        select journal_id
-             , data_payload::text
-        from journal
-        where tenant_id = _tenant_id
-          and journal_id = _journal_id;
+	return query
+		select journal_id
+				 , data_payload::text
+		from journal
+		where tenant_id = _tenant_id
+			and journal_id = _journal_id;
 end;
 $$;
 
@@ -424,9 +424,9 @@ $$;
  */
 
 create function unsecure.create_system_tenant()
-    returns setof tenant
-    language sql
-    rows 1
+	returns setof tenant
+	language sql
+	rows 1
 as
 $$
 insert into tenant(created_by, modified_by, name, code, is_removable, is_assignable)
@@ -436,9 +436,9 @@ $$;
 
 
 create function unsecure.create_system_user()
-    returns setof user_info
-    language sql
-    rows 1
+	returns setof user_info
+	language sql
+	rows 1
 as
 $$
 insert into user_info(created_by, modified_by, can_login, email, display_name, username, password_hash)
@@ -450,9 +450,9 @@ $$;
 create function unsecure.create_user_as_system(_email text, _display_name text, _username text,
                                                _password_hash text,
                                                _can_login bool default true)
-    returns setof user_info
-    language sql
-    rows 1
+	returns setof user_info
+	language sql
+	rows 1
 as
 $$
 insert into user_info (created_by, modified_by, can_login, email, display_name, username, password_hash)
@@ -461,8 +461,8 @@ returning *;
 $$;
 
 create function unsecure.delete_user_by_username_as_system(_username text)
-    returns user_info
-    language sql
+	returns user_info
+	language sql
 as
 $$
 delete
@@ -473,25 +473,25 @@ returning *;
 $$;
 
 create function unsecure.add_user_to_group_as_system(_email text, _group_title text)
-    returns setof user_group_member
-    language sql
-    rows 1
+	returns setof user_group_member
+	language sql
+	rows 1
 as
 $$
 insert into user_group_member(created_by, group_id, user_id)
 select 'system', ug.user_group_id, ui.user_id
 from user_group ug
-         cross join user_info ui
+	     cross join user_info ui
 where ug.title = _group_title
-  and ui.username = _email
+	and ui.username = _email
 returning *;
 $$;
 
 create function unsecure.create_user_group_as_system(_tenant_id int, _title text
 , _is_system bool default false, _is_assignable bool default true)
-    returns setof user_group
-    language sql
-    rows 1
+	returns setof user_group
+	language sql
+	rows 1
 as
 $$
 insert into user_group (created_by, modified_by, tenant_id, title, is_system, is_assignable)
@@ -500,8 +500,8 @@ returning *;
 $$;
 
 create function unsecure.assign_user_group_as_system(_user_group_id int, _perm_set_code text)
-    returns user_group_assignment
-    language sql
+	returns user_group_assignment
+	language sql
 as
 $$
 insert into user_group_assignment(created_by, group_id, perm_set_id)
@@ -512,107 +512,107 @@ returning *;
 $$;
 
 create function throw_no_access(_tenant_id int, _username text)
-    returns void
-    language plpgsql
+	returns void
+	language plpgsql
 as
 $$
 begin
-    raise exception 'User(username: %) has no access to tenant(id: %)', _username, _tenant_id
-        using errcode = 50004;
+	raise exception 'User(username: %) has no access to tenant(id: %)', _username, _tenant_id
+		using errcode = 50004;
 end;
 $$;
 
 create function throw_no_permission(_tenant_id int, _user_id bigint, _perm_code text)
-    returns void
-    language plpgsql
+	returns void
+	language plpgsql
 as
 $$
 begin
-    raise exception 'User(id: %) has no permission (code: %) in tenant(id: %)', _user_id, _perm_code, _tenant_id
-        using errcode = 50003;
+	raise exception 'User(id: %) has no permission (code: %) in tenant(id: %)', _user_id, _perm_code, _tenant_id
+		using errcode = 50003;
 end;
 $$;
 
 create or replace function has_permission(_tenant_id int, _user_id bigint, _perm_code text,
                                           _throw_err bool default true)
-    returns bool
-    language plpgsql
-    stable
+	returns bool
+	language plpgsql
+	stable
 as
 $$
 begin
 
-    if (_user_id = 1) then
-        return true;
-    end if;
+	if (_user_id = 1) then
+		return true;
+	end if;
 
-    if exists(
-            select p.code, ugm.user_id, p.node_path
-            from user_group ug
-                     inner join user_group_assignment uga
-                                on ug.user_group_id = uga.group_id and ug.tenant_id = _tenant_id
-                     inner join user_group_member ugm on ugm.group_id = uga.group_id
-                     inner join perm_set ps on ps.perm_set_id = uga.perm_set_id
-                     inner join perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
-                     inner join permission p on p.permission_id = psp.permission_id
-            where ug.tenant_id = _tenant_id
-              and ugm.user_id = _user_id
-              and p.full_code @> ext.text2ltree(_perm_code)
-        ) then
-        return true;
-    end if;
+	if exists(
+		select p.code, ugm.user_id, p.node_path
+		from user_group ug
+			     inner join user_group_assignment uga
+			                on ug.user_group_id = uga.group_id and ug.tenant_id = _tenant_id
+			     inner join user_group_member ugm on ugm.group_id = uga.group_id
+			     inner join perm_set ps on ps.perm_set_id = uga.perm_set_id
+			     inner join perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
+			     inner join permission p on p.permission_id = psp.permission_id
+		where ug.tenant_id = _tenant_id
+			and ugm.user_id = _user_id
+			and p.full_code @> ext.text2ltree(_perm_code)
+		) then
+		return true;
+	end if;
 
-    if (_throw_err) then
+	if (_throw_err) then
 
-        perform add_journal_msg('system', _user_id
-            , format('User (id: %s) has no permission: %s'
-                                    , _user_id, _perm_code)
-            , 'perm', _user_id
-            , _event_id := 50003);
+		perform add_journal_msg('system', _user_id
+			, format('User (id: %s) has no permission: %s'
+			                        , _user_id, _perm_code)
+			, 'perm', _user_id
+			, _event_id := 50003);
 
-        perform throw_no_permission(_user_id, _perm_code);
-    end if;
+		perform throw_no_permission(_user_id, _perm_code);
+	end if;
 
-    return false;
+	return false;
 end ;
 $$;
 
 create function update_permission_full_title(_perm_path ext.ltree) returns SETOF permission
-    language sql
-    rows 1
+	language sql
+	rows 1
 as
 $$
 update permission p
 set full_title =
-        case
-            when _perm_path = '1'::ext.ltree then 'System'
-            else
-                (select array_to_string(
-                                ARRAY(SELECT p_n2.title
-                                      FROM permission as p_n2
-                                      WHERE p_n2.node_path @> p_n.node_path
-                                        and p_n2.permission_id <> 1
-                                      ORDER BY p_n2.node_path),
-                                ' > ')
-                 FROM permission As p_n
-                 where p_n.permission_id = p.permission_id)
-            end
+	    case
+		    when _perm_path = '1'::ext.ltree then 'System'
+		    else
+			    (select array_to_string(
+				            ARRAY(SELECT p_n2.title
+				                  FROM permission as p_n2
+				                  WHERE p_n2.node_path @> p_n.node_path
+						                and p_n2.permission_id <> 1
+				                  ORDER BY p_n2.node_path),
+				            ' > ')
+			     FROM permission As p_n
+			     where p_n.permission_id = p.permission_id)
+		    end
 where p.node_path <@ _perm_path
 returning *;
 $$;
 
 create function update_permission_full_code(_perm_path ext.ltree) returns SETOF permission
-    language sql
-    rows 1
+	language sql
+	rows 1
 as
 $$
 update permission p
 set full_code = (select ext.text2ltree(array_to_string(
-        ARRAY(SELECT coalesce(p_n2.code, helpers.get_code(p_n2.title))
-              FROM permission as p_n2
-              WHERE p_n2.node_path @> p_n.node_path
-              ORDER BY p_n2.node_path),
-        '.'))
+	ARRAY(SELECT coalesce(p_n2.code, helpers.get_code(p_n2.title))
+	      FROM permission as p_n2
+	      WHERE p_n2.node_path @> p_n.node_path
+	      ORDER BY p_n2.node_path),
+	'.'))
                  FROM permission As p_n
                  where p_n.permission_id = p.permission_id)
 where p.node_path <@ _perm_path
@@ -622,59 +622,59 @@ $$;
 create or replace function unsecure.create_permission_by_path_as_system(_title text
 , _parent_code text default ''
 , _is_assignable bool default true)
-    returns setof permission
-    language plpgsql
-    rows 1
+	returns setof permission
+	language plpgsql
+	rows 1
 as
 $$
 declare
-    __last_id     int;
-    __p           ext.ltree;
-    __parent_id   int;
-    __parent_path text;
+	__last_id     int;
+	__p           ext.ltree;
+	__parent_id   int;
+	__parent_path text;
 begin
 
-    insert into permission(created_by, modified_by, title, is_assignable, code)
-    values ('system', 'system', _title, _is_assignable, helpers.get_code(_title))
-    returning permission_id into __last_id;
+	insert into permission(created_by, modified_by, title, is_assignable, code)
+	values ('system', 'system', _title, _is_assignable, helpers.get_code(_title))
+	returning permission_id into __last_id;
 
-    if (_parent_code = '') then
-        begin
-            if (lower(_title) = 'system') then
-                __p := ext.text2ltree(__last_id::text);
-            else
-                __p := ext.text2ltree('1.' || __last_id::text);
-            end if;
+	if (_parent_code = '') then
+		begin
+			if (lower(_title) = 'system') then
+				__p := ext.text2ltree(__last_id::text);
+			else
+				__p := ext.text2ltree('1.' || __last_id::text);
+			end if;
 
-            update permission
-            set node_path = __p
-            where permission_id = __last_id;
-        end;
-    else
-        begin
-            select p.permission_id, node_path::text
-            from permission p
-            where p.full_code = ext.text2ltree(_parent_code)
-            into __parent_id, __parent_path;
+			update permission
+			set node_path = __p
+			where permission_id = __last_id;
+		end;
+	else
+		begin
+			select p.permission_id, node_path::text
+			from permission p
+			where p.full_code = ext.text2ltree(_parent_code)
+			into __parent_id, __parent_path;
 
-            __p := ext.text2ltree(__parent_path || '.' || __last_id::text);
+			__p := ext.text2ltree(__parent_path || '.' || __last_id::text);
 
-            update permission
-            set node_path = __p
-            where permission_id = __last_id;
+			update permission
+			set node_path = __p
+			where permission_id = __last_id;
 
-            update permission set has_children = true where permission_id = __parent_id;
-        end;
+			update permission set has_children = true where permission_id = __parent_id;
+		end;
 
-    end if;
+	end if;
 
-    perform update_permission_full_title(__p);
-    perform update_permission_full_code(__p);
+	perform update_permission_full_title(__p);
+	perform update_permission_full_code(__p);
 
-    return query
-        select *
-        from permission
-        where node_path = __p;
+	return query
+		select *
+		from permission
+		where node_path = __p;
 end;
 $$;
 
@@ -682,318 +682,366 @@ create function create_permission_by_path(_created_by text, _user_id int,
                                           _data_node_path text, _title text,
                                           _parent_path text default '',
                                           _is_assignable bool default true)
-    returns setof permission
-    language plpgsql
-    rows 1
+	returns setof permission
+	language plpgsql
+	rows 1
 as
 $$
 declare
-    __last_id int;
-    __p       ext.ltree;
+	__last_id int;
+	__p       ext.ltree;
 begin
 
-    perform has_permission(_user_id, _data_node_path::ext.ltree, 'system.manage_permissions.add_permission');
+	perform has_permission(_user_id, _data_node_path::ext.ltree, 'system.manage_permissions.add_permission');
 
-    insert into permission(created_by, modified_by, title, is_assignable, code)
-    values (_created_by, _created_by, _title, _is_assignable, helpers.get_code(_title))
-    returning permission_id into __last_id;
+	insert into permission(created_by, modified_by, title, is_assignable, code)
+	values (_created_by, _created_by, _title, _is_assignable, helpers.get_code(_title))
+	returning permission_id into __last_id;
 
-    if (_parent_path = '') then
-        begin
-            if (lower(_title) != 'system')
-            then
-                __p := ext.text2ltree('1.' || __last_id::text);
-            else
-                __p := ext.text2ltree('1');
-            end if;
+	if (_parent_path = '') then
+		begin
+			if (lower(_title) != 'system')
+			then
+				__p := ext.text2ltree('1.' || __last_id::text);
+			else
+				__p := ext.text2ltree('1');
+			end if;
 
-            update permission
-            set node_path = __p
-            where permission_id = __last_id;
-        end;
-    else
-        begin
-            __p := ext.text2ltree(_parent_path || '.' || __last_id::varchar);
+			update permission
+			set node_path = __p
+			where permission_id = __last_id;
+		end;
+	else
+		begin
+			__p := ext.text2ltree(_parent_path || '.' || __last_id::varchar);
 
-            update permission
-            set node_path = __p
-            where permission_id = __last_id;
+			update permission
+			set node_path = __p
+			where permission_id = __last_id;
 
-            update permission set has_children = true where node_path = ext.text2ltree(_parent_path);
-        end;
+			update permission set has_children = true where node_path = ext.text2ltree(_parent_path);
+		end;
 
-    end if;
+	end if;
 
-    perform update_permission_full_title(__p);
-    perform update_permission_full_code(__p);
+	perform update_permission_full_title(__p);
+	perform update_permission_full_code(__p);
 
-    return query
-        select *
-        from permission
-        where permission_id = __last_id;
+	return query
+		select *
+		from permission
+		where permission_id = __last_id;
 end;
 $$;
 
 create or replace function create_permission_by_code(_created_by text, _user_id int, _title text,
                                                      _parent_code text default '', _is_assignable bool default true)
-    returns setof permission
-    language plpgsql
-    rows 1
+	returns setof permission
+	language plpgsql
+	rows 1
 as
 $$
 declare
-    __last_id     int;
-    __p           ext.ltree;
-    __parent_id   int;
-    __parent_path text;
+	__last_id     int;
+	__p           ext.ltree;
+	__parent_id   int;
+	__parent_path text;
 begin
 
-    perform has_permission(_user_id, 'system.manage_permissions.add_permission');
+	perform has_permission(_user_id, 'system.manage_permissions.add_permission');
 
-    insert into permission(created_by, modified_by, title, is_assignable, code)
-    values (_created_by, _created_by, _title, _is_assignable, helpers.get_code(_title))
-    returning permission_id into __last_id;
+	insert into permission(created_by, modified_by, title, is_assignable, code)
+	values (_created_by, _created_by, _title, _is_assignable, helpers.get_code(_title))
+	returning permission_id into __last_id;
 
-    if (_parent_code = '') then
-        begin
-            __p := ext.text2ltree('1.' || __last_id::text);
+	if (_parent_code = '') then
+		begin
+			__p := ext.text2ltree('1.' || __last_id::text);
 
-            update permission
-            set node_path = __p
-            where permission_id = __last_id;
-        end;
-    else
-        begin
-            select p.permission_id, node_path::text
-            from permission p
-            where p.full_code = ext.text2ltree(_parent_code)
-            into __parent_id, __parent_path;
+			update permission
+			set node_path = __p
+			where permission_id = __last_id;
+		end;
+	else
+		begin
+			select p.permission_id, node_path::text
+			from permission p
+			where p.full_code = ext.text2ltree(_parent_code)
+			into __parent_id, __parent_path;
 
-            __p := ext.text2ltree(__parent_path || '.' || __last_id::text);
+			__p := ext.text2ltree(__parent_path || '.' || __last_id::text);
 
-            update permission
-            set node_path = __p
-            where permission_id = __last_id;
+			update permission
+			set node_path = __p
+			where permission_id = __last_id;
 
-            update permission set has_children = true where permission_id = __parent_id;
-        end;
+			update permission set has_children = true where permission_id = __parent_id;
+		end;
 
-    end if;
+	end if;
 
-    perform update_permission_full_title(__p);
-    perform update_permission_full_code(__p);
+	perform update_permission_full_title(__p);
+	perform update_permission_full_code(__p);
 
-    return query
-        select *
-        from permission
-        where node_path = __p;
+	return query
+		select *
+		from permission
+		where node_path = __p;
 end;
 $$;
 
 create function unsecure.create_perm_set_as_system(
-    _tenant_id int,
-    _title text
-    , _is_system bool default false,
-    _is_assignable bool default true,
-    _permissions text[] default null)
-    returns setof perm_set
-    language plpgsql
-    rows 1
+	_tenant_id int,
+	_title text
+	, _is_system bool default false,
+	_is_assignable bool default true,
+	_permissions text[] default null)
+	returns setof perm_set
+	language plpgsql
+	rows 1
 as
 $$
 declare
-    __last_id int;
+	__last_id int;
 begin
-    -- noinspection SqlInsertValues
+	-- noinspection SqlInsertValues
 
-    insert into perm_set(created_by, modified_by, tenant_id, title, is_system, is_assignable)
-    values ('system', 'system', _tenant_id, _title, _is_system, _is_assignable)
-    returning perm_set_id into __last_id;
+	insert into perm_set(created_by, modified_by, tenant_id, title, is_system, is_assignable)
+	values ('system', 'system', _tenant_id, _title, _is_system, _is_assignable)
+	returning perm_set_id into __last_id;
 
-    insert into perm_set_perm(created_by, perm_set_id, permission_id)
-    SELECT 'system', __last_id, p.permission_id
-    from unnest(_permissions) as perm_code
-             inner join permission p on p.full_code = perm_code::ext.ltree;
+	insert into perm_set_perm(created_by, perm_set_id, permission_id)
+	SELECT 'system', __last_id, p.permission_id
+	from unnest(_permissions) as perm_code
+		     inner join permission p on p.full_code = perm_code::ext.ltree;
 
-    return query
-        select *
-        from perm_set
-        where perm_set_id = __last_id;
+	return query
+		select *
+		from perm_set
+		where perm_set_id = __last_id;
 end;
 
 $$;
 
 create or replace function public.ensure_groups_and_permissions(_oid text, _provider_groups text[])
-    returns table
-            (
-                __roles       text[],
-                __permissions text[]
-            )
-    language plpgsql
-    rows 1
+	returns table
+	        (
+		        __roles       text[],
+		        __permissions text[]
+	        )
+	language plpgsql
+	rows 1
 as
 $$
 declare
-    __user_id int;
-    __rs      text[];
-    __ps      text[];
+	__user_id int;
+	__rs      text[];
+	__ps      text[];
 begin
 
-    select user_id
-    from user_info ui
-    where ui.oid = _oid
-    into __user_id;
+	select user_id
+	from user_info ui
+	where ui.oid = _oid
+	into __user_id;
 
-    delete
-    from user_group_member
-    where user_id = __user_id
-      and (
-            (mapping_id is not null
-                and group_id not in (select distinct ugm.group_id
-                                     from unnest(_provider_groups) g
-                                              inner join public.user_group_mapping ugm on ugm.mapped_object_id = g)
-                )
-            or adhoc_assignment
-        );
+	delete
+	from user_group_member
+	where user_id = __user_id
+		and (
+			(mapping_id is not null
+				and group_id not in (select distinct ugm.group_id
+				                     from unnest(_provider_groups) g
+					                          inner join public.user_group_mapping ugm on ugm.mapped_object_id = g)
+				)
+			or adhoc_assignment
+		);
 
-    insert into user_group_member(user_id, group_id, mapping_id, adhoc_assignment)
-    select distinct __user_id, ugm.group_id, ugm.ug_mapping_id, false
-    from unnest(_provider_groups) g
-             inner join public.user_group_mapping ugm
-                        on ugm.mapped_object_id = g
-    where ugm.group_id not in (select group_id from user_group_member where user_id = __user_id);
+	insert into user_group_member(user_id, group_id, mapping_id, adhoc_assignment)
+	select distinct __user_id, ugm.group_id, ugm.ug_mapping_id, false
+	from unnest(_provider_groups) g
+		     inner join public.user_group_mapping ugm
+		                on ugm.mapped_object_id = g
+	where ugm.group_id not in (select group_id from user_group_member where user_id = __user_id);
 
-    with users_groups as (select ugm.group_id
-                          from user_group_member ugm
-                          where ugm.user_id = __user_id),
-         user_roles as (select distinct ps.perm_set_id, ps.code
-                        from users_groups ug
-                                 inner join user_group_assignment uga on ug.group_id = uga.group_id
-                                 inner join perm_set ps on uga.perm_set_id = ps.perm_set_id),
-         user_permissions as (select sp.full_code
-                              from user_roles r
-                                       inner join perm_set_perm psp on r.perm_set_id = psp.perm_set_id
-                                       join permission p on psp.permission_id = p.permission_id
-                                       inner join permission sp on sp.node_path <@ p.node_path
-                              order by sp.full_code)
-    select array_agg(distinct user_roles.code)                  rs,
-           array_agg(distinct user_permissions.full_code::text) ps
-    from user_roles,
-         user_permissions
-    into __rs, __ps;
+	with users_groups as (select ugm.group_id
+	                      from user_group_member ugm
+	                      where ugm.user_id = __user_id),
+	     user_roles as (select distinct ps.perm_set_id, ps.code
+	                    from users_groups ug
+		                         inner join user_group_assignment uga on ug.group_id = uga.group_id
+		                         inner join perm_set ps on uga.perm_set_id = ps.perm_set_id),
+	     user_permissions as (select sp.full_code
+	                          from user_roles r
+		                               inner join perm_set_perm psp on r.perm_set_id = psp.perm_set_id
+		                               join permission p on psp.permission_id = p.permission_id
+		                               inner join permission sp on sp.node_path <@ p.node_path
+	                          order by sp.full_code)
+	select array_agg(distinct user_roles.code)                  rs,
+	       array_agg(distinct user_permissions.full_code::text) ps
+	from user_roles,
+	     user_permissions
+	into __rs, __ps;
 
 
-    return query
-        update user_info ui
-            set updated_at = now(),
-                roles = coalesce(__rs, array []::text[]),
-                permissions = coalesce(__ps, array []::text[])
-            where ui.oid = _oid
-            returning roles, permissions;
+	return query
+		update user_info ui
+			set updated_at = now(),
+				roles = coalesce(__rs, array []::text[]),
+				permissions = coalesce(__ps, array []::text[])
+			where ui.oid = _oid
+			returning roles, permissions;
 
 end;
 $$;
 
 
 -- for email authentication where there is no provider
+create function public.register_user(_tenant_code text, _username text, _password_hash text, _email text, _display_name text, _user_data text)
+	returns table
+	        (
+		        __user_id      bigint,
+		        __code         text,
+		        __uuid         text,
+		        __username     text,
+		        __email        text,
+		        __display_name text
+	        )
+	language plpgsql
+	rows 1
+as
+$$
+declare
+  __new_user user_info;
+begin
+	if exists(
+		select tu.user_id
+		from tenant_user tu
+		       inner join public.tenant t on t.tenant_id = tu.tenant_id
+			     inner join user_info ui on ui.user_id = tu.user_id
+		where t.code = _tenant_code
+			and ui.username = _username
+		) then
+		raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
+			using errcode = 50100;
+	end if;
+
+	insert into user_info (created_by, modified_by, can_login, username, email, display_name, password_hash)
+		values (_username, _username, true, _username, _email, _display_name, _password_hash)
+	returning * into __new_user;
+
+	return query
+		select user_id
+				, code
+				, uuid::text
+				, username
+				, email
+				, display_name
+		from __new_user;
+
+		insert into user_identity(created_by, modified_by, provider, uid, user_id)
+		values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
+end;
+$$;
+
+
 create function get_user_by_username(_tenant_id int, _username text)
-    returns table
-            (
-                __user_id      bigint,
-                __code         text,
-                __uuid         text,
-                __username     text,
-                __email        text,
-                __display_name text,
-                __roles        text,
-                __permissions  text
-            )
-    language plpgsql
+	returns table
+	        (
+		        __user_id      bigint,
+		        __code         text,
+		        __uuid         text,
+		        __username     text,
+		        __email        text,
+		        __display_name text,
+		        __roles        text,
+		        __permissions  text
+	        )
+	language plpgsql
 as
 $$
 begin
 
-    if not exists(select
-                  from tenant_user tu
-                           inner join user_info ui on ui.user_id = tu.user_id
-                  where tenant_id = _tenant_id
-                    and ui.username = lower(_username)) then
-        perform throw_no_access(_tenant_id, _username);
-    end if;
+	if not exists(select
+	              from tenant_user tu
+		                   inner join user_info ui on ui.user_id = tu.user_id
+	              where tenant_id = _tenant_id
+			            and ui.username = lower(_username)) then
+		perform throw_no_access(_tenant_id, _username);
+	end if;
 
-    return query
-        select tu.user_id,
-               ui.code,
-               ui.uuid,
-               ui.username,
-               ui.email,
-               ui.display_name,
-               upc.groups,
-               upc.permissions
-        from tenant_user tu
-                 inner join user_info ui on ui.user_id = tu.user_id
-                 inner join user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
-        where tu.tenant_id = _tenant_id
-          and ui.username = _username;
+	return query
+		select tu.user_id,
+		       ui.code,
+		       ui.uuid,
+		       ui.username,
+		       ui.email,
+		       ui.display_name,
+		       upc.groups,
+		       upc.permissions
+		from tenant_user tu
+			     inner join user_info ui on ui.user_id = tu.user_id
+			     inner join user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
+		where tu.tenant_id = _tenant_id
+			and ui.username = _username;
 end;
 
 $$;
 
 -- for external authentication provider flows
 create or replace function auth.ensure_user_from_provider(_created_by text, _provider text, _provider_uid text, _username text,
-                                               _display_name text, _email text default null,
-                                               _user_data jsonb default null)
-    returns table
-            (
-                __user_id      bigint,
-                __code         text,
-                __uuid         text,
-                __username     text,
-                __email        text,
-                __display_name text
-            )
-    language plpgsql
+                                                          _display_name text, _email text default null,
+                                                          _user_data jsonb default null)
+	returns table
+	        (
+		        __user_id      bigint,
+		        __code         text,
+		        __uuid         text,
+		        __username     text,
+		        __email        text,
+		        __display_name text
+	        )
+	language plpgsql
 as
 $$
 declare
-    __last_id bigint;
+	__last_id bigint;
 begin
 
-    if not exists(select
-                  from user_identity uid
-                  where uid.provider = _provider
-                    and uid.uid = _provider_uid) then
+	if not exists(select
+	              from user_identity uid
+	              where uid.provider = _provider
+			            and uid.uid = _provider_uid) then
 
-        insert into user_info(created_by, modified_by, username, email, display_name)
-        values (_created_by, _created_by, lower(_username), lower(_email), _display_name)
-        returning user_id into __last_id;
+		insert into user_info(created_by, modified_by, username, email, display_name)
+		values (_created_by, _created_by, lower(_username), lower(_email), _display_name)
+		returning user_id into __last_id;
 
-        insert into user_identity(created_by, modified_by, provider, uid, user_id)
-        values (_created_by, _created_by, _provider, _provider_uid, __last_id);
+		insert into user_identity(created_by, modified_by, provider, uid, user_id)
+		values (_created_by, _created_by, _provider, _provider_uid, __last_id);
 
-    end if;
+	end if;
 
-    return query
-        select ui.user_id,
-               ui.code,
-               ui.uuid::text,
-               ui.username,
-               ui.email,
-               ui.display_name
-        from user_identity uid
-                 inner join user_info ui on uid.user_id = ui.user_id
-        where uid.provider = _provider
-          and uid.uid = _provider_uid;
+	return query
+		select ui.user_id,
+		       ui.code,
+		       ui.uuid::text,
+		       ui.username,
+		       ui.email,
+		       ui.display_name
+		from user_identity uid
+			     inner join user_info ui on uid.user_id = ui.user_id
+		where uid.provider = _provider
+			and uid.uid = _provider_uid;
 end;
 $$;
 
 create function auth.update_user_data(_created_by text, _user_id bigint, _provider text, _user_data jsonb)
-    returns table
-            (
-                __user_id      bigint,
-                __user_data_id bigint
-            )
-    language plpgsql
+	returns table
+	        (
+		        __user_id      bigint,
+		        __user_data_id bigint
+	        )
+	language plpgsql
 as
 $$
 begin
@@ -1003,19 +1051,19 @@ end;
 $$;
 
 create function auth.get_tenant_permissions(_tenant_id int, _user_id bigint)
-    returns table
-            (
-                __user_id     bigint,
-                __groups      text,
-                __permissions text
-            )
-    language sql
+	returns table
+	        (
+		        __user_id     bigint,
+		        __groups      text,
+		        __permissions text
+	        )
+	language sql
 as
 $$
-select upc.user_id, array_to_string(upc.groups, ';'), array_to_string(upc.permissions,';')
+select upc.user_id, array_to_string(upc.groups, ';'), array_to_string(upc.permissions, ';')
 from user_permission_cache upc
 where upc.tenant_id = _tenant_id
-  and upc.user_id = _user_id;
+	and upc.user_id = _user_id;
 $$;
 
 /***
@@ -1029,26 +1077,26 @@ $$;
  */
 
 create or replace function load_initial_data()
-    returns setof int
-    language plpgsql
+	returns setof int
+	language plpgsql
 as
 $$
 declare
-    __last_id int;
+	__last_id int;
 begin
 
-    -- COMMMON WITH ALL DATABASES
+	-- COMMMON WITH ALL DATABASES
 
-    perform unsecure.create_system_user();
-    perform unsecure.create_permission_by_path_as_system('System', _is_assignable := false);
+	perform unsecure.create_system_user();
+	perform unsecure.create_permission_by_path_as_system('System', _is_assignable := false);
 
-    perform unsecure.create_user_group_as_system('System', true, false);
-    perform unsecure.add_user_to_group_as_system('system', 'System');
-    perform unsecure.create_perm_set_as_system('System', true, _is_assignable := false,
-                                               _permissions := array ['system']);
-    perform unsecure.assign_user_group_as_system(1, 'system');
+	perform unsecure.create_user_group_as_system('System', true, false);
+	perform unsecure.add_user_to_group_as_system('system', 'System');
+	perform unsecure.create_perm_set_as_system('System', true, _is_assignable := false,
+	                                           _permissions := array ['system']);
+	perform unsecure.assign_user_group_as_system(1, 'system');
 
-    -- UNIQUE FOR THIS DATABASE
+	-- UNIQUE FOR THIS DATABASE
 end
 $$;
 
