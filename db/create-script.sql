@@ -896,7 +896,7 @@ $$;
 
 
 -- for email authentication where there is no provider
-create function public.register_user(_tenant_code text, _username text, _password_hash text, _email text, _display_name text, _user_data text)
+create or replace function public.register_user(_tenant_code text, _username text, _password_hash text, _email text, _display_name text, _user_data text)
 	returns table
 	        (
 		        __user_id      bigint,
@@ -930,13 +930,13 @@ begin
 	returning * into __new_user;
 
 	return query
-		select user_id
-				, code
-				, uuid::text
-				, username
-				, email
-				, display_name
-		from __new_user;
+		select  __new_user.user_id
+					, __new_user.code
+					, __new_user.uuid::text
+					, __new_user.username
+					, __new_user.email
+					, __new_user.display_name;
+-- 		from __new_user;
 
 		insert into user_identity(created_by, modified_by, provider, uid, user_id)
 		values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
@@ -1050,7 +1050,7 @@ end;
 
 $$;
 
-create function auth.get_tenant_permissions(_tenant_id int, _user_id bigint)
+create function auth.get_tenant_permissions(_tenant_code text, _user_id bigint)
 	returns table
 	        (
 		        __user_id     bigint,
@@ -1062,7 +1062,8 @@ as
 $$
 select upc.user_id, array_to_string(upc.groups, ';'), array_to_string(upc.permissions, ';')
 from user_permission_cache upc
-where upc.tenant_id = _tenant_id
+inner join public.tenant t on upc.tenant_id = t.tenant_id
+where t.code = _tenant_code
 	and upc.user_id = _user_id;
 $$;
 

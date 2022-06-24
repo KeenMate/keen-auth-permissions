@@ -1,11 +1,21 @@
 defmodule KeenAuthPermissions.Storage do
-  @roles_path [:assigns, :user, :roles]
+  @groups_path [:assigns, :user_groups]
+  @permissions_path [:assigns, :user_permissions]
 
-  # def put_roles(conn, roles) do
-  #   put_in(conn, @roles_path, roles)
-  # end
+  def put_permissions(conn, items) do
+    put_in(conn, @permissions_path, items)
+  end
 
-  def get_roles(conn) do
-    get_in(conn, @roles_path)
+  def put_groups(conn, items) do
+    put_in(conn, @groups_path, items)
+  end
+
+
+  def get_groups(conn) do
+    get_in(conn, @groups_path)
+  end
+
+  def get_permissions(conn) do
+    get_in(conn, @permissions_path)
   end
 end

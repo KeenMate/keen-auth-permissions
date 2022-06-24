@@ -12,8 +12,8 @@ defmodule KeenAuthPermissions.Config do
     Application.fetch_env!(:keen_auth_permissions, :db_context)
   end
 
-  def get_tenant_id_resolver() do
-    tenant_id = Application.get_env(:keen_auth_permissions, :tenant_id)
+  def get_tenant_code_resolver() do
+    tenant_id = Application.get_env(:keen_auth_permissions, :tenant_code)
 
     case tenant_id do
       {mod, fun} when is_atom(mod) and is_atom(fun) ->

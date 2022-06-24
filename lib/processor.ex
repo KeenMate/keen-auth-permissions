@@ -6,7 +6,7 @@ defmodule KeenAuthPermissions.Processor do
   @impl true
   def process(conn, provider, %{user: user} = oauth_response) do
     db_context = Config.get_db_context()
-    # tenant_id = Config.get_tenant_id_resolver().(conn)
+    # tenant_id = Config.get_tenant_code_resolver().(conn)
 
     with {:ok, db_user} <- ensure_user(user, provider, db_context),
         #  :ok <- update_user_data(db_context, user, db_user, provider),
