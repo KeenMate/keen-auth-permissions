@@ -913,33 +913,36 @@ $$
 declare
   __new_user user_info;
 begin
-	if exists(
-		select tu.user_id
-		from tenant_user tu
-		       inner join public.tenant t on t.tenant_id = tu.tenant_id
-			     inner join user_info ui on ui.user_id = tu.user_id
-		where t.code = _tenant_code
-			and ui.username = _username
-		) then
-		raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
+  raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
 			using errcode = 50100;
-	end if;
 
-	insert into user_info (created_by, modified_by, can_login, username, email, display_name, password_hash)
-		values (_username, _username, true, _username, _email, _display_name, _password_hash)
-	returning * into __new_user;
-
-	return query
-		select  __new_user.user_id
-					, __new_user.code
-					, __new_user.uuid::text
-					, __new_user.username
-					, __new_user.email
-					, __new_user.display_name;
--- 		from __new_user;
-
-		insert into user_identity(created_by, modified_by, provider, uid, user_id)
-		values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
+-- 	if exists(
+-- 		select tu.user_id
+-- 		from tenant_user tu
+-- 		       inner join public.tenant t on t.tenant_id = tu.tenant_id
+-- 			     inner join user_info ui on ui.user_id = tu.user_id
+-- 		where t.code = _tenant_code
+-- 			and ui.username = _username
+-- 		) then
+-- 		raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
+-- 			using errcode = 50100;
+-- 	end if;
+--
+-- 	insert into user_info (created_by, modified_by, can_login, username, email, display_name, password_hash)
+-- 		values (_username, _username, true, _username, _email, _display_name, _password_hash)
+-- 	returning * into __new_user;
+--
+-- 	return query
+-- 		select  __new_user.user_id
+-- 					, __new_user.code
+-- 					, __new_user.uuid::text
+-- 					, __new_user.username
+-- 					, __new_user.email
+-- 					, __new_user.display_name;
+-- -- 		from __new_user;
+--
+-- 		insert into user_identity(created_by, modified_by, provider, uid, user_id)
+-- 		values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
 end;
 $$;
 
