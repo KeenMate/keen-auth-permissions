@@ -16,6 +16,9 @@ defmodule KeenAuthPermissions.Config do
     tenant_id = Application.get_env(:keen_auth_permissions, :tenant_code)
 
     case tenant_id do
+      fun when is_function(fun) ->
+        fun
+
       {mod, fun} when is_atom(mod) and is_atom(fun) ->
         fn conn -> apply(mod, fun, [conn]) end
 

@@ -5,7 +5,7 @@ defmodule KeenAuthPermissions.Plug.FetchTenantPermissions do
   alias KeenAuthPermissions.Storage
 
   @impl true
-  def init(opts) do
+  def init(_opts) do
     %{
       db_context: Config.get_db_context(),
       storage: KeenAuth.Config.get_storage()
@@ -29,6 +29,8 @@ defmodule KeenAuthPermissions.Plug.FetchTenantPermissions do
       conn
       |> Storage.put_permissions(String.split(permissions.permissions, ";"))
       |> Storage.put_groups(String.split(permissions.groups, ";"))
+
+    # todo: handle {:ok, []}
     end
   end
 end
