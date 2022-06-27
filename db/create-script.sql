@@ -911,12 +911,9 @@ create or replace function public.register_user(_tenant_code text, _username tex
 as
 $$
 declare
-  __new_user user_info;
+	__new_user user_info;
 begin
-  raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
-			using errcode = 50100;
-
--- 	if exists(
+	-- 	if exists(
 -- 		select tu.user_id
 -- 		from tenant_user tu
 -- 		       inner join public.tenant t on t.tenant_id = tu.tenant_id
@@ -927,23 +924,65 @@ begin
 -- 		raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
 -- 			using errcode = 50100;
 -- 	end if;
---
--- 	insert into user_info (created_by, modified_by, can_login, username, email, display_name, password_hash)
--- 		values (_username, _username, true, _username, _email, _display_name, _password_hash)
--- 	returning * into __new_user;
---
--- 	return query
--- 		select  __new_user.user_id
--- 					, __new_user.code
--- 					, __new_user.uuid::text
--- 					, __new_user.username
--- 					, __new_user.email
--- 					, __new_user.display_name;
--- -- 		from __new_user;
---
--- 		insert into user_identity(created_by, modified_by, provider, uid, user_id)
--- 		values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
+
+	insert into user_info (created_by, modified_by, can_login, username, email, display_name, password_hash)
+	values (_username, _username, true, _username, _email, _display_name, _password_hash)
+	returning * into __new_user;
+
+	insert into user_identity(created_by, modified_by, provider, uid, user_id)
+	values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
+
+	with t as (select * from tenant where code = _tenant_code)
+	insert into tenant_user (created_by, tenant_id, user_id)
+	select _username, t.tenant_id, __new_user.user_id
+	from t;
+
+	return query
+		select __new_user.user_id
+				 , __new_user.code
+				 , __new_user.uuid::text
+				 , __new_user.username
+				 , __new_user.email
+				 , __new_user.display_name;
+-- 		from __new_user;
 end;
+$$;
+
+create or replace function public.get_user_verification(_tenant_code text, _username text)
+	returns table
+	        (
+		        __user_id       bigint,
+		        __code          text,
+		        __uuid          text,
+		        __username      text,
+		        __email         text,
+		        __display_name  text,
+		        __password_hash text,
+		        __roles         text,
+		        __permissions   text
+	        )
+	language sql
+	rows 1
+	stable
+as
+$$
+  select tu.user_id,
+		       ui.code,
+		       ui.uuid,
+		       ui.username,
+		       ui.email,
+		       ui.display_name,
+		       ui.password_hash,
+		       null::text,
+		       null::text
+-- 		       upc.groups,
+-- 		       upc.permissions
+		from user_info ui
+			     inner join tenant_user tu on ui.user_id = tu.user_id
+		       inner join tenant t on t.tenant_id = tu.tenant_id
+-- 			     inner join user_permission_cache upc on ui.user_id = upc.user_id
+		where ui.username = _username
+      and t.code = _tenant_code;
 $$;
 
 
@@ -1065,7 +1104,7 @@ as
 $$
 select upc.user_id, array_to_string(upc.groups, ';'), array_to_string(upc.permissions, ';')
 from user_permission_cache upc
-inner join public.tenant t on upc.tenant_id = t.tenant_id
+	     inner join public.tenant t on upc.tenant_id = t.tenant_id
 where t.code = _tenant_code
 	and upc.user_id = _user_id;
 $$;
@@ -1094,13 +1133,17 @@ begin
 	perform unsecure.create_system_user();
 	perform unsecure.create_permission_by_path_as_system('System', _is_assignable := false);
 
-	perform unsecure.create_user_group_as_system('System', true, false);
-	perform unsecure.add_user_to_group_as_system('system', 'System');
-	perform unsecure.create_perm_set_as_system('System', true, _is_assignable := false,
-	                                           _permissions := array ['system']);
-	perform unsecure.assign_user_group_as_system(1, 'system');
+-- 	perform unsecure.create_user_group_as_system('System', true, false);
+-- 	perform unsecure.add_user_to_group_as_system('system', 'System');
+-- 	perform unsecure.create_perm_set_as_system('System', true, _is_assignable := false,
+-- 	                                           _permissions := array ['system']);
+-- 	perform unsecure.assign_user_group_as_system(1, 'system');
 
 	-- UNIQUE FOR THIS DATABASE
+
+  insert into tenant (created_by, modified_by, name, code, is_removable, is_assignable)
+  values ('system', 'system', 'App 1', 'app1', true, true)
+       , ('system', 'system', 'App 2', 'app2', true, true);
 end
 $$;
 
