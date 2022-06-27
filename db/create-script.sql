@@ -1133,11 +1133,13 @@ begin
 	perform unsecure.create_system_user();
 	perform unsecure.create_permission_by_path_as_system('System', _is_assignable := false);
 
--- 	perform unsecure.create_user_group_as_system('System', true, false);
--- 	perform unsecure.add_user_to_group_as_system('system', 'System');
--- 	perform unsecure.create_perm_set_as_system('System', true, _is_assignable := false,
--- 	                                           _permissions := array ['system']);
--- 	perform unsecure.assign_user_group_as_system(1, 'system');
+	perform create_system_tenant();
+
+	perform unsecure.create_user_group_as_system(1, 'System', true, false);
+	perform unsecure.add_user_to_group_as_system('system', 'System');
+	perform unsecure.create_perm_set_as_system(1, 'System', true, _is_assignable := false,
+	                                           _permissions := array ['system']);
+	perform unsecure.assign_user_group_as_system(1, 'system');
 
 	-- UNIQUE FOR THIS DATABASE
 
