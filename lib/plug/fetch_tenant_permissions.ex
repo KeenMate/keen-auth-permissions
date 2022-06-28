@@ -25,12 +25,21 @@ defmodule KeenAuthPermissions.Plug.FetchTenantPermissions do
   end
 
   def load_permissions(db_context, conn, user) do
-    with {:ok, [permissions]} <- db_context.auth_get_tenant_permissions(Config.get_tenant_code_resolver().(conn), user.user_id) do
-      conn
-      |> Storage.put_permissions(String.split(permissions.permissions, ";"))
-      |> Storage.put_groups(String.split(permissions.groups, ";"))
+    case db_context.auth_get_tenant_permissions(Config.get_tenant_code_resolver().(conn), user.user_id) do
+			{:ok, [permissions]} ->
+				store_permissions(permissions.groups, permissions.permissions)
 
-    # todo: handle {:ok, []}
-    end
+			{:ok, []} ->
+				store_permissions()
+
+			error ->
+				error
+		end
   end
+
+	def	store_permissions(conn, groups \\ "", permissions \\ "") do
+		conn
+		|> Storage.put_permissions(String.split(permissions, ";"))
+		|> Storage.put_groups(String.split(groups, ";"))
+	end
 end
