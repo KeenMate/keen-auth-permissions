@@ -30,7 +30,7 @@ defmodule KeenAuthPermissions.Plug.FetchTenantPermissions do
 				store_permissions(permissions.groups, permissions.permissions)
 
 			{:ok, []} ->
-				store_permissions()
+				store_permissions(conn)
 
 			error ->
 				error
