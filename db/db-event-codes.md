@@ -29,4 +29,9 @@
 | 50221  | Group not assignable  |
 | 50231  | Group mapping created  |
 | 50233  | Group mapping deleted  |
+| 50301  | Permission set created |
+| 50302  | Permission set updated |
+| 50303  | Permission set deleted |
+| 50304  | Permission set assigned to group|
+| 50305  | Permission set deleted from group|
 

@@ -228,11 +228,18 @@ create table user_group
     user_group_id int generated always as identity not null primary key,
     tenant_id     int references tenant (tenant_id),
     title         text                             not null,
+    code          text                             not null, -- set with trigger
     is_default    bool                             not null default false,
     is_system     bool                             not null default false,
     is_assignable bool                             not null default true,
     is_active     bool                             not null default true
 ) inherits (_template_timestamps);
+
+create trigger c_user_group_code
+    before insert
+    on user_group
+    for each row
+execute procedure helpers.trg_generate_code_from_title();
 
 create table user_group_mapping
 (
@@ -253,7 +260,7 @@ create table user_group_member
     adhoc_assignment bool                             not null default false
 ) inherits (_template_created);
 
-create unique index uq_user_group_member ON user_group_member (group_id, user_id, mapping_id);
+create unique index uq_user_group_member ON user_group_member (group_id, user_id, coalesce(mapping_id, 0));
 
 create table user_group_assignment
 (
@@ -267,7 +274,7 @@ create unique index uq_user_group_assignment ON user_group_assignment (group_id,
 create table journal
 (
     journal_id     bigint generated always as identity not null,
-    tenant_id      int                                 not null references tenant (tenant_id),
+    tenant_id      int references tenant (tenant_id),
     data_group     text,
     data_object_id bigint,
     event_id       int,
@@ -479,15 +486,14 @@ begin
                                 on p.full_code @> ext.text2ltree(pc.code)
             where (ug.tenant_id = _tenant_id or ug.tenant_id is null)
               and ugm.user_id = _user_id
-              and p
         ) then
         return true;
     end if;
 
     if (_throw_err) then
 
-        perform add_journal_msg('system', _user_id
-            , format('User (id: %s) has no permission: %s'
+        perform add_journal_msg('system', _tenant_id, _user_id
+            , format('User: (id: %s) has no permission: %s'
                                     , _user_id, array_to_string(_perm_codes, '; '))
             , 'perm', _user_id
             , _event_id := 50003);
@@ -507,7 +513,7 @@ create or replace function has_permission(_tenant_id int, _user_id bigint, _perm
 as
 $$
 begin
-    perform has_permission(_tenant_id, _user_id, _perm_code, _throw_err);
+    return has_permissions(_tenant_id, _user_id, array [_perm_code], _throw_err);
 end ;
 $$;
 
@@ -561,44 +567,102 @@ returning *;
 
 $$;
 
-create function unsecure.add_user_to_group_as_system(_tenant_id int, _user_email text, _group_title text)
-    returns setof user_group_member
-    language sql
+create function unsecure.add_user_group_member(_created_by text, _user_id bigint, _tenant_id int, _ug_id int,
+                                               _target_user_id bigint)
+    returns table
+            (
+                __user_group_member_id int
+            )
+    language plpgsql
     rows 1
 as
 $$
-insert into user_group_member(created_by, group_id, user_id)
-select 'system', ug.user_group_id, ui.user_id
-from user_group ug
-         cross join user_info ui
-where ug.tenant_id = _tenant_id
-  and ug.title = _group_title
-  and ui.username = _user_email
-returning *;
+begin
+    return query
+        insert into user_group_member (created_by, group_id, user_id, adhoc_assignment)
+            values (_created_by, _ug_id, _target_user_id, true)
+            returning member_id;
+
+    perform add_journal_msg(_created_by, _tenant_id, _user_id
+        , format('User: %s added new user: %s to group: %s in tenant: %s'
+                                , _created_by, _target_user_id, _ug_id, _tenant_id)
+        , 'group', _ug_id
+        , array ['target_user_id', _target_user_id::text]
+        , 50131);
+end;
 $$;
 
-create function unsecure.create_user_group_as_system(_tenant_id int, _title text
-, _is_system bool default false, _is_assignable bool default true)
-    returns setof user_group
-    language sql
-    rows 1
+create function unsecure.add_user_to_group_as_system(_user_email text, _group_title text, _tenant_id int default null)
+    returns setof user_group_member
+    language plpgsql
+as
+
+$$
+declare
+    __user_id  bigint;
+    __group_id int;
+begin
+    select ui.user_id
+    from user_info ui
+    where ui.username = _user_email
+    into __user_id;
+
+    select user_group_id
+    from user_group ug
+    where lower(ug.title) = lower(_group_title)
+    into __group_id;
+
+    RAISE NOTICE 'Adding user:(%) to group:(%)', __user_id, __group_id;
+
+    return query
+        select ugm.*
+        from unsecure.add_user_group_member('system', 1, _tenant_id, __group_id, __user_id) r
+                 inner join user_group_member ugm on ugm.member_id = r.__user_group_member_id;
+end;
+$$;
+
+create function unsecure.assign_user_group(_created_by text, _user_id bigint, _user_group_id int,
+                                           _perm_set_code text)
+    returns setof user_group_assignment
+    language plpgsql
 as
 $$
-insert into user_group (created_by, modified_by, tenant_id, title, is_system, is_assignable)
-values ('system', 'system', _tenant_id, _title, _is_system, _is_assignable)
-returning *;
+declare
+    __tenant_id int;
+begin
+
+    select tenant_id
+    from user_group ug
+    where ug.user_group_id = _user_group_id
+    into __tenant_id;
+
+    return query
+        insert into user_group_assignment (created_by, group_id, perm_set_id)
+            select 'system', _user_group_id, perm_set_id
+            from auth.perm_set ps
+            where ps.code = _perm_set_code
+            returning *;
+
+    perform add_journal_msg(_created_by, __tenant_id, _user_id
+        , format('User: %s assigned new permission set to group: %s in tenant: %s'
+                                , _created_by, _perm_set_code, __tenant_id)
+        , 'group', _user_group_id
+        , array ['perm_set_code', _perm_set_code]
+        , 50304);
+end;
+
 $$;
 
 create function unsecure.assign_user_group_as_system(_user_group_id int, _perm_set_code text)
-    returns user_group_assignment
-    language sql
+    returns setof user_group_assignment
+    language plpgsql
 as
 $$
-insert into user_group_assignment(created_by, group_id, perm_set_id)
-select 'system', _user_group_id, perm_set_id
-from auth.perm_set ps
-where ps.code = _perm_set_code
-returning *;
+begin
+    return query
+        select * from unsecure.assign_user_group('system', 1, _user_group_id, _perm_set_code);
+end;
+
 $$;
 
 -- create function public.get_tenant_id(_tenant_code text)
@@ -613,7 +677,8 @@ $$;
 -- $$;
 
 create function public.create_tenant(_created_by text, _user_id bigint, _name text, _code text default null,
-                                     _is_removable bool default true, _is_assignable bool default true)
+                                     _is_removable bool default true, _is_assignable bool default true,
+                                     _tenant_owner_id bigint default null)
     returns setof tenant
     language plpgsql
     rows 1
@@ -630,26 +695,32 @@ begin
             _is_assignable)
     returning tenant_id into __last_id;
 
+    perform add_journal_msg(_created_by, __last_id, _user_id
+        , format('User: %s created new tenant: %s'
+                                , _created_by, _name)
+        , 'tenant', __last_id
+        , array ['title', _name]
+        , 50001);
+
     select __group_id
-    from create_user_group(_created_by, _user_id, __last_id, 'Tenant Owner'
-        , true, true)
+    from unsecure.create_user_group(_created_by, _user_id, 'Tenant Owners'
+        , __last_id, true, true, true)
     into __tenant_owner_group_id;
 
-    perform unsecure.assign_user_group_as_system(__tenant_owner_group_id, 'tenant_owner');
+    perform unsecure.assign_user_group(_created_by, _user_id
+        , __tenant_owner_group_id, 'tenant_owner');
+
+    if (_tenant_owner_id is not null) then
+        perform unsecure.add_user_group_member(_created_by, _user_id, __last_id, __tenant_owner_group_id,
+                                               _tenant_owner_id);
+    end if;
 
     return query
         select * from tenant where tenant_id = __last_id;
-
-    perform add_journal_msg(_created_by, 1, _user_id
-        , format('User %s created new tenant: %s'
-                                , _created_by, _name)
-        , 'tenant', __last_id
-        , null
-        , 50001);
 end;
 $$;
 
-create function public.assign_tenant_owner(_created_by text, _user_id bigint, _tenant_id int, _target_user_id int)
+create function public.assign_tenant_owner(_created_by text, _user_id bigint, _tenant_id int, _target_user_id bigint)
     returns setof user_group_member
     language plpgsql
     rows 1
@@ -663,14 +734,17 @@ begin
     select ug.user_group_id
     from user_group ug
     where ug.tenant_id = _tenant_id
-      and title = 'Tenant Owner'
+      and ug.code = 'tenant_owners'
     into __ug_id;
 
     return query
-        select * from add_user_to_group(_created_by, 1, _target_user_id, __ug_id);
+        select ugm.*
+        from unsecure.add_user_group_member(_created_by, _user_id
+                 , _tenant_id, __ug_id, _target_user_id) r
+                 inner join user_group_member ugm on ugm.member_id = r.__user_group_member_id;
 
-    perform add_journal_msg(_created_by, 1, _user_id
-        , format('User %s assigned new owner: %s to tenant: %s'
+    perform add_journal_msg(_created_by, _tenant_id, _user_id
+        , format('User: %s assigned new owner: %s to tenant: %s'
                                 , _created_by, _target_user_id, _tenant_id)
         , 'tenant', _tenant_id
         , array ['target_user_id', _target_user_id::text]
@@ -678,8 +752,57 @@ begin
 end;
 $$;
 
-create function public.create_user_group(_created_by text, _user_id bigint, _tenant_id int, _title text,
-                                         _is_assignable bool, _is_active bool)
+create function unsecure.create_user_group(_created_by text, _user_id bigint, _title text
+    , _tenant_id int default null, _is_assignable bool default true, _is_active bool default true,
+                                           _is_system bool default false, _is_default bool default false)
+    returns table
+            (
+                __group_id int
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __last_id int;
+begin
+    insert into user_group (created_by, modified_by, tenant_id, title, is_default, is_system, is_assignable,
+                            is_active)
+    values (_created_by, _created_by, _tenant_id, _title, _is_default, _is_system, _is_assignable, _is_active)
+    returning user_group_id into __last_id;
+
+    return query
+        select __last_id;
+
+    perform add_journal_msg(_created_by, _tenant_id, _user_id
+        , format('User: %s added new group: %s in tenant: %s'
+                                , _created_by, _title, _tenant_id)
+        , 'group', __last_id
+        ,
+                            array ['title', _title, 'is_default', _is_default::text
+                                , 'is_system', _is_system::text
+                                , 'is_assignable', _is_assignable::text
+                                , 'is_active', _is_active::text]
+        , 50201);
+
+end ;
+$$;
+
+create function unsecure.create_user_group_as_system(_tenant_id int, _title text
+, _is_system bool default false, _is_assignable bool default true)
+    returns setof user_group
+    language sql
+    rows 1
+as
+$$
+select ug.*
+from unsecure.create_user_group('system', 1, _title, _tenant_id, _is_assignable, true, _is_system) g
+         inner join user_group ug on ug.user_group_id = g.__group_id ;
+
+$$;
+
+create function public.create_user_group(_created_by text, _user_id bigint, _title text, _tenant_id int,
+                                         _is_assignable bool default true, _is_active bool default true)
     returns table
             (
                 __group_id int
@@ -689,14 +812,15 @@ create function public.create_user_group(_created_by text, _user_id bigint, _ten
 as
 $$
 begin
-    perform has_permission(_tenant_id, _user_id, 'system.manage_groups.create_group');
+    perform has_permissions(_tenant_id, _user_id,
+                           array ['system.manage_groups.create_group']);
 
     return query
-        insert into user_group (created_by, modified_by, tenant_id, title, is_default, is_system, is_assignable,
-                                is_active)
-            values (_created_by, _created_by, _tenant_id, _title, false, false, _is_assignable, _is_active)
-            returning user_group_id;
-end;
+        select *
+        from unsecure.create_user_group(_created_by, _user_id, _title, _tenant_id
+            , _is_assignable, _is_active, false,
+                                        false);
+end ;
 $$;
 
 create function public.update_user_group(_user_id bigint, _modified_by text, _tenant_id int, _ug_id int, _title text,
@@ -750,7 +874,7 @@ begin
 end;
 $$;
 
-create function public.add_user_group_member(_user_id bigint, _created_by text, _tenant_id int, _ug_id int,
+create function public.add_user_group_member(_created_by text, _user_id bigint, _tenant_id int, _ug_id int,
                                              _target_user_id int)
     returns table
             (
@@ -764,16 +888,7 @@ begin
     perform has_permission(_tenant_id, _user_id, 'system.manage_groups.add_member');
 
     return query
-        insert into user_group_member (created_by, group_id, user_id, adhoc_assignment)
-            values (_created_by, _ug_id, _target_user_id, true)
-            returning member_id;
-
-    perform add_journal_msg(_created_by, _tenant_id, _user_id
-        , format('User %s added new user: %s to group: %s in tenant: %s'
-                                , _created_by, _target_user_id, _ug_id, _tenant_id)
-        , 'group', _ug_id
-        , array ['target_user_id', _target_user_id::text]
-        , 50131);
+        select * from unsecure.add_user_group_member(_created_by, _user_id, _tenant_id, _ug_id, _target_user_id);
 end;
 $$;
 
@@ -795,7 +910,7 @@ begin
     returning user_id into __target_user_id;
 
     perform add_journal_msg(_deleted_by, _tenant_id, _user_id
-        , format('User %s removed user: %s from group: %s in tenant: %s'
+        , format('User: %s removed user: %s from group: %s in tenant: %s'
                                 , _deleted_by, __target_user_id, _ug_id, _tenant_id)
         , 'group', _ug_id
         , array ['target_user_id', __target_user_id::text]
@@ -823,7 +938,7 @@ begin
             returning ug_mapping_id;
 
     perform add_journal_msg(_created_by, _tenant_id, _user_id
-        , format('User %s added new mapping: %s to group: %s in tenant: %s'
+        , format('User: %s added new mapping: %s to group: %s in tenant: %s'
                                 , _created_by, _mapped_object_name, _ug_id, _tenant_id)
         , 'group', _ug_id
         , array ['mapped_object_id', _mapped_object_id::text, 'mapped_object_name', _mapped_object_name]
@@ -851,7 +966,7 @@ begin
 
 
     perform add_journal_msg(_deleted_by, _tenant_id, _user_id
-        , format('User %s removed group mapping: %s from group: %s in tenant: %s'
+        , format('User: %s removed group mapping: %s from group: %s in tenant: %s'
                                 , _deleted_by, __mapped_object_name, _ug_id, _tenant_id)
         , 'group', _ug_id
         , array ['mapped_object_id', __mapped_object_id::text, 'mapped_object_name', __mapped_object_name]
@@ -1216,7 +1331,7 @@ begin
     into __tenant_id, __is_system, __is_assignable, __is_active;
 
     if __is_system or not __is_assignable or not __is_active then
-        raise exception 'User group (group id: %) is either system group or is not assignable or active'
+        raise exception 'User: group (group id: %) is either system group or is not assignable or active'
             , _group_id
             using errcode = 50221;
     end if;
@@ -1545,7 +1660,7 @@ begin
     perform unsecure.create_system_tenant();
 
     perform unsecure.create_user_group_as_system(1, 'System', true, false);
-    perform unsecure.add_user_to_group_as_system(1, 'system', 'System');
+    perform unsecure.add_user_to_group_as_system('system', 'System', 1);
     perform unsecure.create_perm_set_as_system('System', 1, true, _is_assignable := false,
                                                _permissions := array ['system']);
     perform unsecure.assign_user_group_as_system(1, 'system');
@@ -1566,6 +1681,9 @@ begin
     perform unsecure.create_permission_by_path_as_system('Delete mapping', 'system.manage_groups');
 
 
+    perform unsecure.create_perm_set_as_system('Tenant creator', 1, true, _is_assignable := true,
+                                               _permissions := array ['system.manage_tenants.tenant_creator']);
+
     perform unsecure.create_perm_set_as_system('Tenant admin', 1, true, _is_assignable := true,
                                                _permissions := array ['system.manage_tenants']);
 
@@ -1580,9 +1698,9 @@ begin
 
     -- UNIQUE FOR THIS DATABASE
 
-    insert into tenant (created_by, modified_by, name, code, is_removable, is_assignable)
-    values ('system', 'system', 'App 1', 'app1', true, true)
-         , ('system', 'system', 'App 2', 'app2', true, true);
+--     insert into tenant (created_by, modified_by, name, code, is_removable, is_assignable)
+--     values ('system', 'system', 'App 1', 'app1', true, true)
+--          , ('system', 'system', 'App 2', 'app2', true, true);
 end
 $$;
 
@@ -1612,5 +1730,5 @@ grant usage on schema ext, auth, helpers to keen_auth_sample;
 select *
 from load_initial_data();
 
-select version();
+select now(), version();
 
