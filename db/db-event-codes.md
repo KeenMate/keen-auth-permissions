@@ -26,7 +26,10 @@
 | 50201  | Group created  |
 | 50202  | Group updated  |
 | 50203  | Group deleted  |
-| 50221  | Group not assignable  |
+| 50204  | Group enabled  |
+| 50205  | Group disabled  |
+| 50206  | Group unlocked  |
+| 50207  | Group locked  |
 | 50231  | Group mapping created  |
 | 50233  | Group mapping deleted  |
 | 50301  | Permission set created |
@@ -35,3 +38,10 @@
 | 50304  | Permission set assigned to group|
 | 50305  | Permission set deleted from group|
 
+## Security Error codes
+| Event code  | Description |
+| ------------- | ------------- |
+| 52171  | User group not found  |
+| 52172  | User cannot be added to group because the group is not active  |
+| 52173  | User cannot be added to group because it's either not assignable or an external group  |
+| 52271  | User group cannot be deleted because it's a system group  |

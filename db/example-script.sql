@@ -19,6 +19,11 @@ from auth.ensure_user_from_provider(_created_by := 'system', _provider := 'aad',
                                     _email := 'jan.rada@keenmate.com', _user_data := null);
 
 select *
+from auth.ensure_user_from_provider(_created_by := 'system', _provider := 'email', _provider_uid := 'lucie.novakova@keenmate.com',
+                                    _username := 'lucie.novakova@keenmate.com', _display_name := 'Lucie Novakova',
+                                    _email := 'lucie.novakova@keenmate.com', _user_data := null);
+
+select *
 from unsecure.add_user_to_group_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
 
 select *
@@ -29,7 +34,7 @@ from assign_tenant_owner('ondrej.valenta', 2, 2, 4);
 
 select * from create_user_group('filip.jakab', 4, 'Our customers', 2);
 
-select * from add_user_group_member('albert.moravec', 3, 2, 4, 5);
+select * from auth.add_user_group_member('albert.moravec', 3, 2, 4, 5);
 
 select *
 from create_tenant('ondrej.valenta', 2, 'Jan Rada');
