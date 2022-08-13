@@ -135,14 +135,16 @@ create table tenant
 
 create table user_info
 (
-    user_id       bigint generated always as identity not null primary key,
-    code          text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
-    uuid          uuid                                not null default ext.uuid_generate_v4(),      -- if you need this kind of identifier, it's ready for you
-    can_login     bool                                not null default true,
-    username      text                                not null check (length(username) <= 255 ),
-    email         text check (length(email) <= 255 ),
-    display_name  text                                not null check (length(display_name) <= 255 ),
-    password_hash text
+    user_id      bigint generated always as identity not null primary key,
+    code         text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
+    uuid         uuid                                not null default ext.uuid_generate_v4(),      -- if you need this kind of identifier, it's ready for you
+    can_login    bool                                not null default true,
+    username     text                                not null check (length(username) <= 255 ),
+    email        text check (length(email) <= 255 ),
+    display_name text                                not null check (length(display_name) <= 255 ),
+    is_system    bool                                not null default false,
+    is_active    bool                                not null default true,
+    is_locked    bool                                not null default false
 ) inherits (_template_timestamps);
 
 create unique index uq_user_info on user_info (email);
@@ -181,10 +183,11 @@ create table user_identity
     provider         text                                not null,
     uid              text,
     user_id          bigint references user_info (user_id) on delete cascade,
-    user_data        jsonb
+    user_data        jsonb,
+    password_hash    text
 ) inherits (_template_timestamps);
 
-create unique index uq_user_identity on user_identity (uid, provider);
+create unique index uq_user_identity on user_identity (provider, uid);
 
 create table auth.permission
 (
@@ -537,23 +540,10 @@ create function unsecure.create_system_user()
     rows 1
 as
 $$
-insert into user_info(created_by, modified_by, can_login, email, display_name, username, password_hash)
-values ('initial_script', 'initial_script', false, 'system', 'System', 'system', '-1')
+insert into user_info(created_by, modified_by, can_login, email, display_name, username)
+values ('initial_script', 'initial_script', false, 'system', 'System', 'system')
 returning *;
 
-$$;
-
-create function unsecure.create_user_as_system(_email text, _display_name text, _username text,
-                                               _password_hash text,
-                                               _can_login bool default true)
-    returns setof user_info
-    language sql
-    rows 1
-as
-$$
-insert into user_info (created_by, modified_by, can_login, email, display_name, username, password_hash)
-values ('initial_script', 'initial_script', _can_login, _email, _display_name, _username, _password_hash)
-returning *;
 $$;
 
 create function unsecure.delete_user_by_username_as_system(_username text)
@@ -1568,9 +1558,9 @@ end;
 $$;
 
 
--- for email authentication where there is no provider
-create or replace function public.register_user(_tenant_id int, _username text, _password_hash text, _email text,
-                                                _display_name text, _user_data text)
+-- for email authentication
+create or replace function auth.register_user(_user_id int, _email text, _password_hash text,
+                                              _display_name text, _user_data text)
     returns table
             (
                 __user_id      bigint,
@@ -1585,32 +1575,32 @@ create or replace function public.register_user(_tenant_id int, _username text, 
 as
 $$
 declare
-    __new_user user_info;
+    __normalized_email text;
+    __new_user         user_info;
 begin
-    -- 	if exists(
--- 		select tu.user_id
--- 		from tenant_user tu
--- 		       inner join public.tenant t on t.tenant_id = tu.tenant_id
--- 			     inner join user_info ui on ui.user_id = tu.user_id
--- 		where t.code = _tenant_code
--- 			and ui.username = _username
--- 		) then
--- 		raise exception 'User(username: %) already exists in tenant(code: %)', _username, _tenant_code
--- 			using errcode = 50100;
--- 	end if;
 
-    insert into user_info (created_by, modified_by, can_login, username, email, display_name, password_hash)
-    values (_username, _username, true, _username, _email, _display_name, _password_hash)
+    perform auth.has_permission(null, _user_id, 'system.users.register_user');
+
+    __normalized_email := lower(trim(_email));
+
+    if exists(
+            select
+            from user_identity ui
+            where ui.provider = 'email'
+              and ui.uid = lower(__normalized_email)
+        ) then
+        raise exception 'User identity (uid: %) is already in use', __normalized_email
+            using errcode = 52102;
+    end if;
+
+    insert into user_info (created_by, modified_by, can_login, username, email, display_name)
+    values (__normalized_email, __normalized_email, true, __normalized_email, __normalized_email, _display_name)
     returning * into __new_user;
 
-    insert into user_identity(created_by, modified_by, provider, uid, user_id)
-    values (_username, _username, 'email', __new_user.user_id, __new_user.user_id);
+    insert into user_identity(created_by, modified_by, provider, uid, user_id, password_hash)
+    values (__normalized_email, __normalized_email, 'email', __normalized_email, __new_user.user_id, _password_hash);
 
-    with t as (select * from tenant where tenant_id = _tenant_id)
-    insert
-    into tenant_user (created_by, tenant_id, user_id)
-    select _username, t.tenant_id, __new_user.user_id
-    from t;
+    perform auth.update_user_data(_email, _user_id, __new_user.user_id, 'email', _user_data);
 
     return query
         select __new_user.user_id
@@ -1622,43 +1612,44 @@ begin
 -- 		from __new_user;
 end;
 $$;
+--
 
-create or replace function public.get_user_verification(_tenant_id int, _username text)
-    returns table
-            (
-                __user_id       bigint,
-                __code          text,
-                __uuid          text,
-                __username      text,
-                __email         text,
-                __display_name  text,
-                __password_hash text,
-                __roles         text,
-                __permissions   text
-            )
-    language sql
-    rows 1
-    stable
-as
-$$
-select tu.user_id,
-       ui.code,
-       ui.uuid,
-       ui.username,
-       ui.email,
-       ui.display_name,
-       ui.password_hash,
-       null::text,
-       null::text
--- 		       upc.groups,
--- 		       upc.permissions
-from user_info ui
-         inner join tenant_user tu on ui.user_id = tu.user_id
-         inner join tenant t on t.tenant_id = tu.tenant_id
--- 			     inner join user_permission_cache upc on ui.user_id = upc.user_id
-where ui.username = _username
-  and t.tenant_id = _tenant_id;
-$$;
+-- create or replace function public.get_user_verification(_tenant_id int, _username text)
+--     returns table
+--             (
+--                 __user_id       bigint,
+--                 __code          text,
+--                 __uuid          text,
+--                 __username      text,
+--                 __email         text,
+--                 __display_name  text,
+--                 __password_hash text,
+--                 __roles         text,
+--                 __permissions   text
+--             )
+--     language sql
+--     rows 1
+--     stable
+-- as
+-- $$
+-- select tu.user_id,
+--        ui.code,
+--        ui.uuid,
+--        ui.username,
+--        ui.email,
+--        ui.display_name,
+--        ui.password_hash,
+--        null::text,
+--        null::text
+-- -- 		       upc.groups,
+-- -- 		       upc.permissions
+-- from user_info ui
+--          inner join tenant_user tu on ui.user_id = tu.user_id
+--          inner join tenant t on t.tenant_id = tu.tenant_id
+-- -- 			     inner join user_permission_cache upc on ui.user_id = upc.user_id
+-- where ui.username = _username
+--   and t.tenant_id = _tenant_id;
+-- $$;
 
 
 create function get_user_by_username(_tenant_id int, _username text)
@@ -1704,6 +1695,72 @@ end;
 
 $$;
 
+
+-- WARNING: returns password hash, do not use for anything else than authentication, SYSTEM account is the only one with proper permission
+create function auth.get_user_by_email_for_authentication(_user_id int, _email text)
+    returns table
+            (
+                __user_id       bigint,
+                __code          text,
+                __uuid          text,
+                __username      text,
+                __email         text,
+                __display_name  text,
+                __provider      text,
+                __password_hash text
+            )
+    language plpgsql
+as
+$$
+declare
+    __normalized_email text;
+    __is_active        bool;
+    __is_locked        bool;
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.authentication.get_data');
+
+    __normalized_email := lower(trim(_email));
+
+    select ui.is_active, ui.is_locked
+    from user_identity uid
+             inner join user_info ui on uid.user_id = ui.user_id
+    where uid.provider = 'email'
+      and uid.uid = __normalized_email
+    into __is_active, __is_locked;
+
+    if __is_active is null then
+        raise exception 'User identity (uid: %) does not exist', __normalized_email
+            using errcode = 52103;
+    end if;
+
+    if not __is_active then
+        raise exception 'User (email: %) is not in active state', __normalized_email
+            using errcode = 52105;
+    end if;
+
+    if __is_locked then
+        raise exception 'User (email: %) is locked out', __normalized_email
+            using errcode = 52106;
+    end if;
+
+    return query
+        select ui.user_id,
+               ui.code,
+               ui.uuid::text,
+               ui.username,
+               ui.email,
+               ui.display_name,
+               'email',
+               uid.password_hash
+        from user_identity uid
+                 inner join user_info ui on uid.user_id = ui.user_id
+        where uid.provider = 'email'
+          and uid.uid = __normalized_email;
+end;
+
+$$;
+
 -- for external authentication provider flows
 create or replace function auth.ensure_user_from_provider(_created_by text, _provider text, _provider_uid text,
                                                           _username text,
@@ -1724,6 +1781,11 @@ $$
 declare
     __last_id bigint;
 begin
+
+    if lower(_provider) = 'email' then
+        raise exception 'User (username: %) cannot be ensured for email provider, use registration for that', _username
+            using errcode = 52101;
+    end if;
 
     if not exists(select
                   from user_identity uid
@@ -1753,7 +1815,8 @@ begin
 end;
 $$;
 
-create function auth.update_user_data(_created_by text, _user_id bigint, _provider text, _user_data jsonb)
+create function auth.update_user_data(_modified_by text, _user_id bigint, _target_user_id bigint, _provider text,
+                                      _user_data text)
     returns table
             (
                 __user_id      bigint,
@@ -1763,6 +1826,11 @@ create function auth.update_user_data(_created_by text, _user_id bigint, _provid
 as
 $$
 begin
+
+    if __user_id <> _target_user_id then
+        perform auth.has_permission(null, _user_id, 'system.users.update_user');
+    end if;
+
 
 end;
 $$;
@@ -1888,6 +1956,12 @@ begin
                                                _permissions := array ['system']);
     perform unsecure.assign_user_group_as_system(1, 'system');
 
+    perform unsecure.create_permission_by_path_as_system('Authentication', 'system');
+    perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
+
+    perform unsecure.create_permission_by_path_as_system('Users', 'system');
+    perform unsecure.create_permission_by_path_as_system('Register user', 'system.users');
+
     perform unsecure.create_permission_by_path_as_system('Manage tenants', 'system');
     perform unsecure.create_permission_by_path_as_system('Create tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Update tenant', 'system.manage_tenants');
@@ -1899,7 +1973,6 @@ begin
     perform unsecure.create_permission_by_path_as_system('Delete group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create member', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete member', 'system.manage_groups');
-
     perform unsecure.create_permission_by_path_as_system('Create mapping', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete mapping', 'system.manage_groups');
 

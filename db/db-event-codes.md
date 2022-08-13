@@ -41,7 +41,14 @@
 ## Security Error codes
 | Event code  | Description |
 | ------------- | ------------- |
+| 52101  | Cannot ensure user for email provider |
+| 52102  | User cannot register user because the identity is already in use  |
+| 52103  | User does not exist  |
+| 52104  | User is a system user  |
+| 52105  | User is in inactive state  |
+| 52106  | User is locked  |
 | 52171  | User group not found  |
 | 52172  | User cannot be added to group because the group is not active  |
 | 52173  | User cannot be added to group because it's either not assignable or an external group  |
 | 52271  | User group cannot be deleted because it's a system group  |
+
