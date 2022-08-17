@@ -16,6 +16,12 @@
 | 50002  | Tenant updated  |
 | 50003  | Tenant deleted  |
 | 50004  | Assign tenant owner  |
+| 50011  | Provider created |
+| 50012  | Provider updated  |
+| 50013  | Provider deleted  |
+| 50014  | Provider enabled |
+| 50015  | Provider disabled |
+| 50016  | Get provider users |
 | 50101  | User created  |
 | 50102  | User updated  |
 | 50103  | User deleted  |
@@ -47,6 +53,7 @@
 | 52104  | User is a system user  |
 | 52105  | User is in inactive state  |
 | 52106  | User is locked  |
+| 52107  | Provider is not active |
 | 52171  | User group not found  |
 | 52172  | User cannot be added to group because the group is not active  |
 | 52173  | User cannot be added to group because it's either not assignable or an external group  |

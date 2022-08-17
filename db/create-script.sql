@@ -123,6 +123,14 @@ $$;
  *
  */
 
+create table auth.provider
+(
+    provider_id int generated always as identity not null primary key,
+    code        text                             not null unique,
+    name        text                             not null,
+    is_active   bool                             not null default true
+);
+
 create table tenant
 (
     tenant_id     int generated always as identity not null primary key,
@@ -180,14 +188,15 @@ create table user_data
 create table user_identity
 (
     user_identity_id bigint generated always as identity not null primary key,
-    provider         text                                not null,
+    provider_code    text                                not null references auth.provider (code) on update cascade on delete cascade,
     uid              text,
     user_id          bigint references user_info (user_id) on delete cascade,
     user_data        jsonb,
-    password_hash    text
+    password_hash    text,
+    password_salt    text
 ) inherits (_template_timestamps);
 
-create unique index uq_user_identity on user_identity (provider, uid);
+create unique index uq_user_identity on user_identity (provider_code, uid);
 
 create table auth.permission
 (
@@ -215,7 +224,7 @@ create table auth.perm_set
 
 create trigger c_perm_set_code
     before insert
-    on perm_set
+    on auth.perm_set
     for each row
 execute procedure helpers.trg_generate_code_from_title();
 
@@ -249,11 +258,15 @@ create table user_group_mapping
 (
     ug_mapping_id      int generated always as identity not null primary key,
     group_id           int                              not null references user_group (user_group_id),
-    mapped_object_id   text                             not null,
-    mapped_object_name text                             not null
+    provider_code      text                             not null references auth.provider (code) on update cascade on delete cascade,
+    mapped_object_id   text,
+    mapped_object_name text,
+    mapped_role        text
 ) inherits (_template_created);
 
-create unique index uq_user_group_mapping on user_group_mapping (group_id, mapped_object_id);
+create unique index uq_user_group_mapping on user_group_mapping (group_id, provider_code,
+                                                                 coalesce(mapped_object_id, ''),
+                                                                 coalesce(mapped_role, ''));
 
 create table user_group_member
 (
@@ -270,7 +283,7 @@ create table user_group_assignment
 (
     uga_id      int generated always as identity not null primary key,
     group_id    int                              not null references user_group (user_group_id),
-    perm_set_id int                              not null references perm_set (perm_set_id)
+    perm_set_id int                              not null references auth.perm_set (perm_set_id)
 ) inherits (_template_created);
 
 create unique index uq_user_group_assignment ON user_group_assignment (group_id, perm_set_id);
@@ -558,15 +571,233 @@ returning *;
 
 $$;
 
+create function auth.validate_provider_is_active(_provider_code text)
+    returns void
+    language plpgsql
+as
+$$
+begin
+    if exists(select from provider where code = _provider_code and is_active = false) then
+        raise exception 'Provider (provider code: %) is not active', _provider_code
+            using errcode = 52107;
+    end if;
+end;
+$$;
+
 
 /***
- *     ######   ########   #######  ##     ## ########   ######
- *    ##    ##  ##     ## ##     ## ##     ## ##     ## ##    ##
- *    ##        ##     ## ##     ## ##     ## ##     ## ##
- *    ##   #### ########  ##     ## ##     ## ########   ######
- *    ##    ##  ##   ##   ##     ## ##     ## ##              ##
- *    ##    ##  ##    ##  ##     ## ##     ## ##        ##    ##
- *     ######   ##     ##  #######   #######  ##         ######
+ *    ██████╗ ██████╗  ██████╗ ██╗   ██╗██╗██████╗ ███████╗██████╗ ███████╗
+ *    ██╔══██╗██╔══██╗██╔═══██╗██║   ██║██║██╔══██╗██╔════╝██╔══██╗██╔════╝
+ *    ██████╔╝██████╔╝██║   ██║██║   ██║██║██║  ██║█████╗  ██████╔╝███████╗
+ *    ██╔═══╝ ██╔══██╗██║   ██║╚██╗ ██╔╝██║██║  ██║██╔══╝  ██╔══██╗╚════██║
+ *    ██║     ██║  ██║╚██████╔╝ ╚████╔╝ ██║██████╔╝███████╗██║  ██║███████║
+ *    ╚═╝     ╚═╝  ╚═╝ ╚═════╝   ╚═══╝  ╚═╝╚═════╝ ╚══════╝╚═╝  ╚═╝╚══════╝
+ *
+ */
+
+
+create function auth.create_provider(_created_by text, _user_id bigint, _provider_code text, _provider_name text,
+                                     _is_active bool default true)
+    returns table
+            (
+                __provider_id int
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __last_id int;
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.providers.create_provider');
+
+    insert into provider (code, name, is_active)
+    values (_provider_code, _provider_name, _is_active)
+    returning provider_id into __last_id;
+
+    return query
+        select __last_id;
+
+    perform add_journal_msg(_created_by, null, _user_id
+        , format('User: %s created new authentication provider: %s'
+                                , _created_by, _provider_name)
+        , 'provider', __last_id
+        , array ['provider_code', _provider_code, 'provider_name', _provider_name, 'is_active', _is_active::text]
+        , 50011);
+end;
+$$;
+
+create function auth.update_provider(_modified_by text, _user_id bigint, _provider_id int, _provider_code text,
+                                     _provider_name text,
+                                     _is_active bool default true)
+    returns table
+            (
+                __provider_id int
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.providers.update_provider');
+
+    return query
+        update provider
+            set code = _provider_code,
+                name = _provider_name,
+                is_active = _is_active
+            where provider_id = _provider_id
+            returning provider_id;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s updated authentication provider: %s'
+                                , _modified_by, _provider_name)
+        , 'provider', _provider_id
+        , array ['provider_code', _provider_code, 'provider_name', _provider_name, 'is_active', _is_active::text]
+        , 50012);
+end;
+$$;
+
+create function auth.delete_provider(_deleted_by text, _user_id bigint, _provider_code text)
+    returns table
+            (
+                __user_id      bigint,
+                __username     text,
+                __display_name text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __provider_id int;
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.providers.delete_provider');
+
+    return query
+        delete from auth.provider where code = _provider_code
+            returning __provider_id;
+
+    perform add_journal_msg(_deleted_by, null, _user_id
+        , format('User: %s deleted authentication provider: %s'
+                                , _deleted_by, _provider_code)
+        , 'provider', __provider_id
+        , null
+        , 50013);
+end;
+$$;
+
+create function auth.get_users_by_provider(_requested_user text, _user_id bigint, _provider_code text)
+    returns table
+            (
+                __user_id          bigint,
+                __user_identity_id bigint,
+                __username         text,
+                __display_name     text
+            )
+    language plpgsql
+as
+$$
+declare
+    __provider_id int;
+begin
+    perform auth.has_permission(null, _user_id, 'system.providers.get_users');
+
+    select provider_id
+    from provider
+    where code = _provider_code
+    into __provider_id;
+
+    return query
+        select ui.user_id, uid.user_identity_id, ui.username, ui.display_name
+        from user_identity uid
+                 inner join user_info ui on uid.user_id = ui.user_id
+        where uid.provider_code = _provider_code
+        order by ui.display_name;
+
+    perform add_journal_msg(_requested_user, null, _user_id
+        , format('User: %s requested a list of all users for authentication provider: %s'
+                                , _requested_user, _provider_code)
+        , 'provider', __provider_id
+        , null
+        , 50016);
+end;
+$$;
+
+
+create function auth.enable_provider(_modified_by text, _user_id bigint, _provider_code text)
+    returns table
+            (
+                __provider_id int
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __provider_id int;
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.providers.update_provider');
+
+    return query
+        update provider
+            set is_active = true
+            where code = _provider_code
+            returning provider_id;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s enabled authentication provider: %s'
+                                , _modified_by, _provider_code)
+        , 'provider', __provider_id
+        , null
+        , 50014);
+end;
+$$;
+
+create function auth.disable_provider(_modified_by text, _user_id bigint, _provider_code text)
+    returns table
+            (
+                __provider_id int
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __provider_id int;
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.providers.update_provider');
+
+    return query
+        update provider
+            set is_active = false
+            where code = _provider_code
+            returning provider_id;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s disabled authentication provider: %s'
+                                , _modified_by, _provider_code)
+        , 'provider', __provider_id
+        , null
+        , 50015);
+end;
+$$;
+
+
+/***
+ *     ██████╗ ██████╗  ██████╗ ██╗   ██╗██████╗ ███████╗
+ *    ██╔════╝ ██╔══██╗██╔═══██╗██║   ██║██╔══██╗██╔════╝
+ *    ██║  ███╗██████╔╝██║   ██║██║   ██║██████╔╝███████╗
+ *    ██║   ██║██╔══██╗██║   ██║██║   ██║██╔═══╝ ╚════██║
+ *    ╚██████╔╝██║  ██║╚██████╔╝╚██████╔╝██║     ███████║
+ *     ╚═════╝ ╚═╝  ╚═╝ ╚═════╝  ╚═════╝ ╚═╝     ╚══════╝
+ *
  */
 
 
@@ -764,6 +995,7 @@ $$
 declare
     __last_id int;
 begin
+
     insert into user_group (created_by, modified_by, tenant_id, title, is_default, is_system, is_assignable,
                             is_active)
     values (_created_by, _created_by, _tenant_id, _title, _is_default, _is_system, _is_assignable, _is_active)
@@ -1093,7 +1325,9 @@ end;
 $$;
 
 create function auth.add_user_group_mapping(_user_id bigint, _created_by text, _tenant_id int, _user_group_id int,
-                                            _mapped_object_id text, _mapped_object_name text)
+                                            _provider_code text,
+                                            _mapped_object_id text default null, _mapped_object_name text default null,
+                                            _mapped_role text default null)
     returns table
             (
                 __ug_mapping_id int
@@ -1119,15 +1353,18 @@ begin
     end if;
 
     return query
-        insert into user_group_mapping (created_by, group_id, mapped_object_id, mapped_object_name)
-            values (_created_by, _user_group_id, _mapped_object_id, _mapped_object_name)
+        insert into user_group_mapping (created_by, group_id, provider_code, mapped_object_id, mapped_object_name,
+                                        mapped_role)
+            values (_created_by, _user_group_id, _provider_code, _mapped_object_id, _mapped_object_name, _mapped_role)
             returning ug_mapping_id;
 
     perform add_journal_msg(_created_by, _tenant_id, _user_id
-        , format('User: %s added new mapping: %s to group: %s in tenant: %s'
-                                , _created_by, _mapped_object_name, _user_group_id, _tenant_id)
+        , format('User: %s added new provider: %s mapping: %s to group: %s in tenant: %s'
+                                , _created_by, _provider_code, coalesce(_mapped_object_id, _mapped_role),
+                 _user_group_id, _tenant_id)
         , 'group', _user_group_id
-        , array ['mapped_object_id', _mapped_object_id::text, 'mapped_object_name', _mapped_object_name]
+        ,
+                            array ['mapped_object_id', _mapped_object_id::text, 'mapped_object_name', _mapped_object_name, '_mapped_role', _mapped_role]
         , 50231);
 end;
 $$;
@@ -1227,7 +1464,7 @@ $$;
  *    ##        ######## ##     ## ##     ## ####  ######   ######  ####  #######  ##    ##  ######
  */
 
-create function unsecure.update_permission_full_title(_perm_path ext.ltree) returns SETOF permission
+create function unsecure.update_permission_full_title(_perm_path ext.ltree) returns SETOF auth.permission
     language sql
     rows 1
 as
@@ -1251,7 +1488,7 @@ where p.node_path <@ _perm_path
 returning *;
 $$;
 
-create function unsecure.update_permission_full_code(_perm_path ext.ltree) returns SETOF permission
+create function unsecure.update_permission_full_code(_perm_path ext.ltree) returns SETOF auth.permission
     language sql
     rows 1
 as
@@ -1532,10 +1769,10 @@ begin
          groups as (select distinct ps.perm_set_id, ps.code
                     from users_groups ug
                              inner join user_group_assignment uga on ug.group_id = uga.group_id
-                             inner join perm_set ps on uga.perm_set_id = ps.perm_set_id),
+                             inner join auth.perm_set ps on uga.perm_set_id = ps.perm_set_id),
          user_permissions as (select sp.full_code
                               from groups r
-                                       inner join perm_set_perm psp on r.perm_set_id = psp.perm_set_id
+                                       inner join auth.perm_set_perm psp on r.perm_set_id = psp.perm_set_id
                                        join auth.permission p on psp.permission_id = p.permission_id
                                        inner join auth.permission sp on sp.node_path <@ p.node_path
                               order by sp.full_code)
@@ -1547,7 +1784,7 @@ begin
 
 
     return query
-        update user_permission_cache upc
+        update auth.user_permission_cache upc
             set modified = now(),
                 groups = coalesce(__gs, array []::text[]),
                 permissions = coalesce(__ps, array []::text[])
@@ -1579,14 +1816,16 @@ declare
     __new_user         user_info;
 begin
 
-    perform auth.has_permission(null, _user_id, 'system.users.register_user');
+    perform auth.has_permission(null, _user_id, 'system.manage_users.register_user');
+
+    perform auth.validate_provider_is_active('email');
 
     __normalized_email := lower(trim(_email));
 
     if exists(
             select
             from user_identity ui
-            where ui.provider = 'email'
+            where ui.provider_code = 'email'
               and ui.uid = lower(__normalized_email)
         ) then
         raise exception 'User identity (uid: %) is already in use', __normalized_email
@@ -1597,7 +1836,7 @@ begin
     values (__normalized_email, __normalized_email, true, __normalized_email, __normalized_email, _display_name)
     returning * into __new_user;
 
-    insert into user_identity(created_by, modified_by, provider, uid, user_id, password_hash)
+    insert into user_identity(created_by, modified_by, provider_code, uid, user_id, password_hash)
     values (__normalized_email, __normalized_email, 'email', __normalized_email, __new_user.user_id, _password_hash);
 
     perform auth.update_user_data(_email, _user_id, __new_user.user_id, 'email', _user_data);
@@ -1612,45 +1851,6 @@ begin
 -- 		from __new_user;
 end;
 $$;
---
-
--- create or replace function public.get_user_verification(_tenant_id int, _username text)
---     returns table
---             (
---                 __user_id       bigint,
---                 __code          text,
---                 __uuid          text,
---                 __username      text,
---                 __email         text,
---                 __display_name  text,
---                 __password_hash text,
---                 __roles         text,
---                 __permissions   text
---             )
---     language sql
---     rows 1
---     stable
--- as
--- $$
--- select tu.user_id,
---        ui.code,
---        ui.uuid,
---        ui.username,
---        ui.email,
---        ui.display_name,
---        ui.password_hash,
---        null::text,
---        null::text
--- -- 		       upc.groups,
--- -- 		       upc.permissions
--- from user_info ui
---          inner join tenant_user tu on ui.user_id = tu.user_id
---          inner join tenant t on t.tenant_id = tu.tenant_id
--- -- 			     inner join user_permission_cache upc on ui.user_id = upc.user_id
--- where ui.username = _username
---   and t.tenant_id = _tenant_id;
--- $$;
-
 
 create function get_user_by_username(_tenant_id int, _username text)
     returns table
@@ -1674,7 +1874,7 @@ begin
                            inner join user_info ui on ui.user_id = tu.user_id
                   where tenant_id = _tenant_id
                     and ui.username = lower(_username)) then
-        perform throw_no_access(_tenant_id, _username);
+        perform auth.throw_no_access(_tenant_id, _username);
     end if;
 
     return query
@@ -1688,7 +1888,7 @@ begin
                upc.permissions
         from tenant_user tu
                  inner join user_info ui on ui.user_id = tu.user_id
-                 inner join user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
+                 inner join auth.user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
         where tu.tenant_id = _tenant_id
           and ui.username = _username;
 end;
@@ -1707,7 +1907,8 @@ create function auth.get_user_by_email_for_authentication(_user_id int, _email t
                 __email         text,
                 __display_name  text,
                 __provider      text,
-                __password_hash text
+                __password_hash text,
+                __password_salt text
             )
     language plpgsql
 as
@@ -1720,12 +1921,14 @@ begin
 
     perform auth.has_permission(null, _user_id, 'system.authentication.get_data');
 
+    perform auth.validate_provider_is_active('email');
+
     __normalized_email := lower(trim(_email));
 
     select ui.is_active, ui.is_locked
     from user_identity uid
              inner join user_info ui on uid.user_id = ui.user_id
-    where uid.provider = 'email'
+    where uid.provider_code = 'email'
       and uid.uid = __normalized_email
     into __is_active, __is_locked;
 
@@ -1752,17 +1955,18 @@ begin
                ui.email,
                ui.display_name,
                'email',
-               uid.password_hash
+               uid.password_hash,
+               uid.password_salt
         from user_identity uid
                  inner join user_info ui on uid.user_id = ui.user_id
-        where uid.provider = 'email'
+        where uid.provider_code = 'email'
           and uid.uid = __normalized_email;
 end;
 
 $$;
 
 -- for external authentication provider flows
-create or replace function auth.ensure_user_from_provider(_created_by text, _provider text, _provider_uid text,
+create or replace function auth.ensure_user_from_provider(_created_by text, _provider_code text, _provider_uid text,
                                                           _username text,
                                                           _display_name text, _email text default null,
                                                           _user_data jsonb default null)
@@ -1782,22 +1986,24 @@ declare
     __last_id bigint;
 begin
 
-    if lower(_provider) = 'email' then
+    if lower(_provider_code) = 'email' then
         raise exception 'User (username: %) cannot be ensured for email provider, use registration for that', _username
             using errcode = 52101;
     end if;
 
+    perform auth.validate_provider_is_active(_provider_code);
+
     if not exists(select
                   from user_identity uid
-                  where uid.provider = _provider
+                  where uid.provider_code = _provider_code
                     and uid.uid = _provider_uid) then
 
         insert into user_info(created_by, modified_by, username, email, display_name)
         values (_created_by, _created_by, lower(_username), lower(_email), _display_name)
         returning user_id into __last_id;
 
-        insert into user_identity(created_by, modified_by, provider, uid, user_id)
-        values (_created_by, _created_by, _provider, _provider_uid, __last_id);
+        insert into user_identity(created_by, modified_by, provider_code, uid, user_id)
+        values (_created_by, _created_by, _provider_code, _provider_uid, __last_id);
 
     end if;
 
@@ -1810,7 +2016,7 @@ begin
                ui.display_name
         from user_identity uid
                  inner join user_info ui on uid.user_id = ui.user_id
-        where uid.provider = _provider
+        where uid.provider_code = _provider_code
           and uid.uid = _provider_uid;
 end;
 $$;
@@ -1881,12 +2087,12 @@ begin
          groups as (select distinct ps.perm_set_id, ps.code
                     from users_groups ug
                              inner join user_group_assignment uga on ug.group_id = uga.group_id
-                             inner join perm_set ps on uga.perm_set_id = ps.perm_set_id),
+                             inner join auth.perm_set ps on uga.perm_set_id = ps.perm_set_id),
          user_permissions as (select sp.full_code
                               from groups r
-                                       inner join perm_set_perm psp on r.perm_set_id = psp.perm_set_id
-                                       join permission p on psp.permission_id = p.permission_id
-                                       inner join permission sp on sp.node_path <@ p.node_path
+                                       inner join auth.perm_set_perm psp on r.perm_set_id = psp.perm_set_id
+                                       join auth.permission p on psp.permission_id = p.permission_id
+                                       inner join auth.permission sp on sp.node_path <@ p.node_path
                               order by sp.full_code)
     select array_agg(distinct groups.code)                      gs,
            array_agg(distinct user_permissions.full_code::text) ps
@@ -1896,7 +2102,7 @@ begin
 
 
     return query
-        update user_permission_cache
+        update auth.user_permission_cache
             set modified = now()
                 , groups = coalesce(__gs, array []::text[])
                 , permissions = coalesce(__ps, array []::text[])
@@ -1904,23 +2110,95 @@ begin
             returning groups, permissions;
 end;
 $$;
+--
+-- create function auth.get_tenant_permissions(_tenant_id int, _user_id bigint)
+--     returns table
+--             (
+--                 __user_id     bigint,
+--                 __groups      text,
+--                 __permissions text
+--             )
+--     language sql
+-- as
+-- $$
+-- select upc.user_id, array_to_string(upc.groups, ';'), array_to_string(upc.permissions, ';')
+-- from user_permission_cache upc
+--          inner join public.tenant t on upc.tenant_id = t.tenant_id
+-- where t.tenant_id = _tenant_id
+--   and upc.user_id = _user_id;
+-- $$;
+--
+--
+-- create or replace function public.calculate_roles_and_permissions(_user_id bigint, _provider_groups text[], _provider_roles text[])
+--     returns table
+--             (
+--                 __roles       text[],
+--                 __permissions text[]
+--             )
+--     language plpgsql
+--     rows 1
+-- as
+-- $$
+-- declare
+--     __user_id int;
+--     __gs      text[];
+--     __ps      text[];
+-- begin
+--
+--     select user_id
+--     from user_info ui
+--     where ui.oid = _oid
+--     into __user_id;
+--
+--     delete
+--     from user_group_member
+--     where user_id = __user_id
+--       and (
+--             (mapping_id is not null
+--                 and group_id not in (select distinct ugm.group_id
+--                                      from unnest(_provider_groups) g
+--                                               inner join public.user_group_mapping ugm on ugm.mapped_object_id = g)
+--                 )
+--             or adhoc_assignment
+--         );
+--
+--     insert into user_group_member(user_id, group_id, mapping_id, adhoc_assignment)
+--     select distinct __user_id, ugm.group_id, ugm.ug_mapping_id, false
+--     from unnest(_provider_groups) g
+--              inner join public.user_group_mapping ugm
+--                         on ugm.mapped_object_id = g
+--     where ugm.group_id not in (select group_id from user_group_member where user_id = __user_id);
+--
+--     with users_groups as (select ugm.group_id
+--                           from user_group_member ugm
+--                           where ugm.user_id = __user_id),
+--          groups as (select distinct ps.perm_set_id, ps.code
+--                     from users_groups ug
+--                              inner join user_group_assignment uga on ug.group_id = uga.group_id
+--                              inner join auth.perm_set ps on uga.perm_set_id = ps.perm_set_id),
+--          user_permissions as (select sp.full_code
+--                               from groups r
+--                                        inner join auth.perm_set_perm psp on r.perm_set_id = psp.perm_set_id
+--                                        join auth.permission p on psp.permission_id = p.permission_id
+--                                        inner join auth.permission sp on sp.node_path <@ p.node_path
+--                               order by sp.full_code)
+--     select array_agg(distinct groups.code)                      gs,
+--            array_agg(distinct user_permissions.full_code::text) ps
+--     from groups,
+--          user_permissions
+--     into __gs, __ps;
+--
+--
+--     return query
+--         update auth.user_permission_cache
+--             set modified = now()
+--                 , groups = coalesce(__gs, array []::text[])
+--                 , permissions = coalesce(__ps, array []::text[])
+--             where user_id = __user_id
+--             returning groups, permissions;
+-- end;
+-- $$;
 
-create function auth.get_tenant_permissions(_tenant_id int, _user_id bigint)
-    returns table
-            (
-                __user_id     bigint,
-                __groups      text,
-                __permissions text
-            )
-    language sql
-as
-$$
-select upc.user_id, array_to_string(upc.groups, ';'), array_to_string(upc.permissions, ';')
-from user_permission_cache upc
-         inner join public.tenant t on upc.tenant_id = t.tenant_id
-where t.tenant_id = _tenant_id
-  and upc.user_id = _user_id;
-$$;
 
 /***
  *    ██╗███╗---██╗██╗████████╗██╗-█████╗-██╗---------██████╗--█████╗-████████╗-█████╗-
@@ -1938,7 +2216,6 @@ create or replace function load_initial_data()
 as
 $$
 declare
-    __last_id int;
 begin
 
     -- COMMMON WITH ALL DATABASES
@@ -1959,13 +2236,18 @@ begin
     perform unsecure.create_permission_by_path_as_system('Authentication', 'system');
     perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
 
-    perform unsecure.create_permission_by_path_as_system('Users', 'system');
-    perform unsecure.create_permission_by_path_as_system('Register user', 'system.users');
+    perform unsecure.create_permission_by_path_as_system('Manage users', 'system');
+    perform unsecure.create_permission_by_path_as_system('Register user', 'system.manage_users');
 
     perform unsecure.create_permission_by_path_as_system('Manage tenants', 'system');
     perform unsecure.create_permission_by_path_as_system('Create tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Update tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Assign owner', 'system.manage_tenants');
+
+    perform unsecure.create_permission_by_path_as_system('Manage providers', 'system');
+    perform unsecure.create_permission_by_path_as_system('Create provider', 'system.manage_providers');
+    perform unsecure.create_permission_by_path_as_system('Update provider', 'system.manage_providers');
+    perform unsecure.create_permission_by_path_as_system('Delete provider', 'system.manage_providers');
 
     perform unsecure.create_permission_by_path_as_system('Manage groups', 'system');
     perform unsecure.create_permission_by_path_as_system('Create group', 'system.manage_groups');
@@ -1975,6 +2257,10 @@ begin
     perform unsecure.create_permission_by_path_as_system('Delete member', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create mapping', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete mapping', 'system.manage_groups');
+
+    perform unsecure.create_perm_set_as_system('System admin', 1, true, _is_assignable := true,
+                                               _permissions := array ['system.manage_tenants', 'system.manage_providers'
+                                                   , 'system.manage_users']);
 
 
     perform unsecure.create_perm_set_as_system('Tenant creator', 1, true, _is_assignable := true,
@@ -1991,6 +2277,8 @@ begin
     perform unsecure.create_user_group_as_system(1, 'Tenant admins', true, true);
     perform unsecure.assign_user_group_as_system(2, 'tenant_admin');
 
+    perform auth.create_provider('initial', 1, 'email', 'Email authentication', false);
+    perform auth.create_provider('initial', 1, 'aad', 'Azure authentication', false);
 
     -- UNIQUE FOR THIS DATABASE
 

@@ -1,26 +1,31 @@
+select * from auth.enable_provider('system', 1, 'aad');
+select * from auth.enable_provider('system', 1, 'email');
+
 select *
-from auth.ensure_user_from_provider(_created_by := 'system', _provider := 'aad', _provider_uid := '123456',
+from auth.ensure_user_from_provider(_created_by := 'system', _provider_code := 'aad', _provider_uid := '123456',
                                     _username := 'ondrej.valenta@keenmate.com', _display_name := 'Ondrej Valenta',
                                     _email := 'ondrej.valenta@keenmate.com', _user_data := null);
 
 select *
-from auth.ensure_user_from_provider(_created_by := 'system', _provider := 'aad', _provider_uid := '456825',
+from auth.ensure_user_from_provider(_created_by := 'system', _provider_code := 'aad', _provider_uid := '456825',
                                     _username := 'albert.moravec@keenmate.com', _display_name := 'Albert Moravec',
                                     _email := 'albert.moravec@keenmate.com', _user_data := null);
 
 select *
-from auth.ensure_user_from_provider(_created_by := 'system', _provider := 'aad', _provider_uid := '45682511',
+from auth.ensure_user_from_provider(_created_by := 'system', _provider_code := 'aad', _provider_uid := '45682511',
                                     _username := 'filip.jakab@keenmate.com', _display_name := 'Filip Jakab',
                                     _email := 'filip.jakab@keenmate.com', _user_data := null);
 
 select *
-from auth.ensure_user_from_provider(_created_by := 'system', _provider := 'aad', _provider_uid := '45682132123',
+from auth.ensure_user_from_provider(_created_by := 'system', _provider_code := 'aad', _provider_uid := '45682132123',
                                     _username := 'jan.rada@keenmate.com', _display_name := 'Jan Rada',
                                     _email := 'jan.rada@keenmate.com', _user_data := null);
 
 select *
 from auth.register_user(1, 'lucie.novakova1@keenmate.com', '123456', _display_name := 'Lucie Novakova',
                         _user_data := '{firstName: "Lucie", lastname: "Novakova"}');
+
+select * from auth.get_users_by_provider('system', 1, 'aad');
 
 -- select * from auth.get_user_by_email_for_authentication(1, 'Lucie.Novakova@keenmate.com');
 
