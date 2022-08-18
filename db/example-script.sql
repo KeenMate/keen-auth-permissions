@@ -27,8 +27,6 @@ from auth.register_user(1, 'lucie.novakova1@keenmate.com', '123456', _display_na
 
 select * from auth.get_users_by_provider('system', 1, 'aad');
 
--- select * from auth.get_user_by_email_for_authentication(1, 'Lucie.Novakova@keenmate.com');
-
 select *
 from unsecure.add_user_to_group_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
 
@@ -49,6 +47,11 @@ from create_tenant('ondrej.valenta', 2, 'Jan Rada');
 
 select *
 from assign_tenant_owner('ondrej.valenta', 2, 3, 5);
+
+
+
+
+
 
 
 select *

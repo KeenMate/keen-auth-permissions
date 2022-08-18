@@ -36,13 +36,15 @@
 | 50205  | Group disabled  |
 | 50206  | Group unlocked  |
 | 50207  | Group locked  |
+| 50208  | Group set as external group  |
+| 50209  | Group set as hybrid group |
 | 50231  | Group mapping created  |
 | 50233  | Group mapping deleted  |
 | 50301  | Permission set created |
 | 50302  | Permission set updated |
 | 50303  | Permission set deleted |
-| 50304  | Permission set assigned to group|
-| 50305  | Permission set deleted from group|
+| 50304  | Permission assigned |
+| 50305  | Permission unassigned |
 
 ## Security Error codes
 | Event code  | Description |
@@ -57,5 +59,9 @@
 | 52171  | User group not found  |
 | 52172  | User cannot be added to group because the group is not active  |
 | 52173  | User cannot be added to group because it's either not assignable or an external group  |
+| 52174  | Either mapped object id or role must not be empty  |
+| 52175  | Permission set is not assignable  |
 | 52271  | User group cannot be deleted because it's a system group  |
+| 52272  | Either user group id or target user id has to be not null  |
+| 52273  | Either permission set code or permission code has to be not null  |
 

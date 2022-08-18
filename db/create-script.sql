@@ -270,23 +270,29 @@ create unique index uq_user_group_mapping on user_group_mapping (group_id, provi
 
 create table user_group_member
 (
-    member_id        int generated always as identity not null primary key,
-    group_id         int                              not null references user_group (user_group_id) on delete cascade,
-    user_id          int                              not null references user_info (user_id) on delete cascade,
-    mapping_id       int references user_group_mapping (ug_mapping_id) on delete cascade,
-    adhoc_assignment bool                             not null default false
+    member_id         bigint generated always as identity not null primary key,
+    group_id          int                                 not null references user_group (user_group_id) on delete cascade,
+    user_id           int                                 not null references user_info (user_id) on delete cascade,
+    mapping_id        int references user_group_mapping (ug_mapping_id) on delete cascade,
+    manual_assignment bool                                not null default false
 ) inherits (_template_created);
 
 create unique index uq_user_group_member ON user_group_member (group_id, user_id, coalesce(mapping_id, 0));
 
-create table user_group_assignment
+create table permission_assignment
 (
-    uga_id      int generated always as identity not null primary key,
-    group_id    int                              not null references user_group (user_group_id),
-    perm_set_id int                              not null references auth.perm_set (perm_set_id)
+    assignment_id int generated always as identity not null primary key,
+    group_id      int                              not null references user_group (user_group_id),
+    user_id       bigint references user_info (user_id),
+    perm_set_id   int references auth.perm_set (perm_set_id),
+    permission_id int references auth.permission (permission_id),
+    CONSTRAINT pa_either_object CHECK (group_id is not null or user_id is not null),
+    CONSTRAINT pa_either_perm CHECK (perm_set_id is not null or permission_id is not null)
 ) inherits (_template_created);
 
-create unique index uq_user_group_assignment ON user_group_assignment (group_id, perm_set_id);
+create unique index uq_permission_assignment ON permission_assignment (group_id, coalesce(user_id, 0),
+                                                                       coalesce(perm_set_id, 0),
+                                                                       coalesce(permission_id, 0));
 
 create table journal
 (
@@ -320,7 +326,7 @@ create index ix_journal on journal (tenant_id, data_group, data_object_id);
 --      , ug.user_group_id
 --      , ug.title as group_title
 --      , case when ugm.mapping_id is not null then 'Mapped member' else 'Direct member' end
---      , ugm.adhoc_assignment
+--      , ugm.manual_assignment
 --      , u.mapped_object_name
 --      , ui.permissions
 -- from tenant t
@@ -493,7 +499,7 @@ begin
     if exists(
             select p.code, ugm.user_id, p.node_path
             from user_group ug
-                     inner join user_group_assignment uga
+                     inner join permission_assignment uga
                                 on ug.user_group_id = uga.group_id and ug.tenant_id = _tenant_id
                      inner join user_group_member ugm on ugm.group_id = uga.group_id
                      inner join auth.perm_set ps on ps.perm_set_id = uga.perm_set_id
@@ -805,7 +811,7 @@ create function unsecure.add_user_group_member(_created_by text, _user_id bigint
                                                _target_user_id bigint)
     returns table
             (
-                __user_group_member_id int
+                __user_group_member_id bigint
             )
     language plpgsql
     rows 1
@@ -841,7 +847,7 @@ begin
     end if;
 
     return query
-        insert into user_group_member (created_by, group_id, user_id, adhoc_assignment)
+        insert into user_group_member (created_by, group_id, user_id, manual_assignment)
             values (_created_by, _user_group_id, _target_user_id, true)
             returning member_id;
 
@@ -881,73 +887,171 @@ begin
 end;
 $$;
 
-create function unsecure.assign_user_group(_created_by text, _user_id bigint, _user_group_id int,
-                                           _perm_set_code text)
-    returns setof user_group_assignment
+create function unsecure.assign_permission(_created_by text, _user_id bigint, _tenant_id int,
+                                           _user_group_id int default null,
+                                           _target_user_id bigint default null,
+                                           _perm_set_code text default null, _perm_code text default null)
+    returns setof permission_assignment
     language plpgsql
 as
 $$
 declare
-    __is_group_active bool;
-    __tenant_id       int;
+    __last_id int;
 begin
 
-    select is_active, tenant_id
-    from user_group ug
-    where ug.user_group_id = _user_group_id
-    into __is_group_active, __tenant_id;
+    if _user_group_id is null and _target_user_id is null then
+        raise exception 'Either user group is or target user id must not be null'
+            using errcode = 52272;
+    end if;
 
-    if __is_group_active is null then
-        raise exception 'User: group (group id: %) does not exist'
+    if _perm_set_code is null and _perm_code is null then
+        raise exception 'Either user group is or target user id must not be null'
+            using errcode = 52273;
+    end if;
+
+    if _user_group_id is not null and not exists(select
+                                                 from user_group ug
+                                                 where ug.user_group_id = _user_group_id) then
+        raise exception 'User group (group id: %) does not exist'
             , _user_group_id
             using errcode = 52171;
     end if;
 
-    if not __is_group_active then
-        raise exception 'User: group (group id: %) is not active'
+    if _target_user_id is not null and not exists(select
+                                                  from user_info ui
+                                                  where ui.user_id = _target_user_id) then
+        raise exception 'User (user id: %) does not exist'
             , _user_group_id
-            using errcode = 52172;
+            using errcode = 52103;
     end if;
 
-    return query
-        insert into user_group_assignment (created_by, group_id, perm_set_id)
-            select 'system', _user_group_id, perm_set_id
-            from auth.perm_set ps
-            where ps.code = _perm_set_code
-            returning *;
+    if _perm_set_code is not null and
+       exists(select from perm_set where code = _perm_set_code and is_assignable = false) then
+        raise exception 'Permission set (code: %) is not assignable'
+            , _perm_set_code
+            using errcode = 52175;
+    end if;
 
-    perform add_journal_msg(_created_by, __tenant_id, _user_id
-        , format('User: %s assigned new permission set to group: %s in tenant: %s'
-                                , _created_by, _perm_set_code, __tenant_id)
-        , 'group', _user_group_id
-        , array ['perm_set_code', _perm_set_code]
-        , 50304);
+    insert into permission_assignment (created_by, group_id, user_id, perm_set_id, permission_id)
+    select 'system', _user_group_id, perm_set_id
+    from auth.perm_set ps
+    where ps.code = _perm_set_code
+    returning assignment_id into __last_id;
+
+    return query
+        select * from permission_assignment where assignment_id = __last_id;
+
+    if _user_group_id is not null then
+        perform add_journal_msg(_created_by, _tenant_id, _user_id
+            , format('User: %s assigned new permission: %s to group: %s in tenant: %s'
+                                    , _created_by, coalesce(_perm_set_code, _perm_code), _tenant_id)
+            , 'group', _user_group_id
+            , array ['assignment_id', __last_id::text, 'perm_set_code', _perm_set_code, 'permission_code', _perm_code]
+            , 50304);
+    else
+        perform add_journal_msg(_created_by, _tenant_id, _user_id
+            , format('User: %s assigned new permission: %s to user: %s in tenant: %s'
+                                    , _created_by, coalesce(_perm_set_code, _perm_code), _tenant_id)
+            , 'user', _target_user_id
+            , array ['assignment_id', __last_id::text, 'perm_set_code', _perm_set_code, 'permission_code', _perm_code]
+            , 50304);
+    end if;
+
+
 end;
 
 $$;
 
-create function unsecure.assign_user_group_as_system(_user_group_id int, _perm_set_code text)
-    returns setof user_group_assignment
+create function unsecure.unassign_permission(_deleted_by text, _user_id bigint, _tenant_id int,
+                                             _assignment_id int)
+    returns setof permission_assignment
+    language plpgsql
+as
+$$
+declare
+    __user_group_id  int;
+    __target_user_id int;
+begin
+
+    select group_id, user_id
+    from permission_assignment pa
+    where pa.assignment_id = _assignment_id
+    into __user_group_id, __target_user_id;
+
+    return query
+        delete from permission_assignment
+            where assignment_id = _assignment_id
+            returning *;
+
+    if __user_group_id is not null then
+        perform add_journal_msg(_deleted_by, _tenant_id, _user_id
+            , format('User: %s unassigned permission from group: %s in tenant: %s'
+                                    , _deleted_by, __user_group_id, _tenant_id)
+            , 'group', __user_group_id
+            , array ['assignment_id', _assignment_id::text]
+            , 50305);
+    else
+        perform add_journal_msg(_deleted_by, _tenant_id, _user_id
+            , format('User: %s unassigned permission from user: %s in tenant: %s'
+                                    , _deleted_by, __user_group_id, _tenant_id)
+            , 'user', __target_user_id
+            , array ['assignment_id', _assignment_id::text]
+            , 50304);
+    end if;
+end;
+
+$$;
+
+create function unsecure.assign_permission_as_system(_tenant_id int, _user_group_id int, _target_user_id bigint,
+                                                     _perm_set_code text,
+                                                     _perm_code text)
+    returns setof permission_assignment
     language plpgsql
 as
 $$
 begin
     return query
-        select * from unsecure.assign_user_group('system', 1, _user_group_id, _perm_set_code);
+        select *
+        from unsecure.assign_permission('system', 1, _tenant_id, _user_group_id, _target_user_id, _perm_set_code,
+                                        _perm_code);
 end;
 
 $$;
 
--- create function public.get_tenant_id(_tenant_code text)
--- 	returns int
--- 	language sql
--- 	stable
--- as
--- $$
--- 	select tenant_id
---   from tenant
---   where code = _tenant_code;
--- $$;
+create function auth.assign_permission(_created_by text, _user_id bigint, _tenant_id int, _user_group_id int,
+                                       _target_user_id bigint,
+                                       _perm_set_code text,
+                                       _perm_code text)
+    returns setof permission_assignment
+    language plpgsql
+as
+$$
+begin
+    perform has_permission(_tenant_id, _user_id, 'system.manage_permissions.assign_permission');
+
+    return query
+        select *
+        from unsecure.assign_permission(_created_by, _user_id, _tenant_id
+            , _user_group_id, _target_user_id
+            , _perm_set_code
+            , _perm_code);
+end;
+
+$$;
+
+create function auth.unassign_permission(_deleted_by text, _user_id bigint, _tenant_id int, _assignment_id int)
+    returns setof permission_assignment
+    language plpgsql
+as
+$$
+begin
+    perform has_permission(_tenant_id, _user_id, 'system.manage_permissions.unassign_permission');
+
+    return query
+        select *
+        from unsecure.unassign_permission(_deleted_by, _user_id, _tenant_id, _assignment_id);
+end;
+$$;
 
 create function public.assign_tenant_owner(_created_by text, _user_id bigint, _tenant_id int, _target_user_id bigint)
     returns setof user_group_member
@@ -983,6 +1087,7 @@ $$;
 
 create function unsecure.create_user_group(_created_by text, _user_id bigint, _title text
     , _tenant_id int default null, _is_assignable bool default true, _is_active bool default true,
+                                           _is_external bool default false,
                                            _is_system bool default false, _is_default bool default false)
     returns table
             (
@@ -997,8 +1102,9 @@ declare
 begin
 
     insert into user_group (created_by, modified_by, tenant_id, title, is_default, is_system, is_assignable,
-                            is_active)
-    values (_created_by, _created_by, _tenant_id, _title, _is_default, _is_system, _is_assignable, _is_active)
+                            is_active, is_external)
+    values (_created_by, _created_by, _tenant_id, _title, _is_default, _is_system, _is_assignable, _is_active,
+            _is_external)
     returning user_group_id into __last_id;
 
     return query
@@ -1032,7 +1138,8 @@ from unsecure.create_user_group('system', 1, _title, _tenant_id, _is_assignable,
 $$;
 
 create function public.create_user_group(_created_by text, _user_id bigint, _title text, _tenant_id int,
-                                         _is_assignable bool default true, _is_active bool default true)
+                                         _is_assignable bool default true, _is_active bool default true,
+                                         _is_external bool default false)
     returns table
             (
                 __group_id int
@@ -1048,7 +1155,7 @@ begin
     return query
         select *
         from unsecure.create_user_group(_created_by, _user_id, _title, _tenant_id
-            , _is_assignable, _is_active, false,
+            , _is_assignable, _is_active, _is_external, false,
                                         false);
 end ;
 $$;
@@ -1261,7 +1368,7 @@ begin
     if not __is_system then
         raise exception 'User: group (group id: %) is a system group'
             , _user_group_id
-            using errcode = 50271;
+            using errcode = 52271;
     end if;
 
     return query
@@ -1279,11 +1386,11 @@ begin
 end;
 $$;
 
-create function auth.add_user_group_member(_created_by text, _user_id bigint, _tenant_id int, _user_group_id int,
-                                           _target_user_id int)
+create function auth.create_user_group_member(_created_by text, _user_id bigint, _tenant_id int, _user_group_id int,
+                                              _target_user_id int)
     returns table
             (
-                __user_group_member_id int
+                __user_group_member_id bigint
             )
     language plpgsql
     rows 1
@@ -1298,8 +1405,8 @@ begin
 end;
 $$;
 
-create function auth.delete_user_group_member(_user_id bigint, _deleted_by text, _tenant_id int, _ug_id int,
-                                              _user_member_id int)
+create function auth.delete_user_group_member(_deleted_by text, _user_id bigint, _tenant_id int, _ug_id int,
+                                              _user_member_id bigint)
     returns void
     language plpgsql
 as
@@ -1324,10 +1431,11 @@ begin
 end;
 $$;
 
-create function auth.add_user_group_mapping(_user_id bigint, _created_by text, _tenant_id int, _user_group_id int,
-                                            _provider_code text,
-                                            _mapped_object_id text default null, _mapped_object_name text default null,
-                                            _mapped_role text default null)
+create function auth.create_user_group_mapping(_created_by text, _user_id bigint, _tenant_id int, _user_group_id int,
+                                               _provider_code text,
+                                               _mapped_object_id text default null,
+                                               _mapped_object_name text default null,
+                                               _mapped_role text default null)
     returns table
             (
                 __ug_mapping_id int
@@ -1339,7 +1447,14 @@ $$
 declare
     __is_group_active bool;
 begin
-    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.create_mapping');
+
+    if _mapped_object_id is null and _mapped_role is null then
+        raise exception 'Either mapped object id or mapped role must not be empty'
+            , _user_group_id
+            using errcode = 52174;
+    end if;
+
+    perform auth.has_permissions(_tenant_id, _user_id, 'system.manage_groups.create_mapping');
 
     select is_active, tenant_id
     from user_group ug
@@ -1347,7 +1462,7 @@ begin
     into __is_group_active;
 
     if __is_group_active is null then
-        raise exception 'User: group (group id: %) does not exist'
+        raise exception 'User group (group id: %) does not exist'
             , _user_group_id
             using errcode = 52171;
     end if;
@@ -1369,7 +1484,7 @@ begin
 end;
 $$;
 
-create function auth.delete_user_group_mapping(_user_id bigint, _deleted_by text, _tenant_id int, _ug_id int,
+create function auth.delete_user_group_mapping(_deleted_by text, _user_id bigint, _tenant_id int, _ug_id int,
                                                _ug_mapping_id int)
     returns void
     language plpgsql
@@ -1394,6 +1509,94 @@ begin
         , 'group', _ug_id
         , array ['mapped_object_id', __mapped_object_id::text, 'mapped_object_name', __mapped_object_name]
         , 50233);
+end;
+$$;
+
+
+create function public.create_external_user_group(_created_by text, _user_id bigint, _title text, _tenant_id int,
+                                                  _is_assignable bool default true, _is_active bool default true,
+                                                  _provider text,
+                                                  _mapped_object_id text default null,
+                                                  _mapped_object_name text default null,
+                                                  _mapped_role text default null)
+    returns table
+            (
+                __group_id int
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __last_id int;
+begin
+    perform auth.has_permissions(_tenant_id, _user_id,
+                                 array ['system.manage_groups.create_group']);
+
+
+    select *
+    from unsecure.create_user_group(_created_by, _user_id, _title, _tenant_id
+        , _is_assignable, _is_active, false,
+                                    false)
+    into __last_id;
+
+    perform auth.create_user_group_mapping(_created_by, _user_id, _tenant_id, __last_id, _provider, _mapped_object_id,
+                                           _mapped_object_name, _mapped_role);
+
+    return query
+        select __last_id;
+end ;
+$$;
+
+create function auth.set_user_group_as_external(_modified_by text, _user_id bigint, _tenant_id int, _user_group_id int)
+    returns void
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.update_group');
+
+    delete
+    from user_group_member ugm
+    where ugm.group_id = _user_group_id
+      and ugm.manual_assignment = true;
+
+    update user_group
+    set modified    = now(),
+        modified_by = _modified_by,
+        is_external = true
+    where user_group_id = _user_group_id;
+
+
+    perform add_journal_msg(_modified_by, _tenant_id, _user_id
+        , format('User: %s set user group as external in tenant: %s'
+                                , _modified_by, _user_group_id, _tenant_id)
+        , 'group', _user_group_id
+        , null
+        , 50208);
+end;
+$$;
+
+create function auth.set_user_group_as_hybrid(_modified_by text, _user_id bigint, _tenant_id int, _user_group_id int)
+    returns void
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.update_group');
+
+    update user_group
+    set modified    = now(),
+        modified_by = _modified_by,
+        is_external = false
+    where user_group_id = _user_group_id;
+
+    perform add_journal_msg(_modified_by, _tenant_id, _user_id
+        , format('User: %s set user group as hybrid in tenant: %s'
+                                , _modified_by, _user_group_id, _tenant_id)
+        , 'group', _user_group_id
+        , null
+        , 50209);
 end;
 $$;
 
@@ -1440,8 +1643,8 @@ begin
         , __last_id, true, true, true)
     into __tenant_owner_group_id;
 
-    perform unsecure.assign_user_group(_created_by, _user_id
-        , __tenant_owner_group_id, 'tenant_owner');
+    perform unsecure.assign_permission(_created_by, _user_id
+        , __last_id, __tenant_owner_group_id, null, 'tenant_owner');
 
     if (_tenant_owner_id is not null) then
         perform unsecure.add_user_group_member(_created_by, _user_id, __last_id, __tenant_owner_group_id,
@@ -1723,10 +1926,14 @@ $$;
  */
 
 
-create or replace function public.ensure_groups_and_permissions(_oid text, _provider_groups text[])
+create or replace function auth.ensure_groups_and_permissions(_user_id bigint, _target_user_id bigint, _tenant_id int,
+                                                              _provider_code text,
+                                                              _provider_groups text[] default null,
+                                                              _provider_roles text[] default null)
     returns table
             (
-                __roles       text[],
+                __tenant_id   int,
+                __groups      text[],
                 __permissions text[]
             )
     language plpgsql
@@ -1734,42 +1941,57 @@ create or replace function public.ensure_groups_and_permissions(_oid text, _prov
 as
 $$
 declare
-    __user_id int;
-    __gs      text[];
-    __ps      text[];
+    __gs text[];
+    __ps text[];
 begin
-
-    select user_id
-    from user_info ui
-    where ui.oid = _oid
-    into __user_id;
+    perform auth.has_permission(null, _user_id, 'system.authentication.ensure_permissions');
 
     delete
     from user_group_member
-    where user_id = __user_id
-      and (
-            (mapping_id is not null
-                and group_id not in (select distinct ugm.group_id
-                                     from unnest(_provider_groups) g
-                                              inner join public.user_group_mapping ugm on ugm.mapped_object_id = g)
-                )
-            or adhoc_assignment
-        );
+    where user_id = _target_user_id
+      and mapping_id is not null
+      and group_id not in (select distinct ugm.group_id
+                           from unnest(_provider_groups) g
+                                    inner join public.user_group_mapping ugm
+                                               on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
+                                    inner join user_group u
+                                               on u.user_group_id = ugm.group_id and u.tenant_id = _tenant_id
+                           union
+                           select distinct ugm.group_id
+                           from unnest(_provider_roles) r
+                                    inner join public.user_group_mapping ugm
+                                               on ugm.provider_code = _provider_code and ugm.mapped_role = r
+                                    inner join user_group u
+                                               on u.user_group_id = ugm.group_id and u.tenant_id = _tenant_id);
 
-    insert into user_group_member(user_id, group_id, mapping_id, adhoc_assignment)
-    select distinct __user_id, ugm.group_id, ugm.ug_mapping_id, false
+    insert into user_group_member(user_id, group_id, mapping_id, manual_assignment)
+    select distinct _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
     from unnest(_provider_groups) g
              inner join public.user_group_mapping ugm
-                        on ugm.mapped_object_id = g
-    where ugm.group_id not in (select group_id from user_group_member where user_id = __user_id);
+                        on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
+    where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id);
+
+    insert into user_group_member(user_id, group_id, mapping_id, manual_assignment)
+    select distinct _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
+    from unnest(_provider_groups) g
+             inner join public.user_group_mapping ugm
+                        on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
+    where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id);
 
     with users_groups as (select ugm.group_id
                           from user_group_member ugm
-                          where ugm.user_id = __user_id),
-         groups as (select distinct ps.perm_set_id, ps.code
-                    from users_groups ug
-                             inner join user_group_assignment uga on ug.group_id = uga.group_id
-                             inner join auth.perm_set ps on uga.perm_set_id = ps.perm_set_id),
+                          where ugm.user_id = _target_user_id),
+         group_assignments as (select distinct sp.full_code
+                               from users_groups ug
+                                        inner join permission_assignment pa on ug.group_id = pa.group_id
+                                        inner join auth.perm_set ps on pa.perm_set_id = ps.perm_set_id
+                                        inner join auth.perm_set_perm psp on r.perm_set_id = psp.perm_set_id
+                                        join auth.permission p on psp.permission_id = p.permission_id
+                                        inner join auth.permission sp on sp.node_path <@ p.node_path),
+         user_assignments as (select distinct ps.perm_set_id, ps.code
+                              from users_groups ug
+                                       inner join permission_assignment pa on ug.group_id = pa.group_id
+                                       inner join auth.perm_set ps on pa.perm_set_id = ps.perm_set_id),
          user_permissions as (select sp.full_code
                               from groups r
                                        inner join auth.perm_set_perm psp on r.perm_set_id = psp.perm_set_id
@@ -2071,10 +2293,10 @@ begin
                                      from unnest(_provider_groups) g
                                               inner join public.user_group_mapping ugm on ugm.mapped_object_id = g)
                 )
-            or adhoc_assignment
+            or manual_assignment
         );
 
-    insert into user_group_member(user_id, group_id, mapping_id, adhoc_assignment)
+    insert into user_group_member(user_id, group_id, mapping_id, manual_assignment)
     select distinct __user_id, ugm.group_id, ugm.ug_mapping_id, false
     from unnest(_provider_groups) g
              inner join public.user_group_mapping ugm
@@ -2086,7 +2308,7 @@ begin
                           where ugm.user_id = __user_id),
          groups as (select distinct ps.perm_set_id, ps.code
                     from users_groups ug
-                             inner join user_group_assignment uga on ug.group_id = uga.group_id
+                             inner join permission_assignment uga on ug.group_id = uga.group_id
                              inner join auth.perm_set ps on uga.perm_set_id = ps.perm_set_id),
          user_permissions as (select sp.full_code
                               from groups r
@@ -2159,10 +2381,10 @@ $$;
 --                                      from unnest(_provider_groups) g
 --                                               inner join public.user_group_mapping ugm on ugm.mapped_object_id = g)
 --                 )
---             or adhoc_assignment
+--             or manual_assignment
 --         );
 --
---     insert into user_group_member(user_id, group_id, mapping_id, adhoc_assignment)
+--     insert into user_group_member(user_id, group_id, mapping_id, manual_assignment)
 --     select distinct __user_id, ugm.group_id, ugm.ug_mapping_id, false
 --     from unnest(_provider_groups) g
 --              inner join public.user_group_mapping ugm
@@ -2174,7 +2396,7 @@ $$;
 --                           where ugm.user_id = __user_id),
 --          groups as (select distinct ps.perm_set_id, ps.code
 --                     from users_groups ug
---                              inner join user_group_assignment uga on ug.group_id = uga.group_id
+--                              inner join permission_assignment uga on ug.group_id = uga.group_id
 --                              inner join auth.perm_set ps on uga.perm_set_id = ps.perm_set_id),
 --          user_permissions as (select sp.full_code
 --                               from groups r
@@ -2231,10 +2453,20 @@ begin
 
     perform unsecure.create_perm_set_as_system('System', 1, true, _is_assignable := false,
                                                _permissions := array ['system']);
-    perform unsecure.assign_user_group_as_system(1, 'system');
+    perform unsecure.assign_permission_as_system(1, 1, null, 'system');
 
     perform unsecure.create_permission_by_path_as_system('Authentication', 'system');
     perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
+
+    perform unsecure.create_permission_by_path_as_system('Manage permissions', 'system');
+    perform unsecure.create_permission_by_path_as_system('Create permission', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Update permission', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Delete permission', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Create permission set', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Update permission set', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Delete permission set', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Assign permission', 'system.manage_permissions');
+    perform unsecure.create_permission_by_path_as_system('Unassign permission', 'system.manage_permissions');
 
     perform unsecure.create_permission_by_path_as_system('Manage users', 'system');
     perform unsecure.create_permission_by_path_as_system('Register user', 'system.manage_users');
@@ -2275,7 +2507,7 @@ begin
                                                    , 'system.manage_tenants.assign_owner']);
 
     perform unsecure.create_user_group_as_system(1, 'Tenant admins', true, true);
-    perform unsecure.assign_user_group_as_system(2, 'tenant_admin');
+    perform unsecure.assign_permission_as_system(1, 2, null, 'tenant_admin');
 
     perform auth.create_provider('initial', 1, 'email', 'Email authentication', false);
     perform auth.create_provider('initial', 1, 'aad', 'Azure authentication', false);
