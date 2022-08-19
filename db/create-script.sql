@@ -282,6 +282,7 @@ create unique index uq_user_group_member ON user_group_member (group_id, user_id
 create table permission_assignment
 (
     assignment_id int generated always as identity not null primary key,
+    tenant_id     int references tenant (tenant_id) on delete cascade,
     group_id      int                              not null references user_group (user_group_id),
     user_id       bigint references user_info (user_id),
     perm_set_id   int references auth.perm_set (perm_set_id),
@@ -976,8 +977,8 @@ begin
         end if;
     end if;
 
-    insert into permission_assignment (created_by, group_id, user_id, perm_set_id, permission_id)
-    values (_created_by, _user_group_id, _user_id, __perm_set_id, __permission_id)
+    insert into permission_assignment (created_by, tenant_id, group_id, user_id, perm_set_id, permission_id)
+    values (_created_by, _tenant_id, _user_group_id, _user_id, __perm_set_id, __permission_id)
     returning assignment_id into __last_id;
 
     return query
@@ -1984,6 +1985,7 @@ begin
 end;
 $$;
 
+
 create function unsecure.create_perm_set_as_system(
     _title text,
     _tenant_id int default null,
@@ -2007,14 +2009,45 @@ begin
     insert into auth.perm_set_perm(created_by, perm_set_id, permission_id)
     SELECT 'system', __last_id, p.permission_id
     from unnest(_permissions) as perm_code
-             inner join auth.permission p on p.full_code = perm_code::ext.ltree;
+             inner join auth.permission p on p.full_code = perm_code::ext.ltree and p.is_assignable;
 
     return query
         select *
         from auth.perm_set
         where perm_set_id = __last_id;
 end;
+$$;
 
+create function unsecure.create_perm_set_as_system(
+    _title text,
+    _tenant_id int default null,
+    _is_system bool default false,
+    _is_assignable bool default true,
+    _permissions text[] default null)
+    returns setof auth.perm_set
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __last_id int;
+begin
+    -- noinspection SqlInsertValues
+
+    insert into perm_set(created_by, modified_by, tenant_id, title, is_system, is_assignable)
+    values ('system', 'system', _tenant_id, _title, _is_system, _is_assignable)
+    returning perm_set_id into __last_id;
+
+    insert into auth.perm_set_perm(created_by, perm_set_id, permission_id)
+    SELECT 'system', __last_id, p.permission_id
+    from unnest(_permissions) as perm_code
+             inner join auth.permission p on p.full_code = perm_code::ext.ltree and p.is_assignable;
+
+    return query
+        select *
+        from auth.perm_set
+        where perm_set_id = __last_id;
+end;
 $$;
 
 
@@ -2103,15 +2136,19 @@ begin
          user_assignments as (select distinct ep.permission_code as full_code
                               from permission_assignment pa
                                        inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
-                              where ep.perm_set_is_assignable = true
+                              where pa.tenant_id = _tenant_id
+                                and pa.user_id = _target_user_id
+                                and ep.perm_set_is_assignable = true
                                 and ep.permission_is_assignable = true
                               union
                               select distinct sp.full_code
                               from permission_assignment pa
-                                       inner join auth.permission p on pa.permission_id = p.permission_id
+                                       inner join auth.permission p
+                                                  on pa.permission_id = p.permission_id
                                        inner join auth.permission sp
                                                   on sp.node_path <@ p.node_path and sp.is_assignable = true
-                              where pa.user_id = _target_user_id),
+                              where pa.tenant_id = _tenant_id
+                                and pa.user_id = _target_user_id),
          user_permissions as (select distinct full_code
                               from group_assignments
                               union
@@ -2516,8 +2553,11 @@ begin
     perform unsecure.assign_permission_as_system(1, 1, null, 'system');
     perform unsecure.set_permission_as_assignable('system', '1', 1, null, false);
 
-    perform unsecure.create_permission_by_path_as_system('Authentication', 'system');
+    perform unsecure.create_permission_by_path_as_system('Authentication', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
+
+    perform unsecure.create_permission_by_path_as_system('Admin', 'system', false);
+    perform unsecure.create_permission_by_path_as_system('Can access', 'system.admin');
 
     perform unsecure.create_permission_by_path_as_system('Manage permissions', 'system');
     perform unsecure.create_permission_by_path_as_system('Create permission', 'system.manage_permissions');

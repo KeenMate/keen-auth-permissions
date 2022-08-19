@@ -52,12 +52,11 @@ select * from auth.create_user_group_member('jan.rada@keenmate.com', 5, 3, 5, 2)
 
 select * from auth.create_external_user_group('system', 2, 'External group 1', 3, 'aad', _mapped_object_id := 'aaa_rada');
 
-select * from unsecure.create_perm_set_as_system('My external partners', 3, false, true, array ['system.manage_providers', 'system.manage_permissions']);
+select * from unsecure.create_perm_set_as_system('My external partners', 3, false, true, array ['system.admin', 'system.manage_providers', 'system.manage_permissions']);
 
 select * from unsecure.assign_permission_as_system(3, 6, null, 'my_external_partners');
 
-
-explain analyse select * from auth.ensure_groups_and_permissions(1, 6, 3, 'aad', array ['aaa_rada']);
+select * from auth.ensure_groups_and_permissions(1, 6, 3, 'aad', array ['aaa_rada']);
 
 
 select * from permission_assignment;
@@ -92,6 +91,19 @@ select distinct ep.permission_code as full_code
                                         inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
                                where ep.perm_set_is_assignable = true
                                  and ep.permission_is_assignable = true;
+
+select distinct ep.permission_code as full_code
+                              from permission_assignment pa
+                                       inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
+                              where ep.perm_set_is_assignable = true
+                                and ep.permission_is_assignable = true
+                              union
+                              select distinct sp.full_code
+                              from permission_assignment pa
+                                       inner join auth.permission p on pa.permission_id = p.permission_id
+                                       inner join auth.permission sp
+                                                  on sp.node_path <@ p.node_path and sp.is_assignable = true
+                              where pa.user_id = 6;
 
 select * from user_permission_cache
 
