@@ -37,10 +37,10 @@ select *
 from assign_tenant_owner('ondrej.valenta', 2, 2, 4);
 
 select *
-from create_user_group('filip.jakab', 4, 'Our customers', 2);
+from auth.create_user_group('filip.jakab', 4, 'Our customers', 2);
 
 select *
-from auth.add_user_group_member('albert.moravec', 3, 2, 4, 5);
+from auth.create_user_group_member('albert.moravec', 3, 2, 4, 5);
 
 select *
 from create_tenant('ondrej.valenta', 2, 'Jan Rada');
@@ -48,11 +48,59 @@ from create_tenant('ondrej.valenta', 2, 'Jan Rada');
 select *
 from assign_tenant_owner('ondrej.valenta', 2, 3, 5);
 
+select * from auth.create_user_group_member('jan.rada@keenmate.com', 5, 3, 5, 2);
+
+select * from auth.create_external_user_group('system', 2, 'External group 1', 3, 'aad', _mapped_object_id := 'aaa_rada');
+
+select * from unsecure.create_perm_set_as_system('My external partners', 3, false, true, array ['system.manage_providers', 'system.manage_permissions']);
+
+select * from unsecure.assign_permission_as_system(3, 6, null, 'my_external_partners');
 
 
+explain analyse select * from auth.ensure_groups_and_permissions(1, 6, 3, 'aad', array ['aaa_rada']);
 
 
+select * from permission_assignment;
 
+select * from perm_set where perm_set_id = 6;
+select * from perm_set_perm
+         inner join permission p on p.permission_id = perm_set_perm.permission_id
+         where perm_set_id = 6
+;
+
+-- select * from auth.create_user_group_member('ondrej.valenta@keenmate.com', 2, 3, 6, 6);
+-- select * from auth.delete_user_group_member('ondrej.valenta@keenmate.com', 2, 3, 6, 6);
+
+select * from user_info;
+select * from user_group;
+select * from user_group_member
+;
+
+select * from user_groups;
+
+select user_group_id, group_code
+                 from user_groups
+                 where tenant_id = 3
+                   and user_id = 6;
+
+select distinct ep.permission_code as full_code
+                               from (select user_group_id, group_code
+                 from user_groups
+                 where tenant_id = 3
+                   and user_id = 6) ug
+                                        inner join permission_assignment pa on ug.user_group_id = pa.group_id
+                                        inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
+                               where ep.perm_set_is_assignable = true
+                                 and ep.permission_is_assignable = true;
+
+select * from user_permission_cache
+
+
+select distinct 6, ugm.group_id, ugm.ug_mapping_id, false
+    from unnest(array['aaa_rada']) g
+             inner join public.user_group_mapping ugm
+                        on ugm.provider_code = 'aad' and ugm.mapped_object_id = lower(g)
+    where ugm.group_id not in (select group_id from user_group_member where user_id = 6);
 
 select *
 from create_user_group_as_system('');

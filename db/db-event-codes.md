@@ -45,6 +45,8 @@
 | 50303  | Permission set deleted |
 | 50304  | Permission assigned |
 | 50305  | Permission unassigned |
+| 50306  | Permission assignability changed |
+
 
 ## Security Error codes
 | Event code  | Description |
@@ -61,7 +63,10 @@
 | 52173  | User cannot be added to group because it's either not assignable or an external group  |
 | 52174  | Either mapped object id or role must not be empty  |
 | 52175  | Permission set is not assignable  |
+| 52176  | Permission is not assignable  |
 | 52271  | User group cannot be deleted because it's a system group  |
 | 52272  | Either user group id or target user id has to be not null  |
 | 52273  | Either permission set code or permission code has to be not null  |
+| 52274  | Either permission id or code has to be not null  |
+| 52275  | Permission does not exist  |
 
