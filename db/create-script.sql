@@ -321,8 +321,8 @@ create index ix_journal on journal (tenant_id, data_group, data_object_id);
 
 create view user_groups as
 (
-select t.tenant_id
-     , t.code                                                                             as tenant_code
+select ug.tenant_id
+     , case when t.code is null then 'system' else t.code end                             as tenant_code
      , ui.user_id
      , ui.display_name                                                                    as user_display_name
      , ui.uuid                                                                            as user_uuid
@@ -336,7 +336,8 @@ select t.tenant_id
      , u.mapped_object_name
      , u.mapped_role
 from user_group_member ugm
-         inner join user_info ui on ui.user_id = ugm.user_id
+         inner join user_info ui
+                    on ui.user_id = ugm.user_id
          inner join user_group ug on ugm.group_id = ug.user_group_id
          inner join tenant t on ug.tenant_id = t.tenant_id
          left join user_group_mapping u on ugm.mapping_id = u.ug_mapping_id
@@ -560,14 +561,14 @@ end ;
 $$;
 
 
-create function unsecure.create_system_tenant()
+create function unsecure.create_primary_tenant()
     returns setof tenant
     language sql
     rows 1
 as
 $$
 insert into tenant(created_by, modified_by, name, code, is_removable, is_assignable)
-values ('initial_script', 'initial_script', 'System', 'system', false, false)
+values ('initial_script', 'initial_script', 'Primary', 'primary', false, true)
 returning *;
 $$;
 
@@ -2217,7 +2218,7 @@ begin
 
     with ugs as (select user_group_id, group_code
                  from user_groups
-                 where tenant_id = _tenant_id
+                 where (tenant_id = _tenant_id or tenant_id is null)
                    and user_id = _target_user_id),
          group_assignments as (select distinct ep.permission_code as full_code
                                from ugs ug
@@ -2644,17 +2645,17 @@ begin
     perform unsecure.create_system_user();
     perform unsecure.create_permission_by_path_as_system('System', _is_assignable := true);
 
-    perform unsecure.create_system_tenant();
+    perform unsecure.create_user_group_as_system(null, 'System', true, true);
 
-    perform unsecure.create_user_group_as_system(1, 'System', true, true);
+    perform unsecure.add_user_to_group_as_system('system', 'System', null);
+    perform auth.lock_user_group('system', 1, null, 1);
 
-    perform unsecure.add_user_to_group_as_system('system', 'System', 1);
-    perform auth.lock_user_group('system', 1, 1, 1);
-
-    perform unsecure.create_perm_set_as_system('System', 1, true, _is_assignable := true,
+    perform unsecure.create_perm_set_as_system('System', null, true, _is_assignable := true,
                                                _permissions := array ['system']);
-    perform unsecure.assign_permission_as_system(1, 1, null, 'system');
-    perform unsecure.set_permission_as_assignable('system', '1', 1, null, false);
+    perform unsecure.assign_permission_as_system(null, 1, null, 'system');
+    perform unsecure.set_permission_as_assignable('system', 1, 1, null, false);
+
+    perform unsecure.create_primary_tenant();
 
     perform unsecure.create_permission_by_path_as_system('Authentication', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
