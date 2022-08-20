@@ -1986,7 +1986,9 @@ end;
 $$;
 
 
-create function unsecure.create_perm_set_as_system(
+create function unsecure.create_perm_set(
+    _created_by text,
+    _user_id bigint,
     _title text,
     _tenant_id int default null,
     _is_system bool default false,
@@ -2000,16 +2002,32 @@ $$
 declare
     __last_id int;
 begin
-    -- noinspection SqlInsertValues
 
-    insert into perm_set(created_by, modified_by, tenant_id, title, is_system, is_assignable)
+    if exists(SELECT
+              from unnest(_permissions) as perm_code
+                       inner join auth.permission p
+                                  on p.full_code = perm_code::ext.ltree and not p.is_assignable) then
+        raise exception 'Some of permissions are not assignable'
+            using errcode = 52176;
+    end if;
+
+    -- noinspection SqlInsertValues
+    insert into auth.perm_set(created_by, modified_by, tenant_id, title, is_system, is_assignable)
     values ('system', 'system', _tenant_id, _title, _is_system, _is_assignable)
     returning perm_set_id into __last_id;
 
     insert into auth.perm_set_perm(created_by, perm_set_id, permission_id)
     SELECT 'system', __last_id, p.permission_id
     from unnest(_permissions) as perm_code
-             inner join auth.permission p on p.full_code = perm_code::ext.ltree and p.is_assignable;
+             inner join auth.permission p on p.full_code = perm_code::ext.ltree;
+
+    perform add_journal_msg(_created_by, _tenant_id, _user_id
+        , format('User: %s created new permission set: %s'
+                                , _created_by, _title)
+        , 'perm_set', __last_id
+        ,
+                            array ['title', _title, 'is_system', _is_system::text, 'is_assignable', _is_assignable::text, 'permissions', array_to_string(_permissions, ', ')]
+        , 50301);
 
     return query
         select *
@@ -2025,6 +2043,49 @@ create function unsecure.create_perm_set_as_system(
     _is_assignable bool default true,
     _permissions text[] default null)
     returns setof auth.perm_set
+    language sql
+    rows 1
+as
+$$
+
+select *
+from unsecure.create_perm_set('system', 1, _title, _tenant_id, _is_system, _is_assignable, _permissions);
+
+$$;
+
+create function auth.create_perm_set(
+    _created_by text,
+    _user_id text,
+    _title text,
+    _tenant_id int default null,
+    _is_system bool default false,
+    _is_assignable bool default true,
+    _permissions text[] default null)
+    returns setof auth.perm_set
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.create_permission_set');
+
+    return query
+        select *
+        from unsecure.create_perm_set(_created_by, _user_id, _title, _tenant_id, _is_system, _is_assignable,
+                                      _permissions);
+end;
+$$;
+
+create function unsecure.update_perm_set(
+    _modified_by text,
+    _user_id text,
+    _tenant_id int,
+    _perm_set_id int,
+    _title text,
+    _is_assignable bool default true
+)
+    returns setof auth.perm_set
     language plpgsql
     rows 1
 as
@@ -2032,16 +2093,23 @@ $$
 declare
     __last_id int;
 begin
-    -- noinspection SqlInsertValues
 
-    insert into perm_set(created_by, modified_by, tenant_id, title, is_system, is_assignable)
-    values ('system', 'system', _tenant_id, _title, _is_system, _is_assignable)
+    -- noinspection SqlInsertValues
+    update perm_set
+    set modified      = now(),
+        modified_by   = _modified_by,
+        title         = _title,
+        is_assignable = _is_assignable
+    where perm_set_id = _perm_set_id
     returning perm_set_id into __last_id;
 
-    insert into auth.perm_set_perm(created_by, perm_set_id, permission_id)
-    SELECT 'system', __last_id, p.permission_id
-    from unnest(_permissions) as perm_code
-             inner join auth.permission p on p.full_code = perm_code::ext.ltree and p.is_assignable;
+    perform add_journal_msg(_modified_by, _tenant_id, _user_id
+        , format('User: %s updated permission set: %s'
+                                , _modified_by, _title)
+        , 'perm_set', __last_id
+        ,
+                            array ['title', _title, 'is_assignable', _is_assignable::text]
+        , 50302);
 
     return query
         select *
@@ -2050,6 +2118,34 @@ begin
 end;
 $$;
 
+create function auth.update_perm_set(
+    _modified_by text,
+    _user_id text,
+    _tenant_id int,
+    _perm_set_id int,
+    _title text,
+    _is_assignable bool default true
+)
+    returns setof auth.perm_set
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    if not exists(select from auth.perm_set where perm_set_id = _perm_set_id and tenant_id = _tenant_id) then
+        raise exception 'Permission set (id: %) is not defined in tenant (id: %)', _perm_set_id, _tenant_id
+            using errcode = 52177;
+    end if;
+
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.update_permission_set');
+
+    return query
+        select *
+        from unsecure.update_perm_set(_modified_by, _user_id, _tenant_id
+            , _perm_set_id, _title, _is_assignable);
+end;
+$$;
 
 /***
  *    ##     ##  ######  ######## ########   ######
@@ -2062,7 +2158,8 @@ $$;
  */
 
 
-create or replace function auth.ensure_groups_and_permissions(_user_id bigint, _target_user_id bigint, _tenant_id int,
+create or replace function auth.ensure_groups_and_permissions(_created_by text, _user_id bigint, _target_user_id bigint,
+                                                              _tenant_id int,
                                                               _provider_code text,
                                                               _provider_groups text[] default null,
                                                               _provider_roles text[] default null)
@@ -2093,24 +2190,26 @@ begin
                                     inner join public.user_group_mapping ugm
                                                on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
                                     inner join user_group u
-                                               on u.user_group_id = ugm.group_id and u.tenant_id = _tenant_id
+                                               on u.user_group_id = ugm.group_id and
+                                                  (u.tenant_id = _tenant_id or u.tenant_id is null)
                            union
                            select distinct ugm.group_id
                            from unnest(_provider_roles) r
                                     inner join public.user_group_mapping ugm
                                                on ugm.provider_code = _provider_code and ugm.mapped_role = r
                                     inner join user_group u
-                                               on u.user_group_id = ugm.group_id and u.tenant_id = _tenant_id);
+                                               on u.user_group_id = ugm.group_id and
+                                                  (u.tenant_id = _tenant_id or u.tenant_id is null));
 
-    insert into user_group_member(user_id, group_id, mapping_id, manual_assignment)
-    select distinct _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
+    insert into user_group_member(created_by, user_id, group_id, mapping_id, manual_assignment)
+    select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
     from unnest(_provider_groups) g
              inner join public.user_group_mapping ugm
                         on ugm.provider_code = _provider_code and ugm.mapped_object_id = lower(g)
     where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id);
 
-    insert into user_group_member(user_id, group_id, mapping_id, manual_assignment)
-    select distinct _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
+    insert into user_group_member(created_by, user_id, group_id, mapping_id, manual_assignment)
+    select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
     from unnest(_provider_roles) r
              inner join public.user_group_mapping ugm
                         on ugm.provider_code = _provider_code and ugm.mapped_role = lower(r)
@@ -2136,7 +2235,7 @@ begin
          user_assignments as (select distinct ep.permission_code as full_code
                               from permission_assignment pa
                                        inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
-                              where pa.tenant_id = _tenant_id
+                              where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
                                 and pa.user_id = _target_user_id
                                 and ep.perm_set_is_assignable = true
                                 and ep.permission_is_assignable = true
@@ -2147,7 +2246,7 @@ begin
                                                   on pa.permission_id = p.permission_id
                                        inner join auth.permission sp
                                                   on sp.node_path <@ p.node_path and sp.is_assignable = true
-                              where pa.tenant_id = _tenant_id
+                              where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
                                 and pa.user_id = _target_user_id),
          user_permissions as (select distinct full_code
                               from group_assignments
@@ -2163,12 +2262,13 @@ begin
 
     if not exists(select from auth.user_permission_cache upc where upc.user_id = _target_user_id) then
         insert into auth.user_permission_cache (created_by, user_id, tenant_id, groups, permissions)
-        values ('system', _target_user_id, _tenant_id, coalesce(__gs, array []::text[]),
+        values (_created_by, _target_user_id, _tenant_id, coalesce(__gs, array []::text[]),
                 coalesce(__ps, array []::text[]))
         returning groups, permissions into __effective_gs, __effective_ps;
     else
         update auth.user_permission_cache upc
         set modified    = now(),
+            modified_by = _created_by,
             groups      = coalesce(__gs, array []::text[]),
             permissions = coalesce(__ps, array []::text[])
         where upc.user_id = _target_user_id
@@ -2183,7 +2283,7 @@ $$;
 
 
 -- for email authentication
-create or replace function auth.register_user(_user_id int, _email text, _password_hash text,
+create or replace function auth.register_user(_created_by text, _user_id int, _email text, _password_hash text,
                                               _display_name text, _user_data text)
     returns table
             (
@@ -2220,13 +2320,13 @@ begin
     end if;
 
     insert into user_info (created_by, modified_by, can_login, username, email, display_name)
-    values (__normalized_email, __normalized_email, true, __normalized_email, __normalized_email, _display_name)
+    values (_created_by, __normalized_email, true, __normalized_email, __normalized_email, _display_name)
     returning * into __new_user;
 
     insert into user_identity(created_by, modified_by, provider_code, uid, user_id, password_hash)
-    values (__normalized_email, __normalized_email, 'email', __normalized_email, __new_user.user_id, _password_hash);
+    values (_created_by, __normalized_email, 'email', __normalized_email, __new_user.user_id, _password_hash);
 
-    perform auth.update_user_data(_email, _user_id, __new_user.user_id, 'email', _user_data);
+    perform auth.update_user_data(_created_by, _user_id, __new_user.user_id, 'email', _user_data);
 
     return query
         select __new_user.user_id
@@ -2353,10 +2453,11 @@ end;
 $$;
 
 -- for external authentication provider flows
-create or replace function auth.ensure_user_from_provider(_created_by text, _provider_code text, _provider_uid text,
+create or replace function auth.ensure_user_from_provider(_created_by text, _user_id bigint, _provider_code text,
+                                                          _provider_uid text,
                                                           _username text,
                                                           _display_name text, _email text default null,
-                                                          _user_data jsonb default null)
+                                                          _user_data text default null)
     returns table
             (
                 __user_id      bigint,
@@ -2391,6 +2492,8 @@ begin
 
         insert into user_identity(created_by, modified_by, provider_code, uid, user_id)
         values (_created_by, _created_by, _provider_code, _provider_uid, __last_id);
+
+        perform auth.update_user_data(_email, _user_id, __last_id, _provider_code, _user_data);
 
     end if;
 
@@ -2556,10 +2659,11 @@ begin
     perform unsecure.create_permission_by_path_as_system('Authentication', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
 
-    perform unsecure.create_permission_by_path_as_system('Admin', 'system', false);
-    perform unsecure.create_permission_by_path_as_system('Can access', 'system.admin');
+    perform unsecure.create_permission_by_path_as_system('Areas', 'system', false);
+    perform unsecure.create_permission_by_path_as_system('Public', 'system.areas');
+    perform unsecure.create_permission_by_path_as_system('Admin', 'system.areas');
 
-    perform unsecure.create_permission_by_path_as_system('Manage permissions', 'system');
+    perform unsecure.create_permission_by_path_as_system('Manage permissions', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Create permission', 'system.manage_permissions');
     perform unsecure.create_permission_by_path_as_system('Update permission', 'system.manage_permissions');
     perform unsecure.create_permission_by_path_as_system('Delete permission', 'system.manage_permissions');

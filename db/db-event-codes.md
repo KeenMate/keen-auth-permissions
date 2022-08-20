@@ -47,7 +47,6 @@
 | 50305  | Permission unassigned |
 | 50306  | Permission assignability changed |
 
-
 ## Security Error codes
 | Event code  | Description |
 | ------------- | ------------- |
@@ -64,6 +63,7 @@
 | 52174  | Either mapped object id or role must not be empty  |
 | 52175  | Permission set is not assignable  |
 | 52176  | Permission is not assignable  |
+| 52177  | Permission set is not defined in tenant  |
 | 52271  | User group cannot be deleted because it's a system group  |
 | 52272  | Either user group id or target user id has to be not null  |
 | 52273  | Either permission set code or permission code has to be not null  |
