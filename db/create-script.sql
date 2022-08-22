@@ -503,7 +503,22 @@ begin
 end;
 $$;
 
-create or replace function auth.has_permissions(_tenant_id int, _user_id bigint, _perm_codes text[],
+create or replace function unsecure.calculate_user_permissions(_tenant_id int, _user_id bigint)
+returns table (
+    __groups text[],
+    __permissions text[]
+              )
+language plpgsql
+as
+$$
+begin
+
+
+
+end;
+$$;
+
+create or replace function auth.has_permissions(_tenant_id int, _target_user_id bigint, _perm_codes text[],
                                                 _throw_err bool default true)
     returns bool
     language plpgsql
@@ -512,7 +527,7 @@ as
 $$
 begin
 
-    if (_user_id = 1) then
+    if (_target_user_id = 1) then
         return true;
     end if;
 
@@ -528,27 +543,27 @@ begin
                      inner join (select unnest as code from unnest(_perm_codes)) pc
                                 on p.full_code @> ext.text2ltree(pc.code)
             where (ug.tenant_id = _tenant_id or ug.tenant_id is null)
-              and ugm.user_id = _user_id
+              and ugm.user_id = _target_user_id
         ) then
         return true;
     end if;
 
     if (_throw_err) then
 
-        perform add_journal_msg('system', _tenant_id, _user_id
+        perform add_journal_msg('system', _tenant_id, _target_user_id
             , format('User: (id: %s) has no permission: %s'
-                                    , _user_id, array_to_string(_perm_codes, '; '))
-            , 'perm', _user_id
+                                    , _target_user_id, array_to_string(_perm_codes, '; '))
+            , 'perm', _target_user_id
             , _event_id := 50003);
 
-        perform auth.throw_no_permission(_tenant_id, _user_id, _perm_codes);
+        perform auth.throw_no_permission(_tenant_id, _target_user_id, _perm_codes);
     end if;
 
     return false;
 end ;
 $$;
 
-create or replace function auth.has_permission(_tenant_id int, _user_id bigint, _perm_code text,
+create or replace function auth.has_permission(_tenant_id int, _target_user_id bigint, _perm_code text,
                                                _throw_err bool default true)
     returns bool
     language plpgsql
@@ -556,7 +571,7 @@ create or replace function auth.has_permission(_tenant_id int, _user_id bigint, 
 as
 $$
 begin
-    return auth.has_permissions(_tenant_id, _user_id, array [_perm_code], _throw_err);
+    return auth.has_permissions(_tenant_id, _target_user_id, array [_perm_code], _throw_err);
 end ;
 $$;
 
