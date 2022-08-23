@@ -561,14 +561,14 @@ begin
                     and group_id not in (select distinct ugm.group_id
                                          from unnest(__provider_groups) g
                                                   inner join public.user_group_mapping ugm
-                                                             on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
+                                                             on ugm.provider_code = _provider_code and ugm.mapped_object_id = lower(g)
                                                   inner join user_group u
                                                              on u.user_group_id = ugm.group_id
                                          union
                                          select distinct ugm.group_id
                                          from unnest(__provider_roles) r
                                                   inner join public.user_group_mapping ugm
-                                                             on ugm.provider_code = _provider_code and ugm.mapped_role = r
+                                                             on ugm.provider_code = _provider_code and ugm.mapped_role = lower(r)
                                                   inner join user_group u
                                                              on u.user_group_id = ugm.group_id)
                 returning group_id),
@@ -1833,7 +1833,8 @@ begin
     return query
         insert into user_group_mapping (created_by, group_id, provider_code, mapped_object_id, mapped_object_name,
                                         mapped_role)
-            values (_created_by, _user_group_id, _provider_code, _mapped_object_id, _mapped_object_name, _mapped_role)
+            values (_created_by, _user_group_id, _provider_code, lower(_mapped_object_id), _mapped_object_name,
+                    lower(_mapped_role))
             returning ug_mapping_id;
 
     perform add_journal_msg(_created_by, _tenant_id, _user_id
@@ -1842,7 +1843,8 @@ begin
                  _user_group_id, _tenant_id)
         , 'group', _user_group_id
         ,
-                            array ['mapped_object_id', _mapped_object_id::text, 'mapped_object_name', _mapped_object_name, '_mapped_role', _mapped_role]
+                            array ['mapped_object_id', _mapped_object_id::text, 'mapped_object_name'
+                                , _mapped_object_name, '_mapped_role', _mapped_role]
         , 50231);
 end;
 $$;
