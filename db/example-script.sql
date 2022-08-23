@@ -59,7 +59,7 @@ select *
 from auth.create_user_group_member('jan.rada@keenmate.com', 5, 3, 5, 2);
 
 select *
-from auth.create_external_user_group('system', 2, 'External group 1', 3, 'aad', _mapped_object_id := 'aaa_rada');
+from auth.create_external_user_group('system', 2, 'External group 1', 3, 'aad', _mapped_object_id := 'aad_rada');
 
 select *
 from unsecure.create_perm_set_as_system('My external partners', 3, false, true,
@@ -69,13 +69,24 @@ select *
 from unsecure.assign_permission_as_system(3, 6, null, 'my_external_partners');
 
 select *
-from auth.ensure_groups_and_permissions('authenticator', 1, 6, 3, 'aad', array ['aaa_rada']);
+from auth.ensure_groups_and_permissions('authenticator', 1, 6, 3, 'aad', array ['aad_rada']);
+
+select * from user_group_mapping;
+select * from user_group_member;
+
+select * from unsecure.recalculate_user_groups('_created_by'
+        , 6
+        , 'aad'
+        , array ['aad_rada']
+        , null);
+
+select * from unsecure.recalculate_user_permissions('authenticator', 3, 6);
 
 
-
-
-
-
+select coalesce(number_value,1)
+        from const.sys_params sp
+        where sp.group_code = 'autha'
+          and sp.code = 'perm_cache_timeout_in_s';
 
 
 

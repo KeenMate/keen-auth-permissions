@@ -123,13 +123,25 @@ $$;
  *
  */
 
+create table const.sys_params
+(
+    sys_param_id int generated always as identity not null primary key,
+    group_code   text                             not null,
+    code         text                             not null,
+    text_value   text,
+    number_value bigint,
+    bool_value   bool
+) inherits (_template_timestamps);
+
+create unique index uq_sys_params on const.sys_params (group_code, code);
+
 create table auth.provider
 (
     provider_id int generated always as identity not null primary key,
     code        text                             not null unique,
     name        text                             not null,
     is_active   bool                             not null default true
-);
+) inherits (_template_timestamps);
 
 create table tenant
 (
@@ -166,11 +178,12 @@ create table tenant_user
 
 create table auth.user_permission_cache
 (
-    upc_id      bigint generated always as identity not null primary key,
-    user_id     bigint                              not null references user_info (user_id),
-    tenant_id   int                                 not null references tenant (tenant_id),
-    groups      text[]                              not null default '{}',
-    permissions text[]                              not null default '{}'
+    upc_id          bigint generated always as identity not null primary key,
+    user_id         bigint                              not null references user_info (user_id),
+    tenant_id       int                                 not null references tenant (tenant_id),
+    groups          text[]                              not null default '{}',
+    permissions     text[]                              not null default '{}',
+    expiration_date timestamptz                         not null
 ) inherits (_template_timestamps);
 
 
@@ -503,18 +516,200 @@ begin
 end;
 $$;
 
-create or replace function unsecure.calculate_user_permissions(_tenant_id int, _user_id bigint)
-returns table (
-    __groups text[],
-    __permissions text[]
-              )
-language plpgsql
+create or replace function unsecure.clear_permission_cache(_deleted_by text, _tenant_id int, _target_user_id bigint)
+    returns void
+    language sql
 as
 $$
+
+delete
+from auth.user_permission_cache
+where tenant_id = _tenant_id
+  and user_id = _target_user_id;
+$$;
+
+create or replace function unsecure.recalculate_user_groups(_created_by text,
+                                                            _target_user_id bigint, _provider_code text,
+                                                            _provider_groups text[], _provider_roles text[])
+    returns table
+            (
+                __groups text[]
+            )
+    language plpgsql
+as
+$$
+declare
+    __not_really_used int;
 begin
 
+    -- cleanup membership of groups user is no longer part of
+    with deleted_group_tenants as (
+        delete
+            from user_group_member
+                where user_id = _target_user_id
+                    and mapping_id is not null
+                    and group_id not in (select distinct ugm.group_id
+                                         from unnest(_provider_groups) g
+                                                  inner join public.user_group_mapping ugm
+                                                             on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
+                                                  inner join user_group u
+                                                             on u.user_group_id = ugm.group_id
+                                         union
+                                         select distinct ugm.group_id
+                                         from unnest(_provider_roles) r
+                                                  inner join public.user_group_mapping ugm
+                                                             on ugm.provider_code = _provider_code and ugm.mapped_role = r
+                                                  inner join user_group u
+                                                             on u.user_group_id = ugm.group_id)
+                returning group_id),
+         created_group_tenant as (
+             insert
+                 into user_group_member (created_by, user_id, group_id, mapping_id, manual_assignment)
+                     select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
+                     from unnest(_provider_groups) g
+                              inner join public.user_group_mapping ugm
+                                         on ugm.provider_code = _provider_code and ugm.mapped_object_id = lower(g)
+                     where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id)
+                     returning group_id),
+         created_role_tenant as (
+             insert into user_group_member (created_by, user_id, group_id, mapping_id, manual_assignment)
+                 select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
+                 from unnest(_provider_roles) r
+                          inner join public.user_group_mapping ugm
+                                     on ugm.provider_code = _provider_code and ugm.mapped_role = lower(r)
+                 where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id)
+                 returning group_id),
+         all_group_ids as (select group_id
+                           from deleted_group_tenants
+                           union
+                           select group_id
+                           from created_group_tenant
+                           union
+                           select group_id
+                           from created_role_tenant),
+         all_tenants as (select tenant_id
+                         from all_group_ids ids
+                                  inner join user_group ug on ids.group_id = ug.user_group_id
+                         group by tenant_id)
+         -- variable not really used, it's there just to avoid 'query has no destination for result data'
+    select at.tenant_id
+    from all_tenants at,
+         lateral unsecure.clear_permission_cache(_created_by, at.tenant_id, _target_user_id) r
+    into __not_really_used;
 
+    return query
+        select array_agg(distinct ug.code)
+        from user_group_member ugm
+                 inner join user_group ug on ug.user_group_id = ugm.group_id
+        where user_id = _target_user_id;
+end;
+$$;
 
+create or replace function unsecure.recalculate_user_permissions(_created_by text, _tenant_id int, _target_user_id bigint)
+    returns table
+            (
+                __groups      text[],
+                __permissions text[]
+            )
+    language plpgsql
+as
+$$
+declare
+    __perm_cache_timeout_in_s bigint;
+    __gs                      text[];
+    __ps                      text[];
+    __expiration_date         timestamptz;
+begin
+
+    if exists(select
+              from auth.user_permission_cache
+              where tenant_id = _tenant_id
+                and user_id = _target_user_id
+                and expiration_date > now()) then
+
+        return query
+            select upc.groups,
+                   upc.permissions
+            from auth.user_permission_cache upc
+            where upc.tenant_id = _tenant_id
+              and upc.user_id = _target_user_id;
+
+    else
+
+        select number_value
+        from const.sys_params sp
+        where sp.group_code = 'auth'
+          and sp.code = 'perm_cache_timeout_in_s'
+        into __perm_cache_timeout_in_s;
+
+        if (__perm_cache_timeout_in_s is null) then
+            __perm_cache_timeout_in_s := 300;
+        end if;
+
+        with ugs as (select user_group_id, group_code
+                     from user_groups
+                     where (tenant_id = _tenant_id or tenant_id is null)
+                       and user_id = _target_user_id),
+             group_assignments as (select distinct ep.permission_code as full_code
+                                   from ugs ug
+                                            inner join permission_assignment pa on ug.user_group_id = pa.group_id
+                                            inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
+                                   where ep.perm_set_is_assignable = true
+                                     and ep.permission_is_assignable = true
+                                   union
+                                   select distinct sp.full_code
+                                   from ugs ug
+                                            inner join permission_assignment pa on ug.user_group_id = pa.group_id
+                                            inner join auth.permission p on pa.permission_id = p.permission_id
+                                            inner join auth.permission sp
+                                                       on sp.node_path <@ p.node_path and sp.is_assignable = true),
+             user_assignments as (select distinct ep.permission_code as full_code
+                                  from permission_assignment pa
+                                           inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
+                                  where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
+                                    and pa.user_id = _target_user_id
+                                    and ep.perm_set_is_assignable = true
+                                    and ep.permission_is_assignable = true
+                                  union
+                                  select distinct sp.full_code
+                                  from permission_assignment pa
+                                           inner join auth.permission p
+                                                      on pa.permission_id = p.permission_id
+                                           inner join auth.permission sp
+                                                      on sp.node_path <@ p.node_path and sp.is_assignable = true
+                                  where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
+                                    and pa.user_id = _target_user_id),
+             user_permissions as (select distinct full_code
+                                  from group_assignments
+                                  union
+                                  select full_code
+                                  from user_assignments
+                                  order by full_code)
+        select coalesce(array_agg(distinct ugs.group_code), array []::text[])                   rs,
+               coalesce(array_agg(distinct user_permissions.full_code::text), array []::text[]) ps
+        from ugs,
+             user_permissions
+        into __gs, __ps;
+
+        __expiration_date := now() + interval '1 second' * __perm_cache_timeout_in_s;
+
+        if not exists(select from auth.user_permission_cache upc where upc.user_id = _target_user_id) then
+            insert into auth.user_permission_cache (created_by, user_id, tenant_id, groups, permissions, expiration_date)
+            values (_created_by, _target_user_id, _tenant_id, __gs, __ps, __expiration_date);
+        else
+            update auth.user_permission_cache upc
+            set modified        = now(),
+                modified_by     = _created_by,
+                groups          = __gs,
+                permissions     = __ps,
+                expiration_date = __expiration_date
+            where tenant_id = _tenant_id
+              and user_id = _target_user_id;
+        end if;
+
+        return query
+            select __gs, __ps;
+    end if;
 end;
 $$;
 
@@ -525,28 +720,51 @@ create or replace function auth.has_permissions(_tenant_id int, _target_user_id 
     stable
 as
 $$
+declare
+    __perms           text[];
+    __expiration_date timestamptz;
 begin
 
     if (_target_user_id = 1) then
         return true;
     end if;
 
+    select permissions, expiration_date
+    from auth.user_permission_cache upc
+    where upc.tenant_id = _tenant_id
+      and user_id = _target_user_id
+    into __perms, __expiration_date;
+
+    if __expiration_date is null or __expiration_date <= now() then
+        select __permissions
+        from unsecure.recalculate_user_permissions('permission_check', _tenant_id, _target_user_id)
+        into __perms;
+    end if;
+
     if exists(
-            select p.code, ugm.user_id, p.node_path
-            from user_group ug
-                     inner join permission_assignment uga
-                                on ug.user_group_id = uga.group_id and ug.tenant_id = _tenant_id
-                     inner join user_group_member ugm on ugm.group_id = uga.group_id
-                     inner join auth.perm_set ps on ps.perm_set_id = uga.perm_set_id
-                     inner join auth.perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
-                     inner join auth.permission p on p.permission_id = psp.permission_id
-                     inner join (select unnest as code from unnest(_perm_codes)) pc
-                                on p.full_code @> ext.text2ltree(pc.code)
-            where (ug.tenant_id = _tenant_id or ug.tenant_id is null)
-              and ugm.user_id = _target_user_id
+            select
+            from unnest(__perms) p
+                     inner join unnest(_perm_codes) rp on p = rp
         ) then
         return true;
     end if;
+
+    --     if exists(
+--             select p.code, ugm.user_id, p.node_path
+--             from user_group ug
+--                      inner join permission_assignment uga
+--                                 on ug.user_group_id = uga.group_id and ug.tenant_id = _tenant_id
+--                      inner join user_group_member ugm on ugm.group_id = uga.group_id
+--                      inner join auth.perm_set ps on ps.perm_set_id = uga.perm_set_id
+--                      inner join auth.perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
+--                      inner join auth.permission p on p.permission_id = psp.permission_id
+--                      inner join (select unnest as code from unnest(_perm_codes)) pc
+--                                 on p.full_code @> ext.text2ltree(pc.code)
+--             where (ug.tenant_id = _tenant_id or ug.tenant_id is null)
+--               and ugm.user_id = _target_user_id
+--         ) then
+--         return true;
+--     end if;
 
     if (_throw_err) then
 
@@ -618,7 +836,7 @@ create function auth.validate_provider_is_active(_provider_code text)
 as
 $$
 begin
-    if exists(select from provider where code = _provider_code and is_active = false) then
+    if exists(select from auth.provider where code = _provider_code and is_active = false) then
         raise exception 'Provider (provider code: %) is not active', _provider_code
             using errcode = 52107;
     end if;
@@ -636,7 +854,6 @@ $$;
  *
  */
 
-
 create function auth.create_provider(_created_by text, _user_id bigint, _provider_code text, _provider_name text,
                                      _is_active bool default true)
     returns table
@@ -653,8 +870,8 @@ begin
 
     perform auth.has_permission(null, _user_id, 'system.providers.create_provider');
 
-    insert into provider (code, name, is_active)
-    values (_provider_code, _provider_name, _is_active)
+    insert into provider (created_by, modified_by, code, name, is_active)
+    values (_created_by, _created_by, _provider_code, _provider_name, _is_active)
     returning provider_id into __last_id;
 
     return query
@@ -687,7 +904,10 @@ begin
 
     return query
         update provider
-            set code = _provider_code,
+            set
+                modified = now(),
+                modified_by = _modified_by,
+                code = _provider_code,
                 name = _provider_name,
                 is_active = _is_active
             where provider_id = _provider_id
@@ -749,7 +969,7 @@ begin
     perform auth.has_permission(null, _user_id, 'system.providers.get_users');
 
     select provider_id
-    from provider
+    from auth.provider
     where code = _provider_code
     into __provider_id;
 
@@ -786,7 +1006,7 @@ begin
     perform auth.has_permission(null, _user_id, 'system.providers.update_provider');
 
     return query
-        update provider
+        update auth.provider
             set is_active = true
             where code = _provider_code
             returning provider_id;
@@ -969,7 +1189,7 @@ begin
 
     if _perm_set_code is not null then
         select perm_set_id, is_assignable
-        from perm_set
+        from auth.perm_set
         where code = _perm_set_code
         into __perm_set_id, __perm_set_assignable;
 
@@ -982,7 +1202,7 @@ begin
 
     if _perm_code is not null then
         select permission.permission_id, is_assignable
-        from permission
+        from auth.permission
         where code = _perm_code
         into __permission_id, __permission_assignable;
 
@@ -2189,111 +2409,19 @@ create or replace function auth.ensure_groups_and_permissions(_created_by text, 
     rows 1
 as
 $$
-declare
-    __gs           text[];
-    __ps           text[];
-    __effective_gs text[];
-    __effective_ps text[];
 begin
     perform auth.has_permission(null, _user_id, 'system.authentication.ensure_permissions');
 
-    delete
-    from user_group_member
-    where user_id = _target_user_id
-      and mapping_id is not null
-      and group_id not in (select distinct ugm.group_id
-                           from unnest(_provider_groups) g
-                                    inner join public.user_group_mapping ugm
-                                               on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
-                                    inner join user_group u
-                                               on u.user_group_id = ugm.group_id and
-                                                  (u.tenant_id = _tenant_id or u.tenant_id is null)
-                           union
-                           select distinct ugm.group_id
-                           from unnest(_provider_roles) r
-                                    inner join public.user_group_mapping ugm
-                                               on ugm.provider_code = _provider_code and ugm.mapped_role = r
-                                    inner join user_group u
-                                               on u.user_group_id = ugm.group_id and
-                                                  (u.tenant_id = _tenant_id or u.tenant_id is null));
-
-    insert into user_group_member(created_by, user_id, group_id, mapping_id, manual_assignment)
-    select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
-    from unnest(_provider_groups) g
-             inner join public.user_group_mapping ugm
-                        on ugm.provider_code = _provider_code and ugm.mapped_object_id = lower(g)
-    where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id);
-
-    insert into user_group_member(created_by, user_id, group_id, mapping_id, manual_assignment)
-    select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
-    from unnest(_provider_roles) r
-             inner join public.user_group_mapping ugm
-                        on ugm.provider_code = _provider_code and ugm.mapped_role = lower(r)
-    where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id);
-
-    with ugs as (select user_group_id, group_code
-                 from user_groups
-                 where (tenant_id = _tenant_id or tenant_id is null)
-                   and user_id = _target_user_id),
-         group_assignments as (select distinct ep.permission_code as full_code
-                               from ugs ug
-                                        inner join permission_assignment pa on ug.user_group_id = pa.group_id
-                                        inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
-                               where ep.perm_set_is_assignable = true
-                                 and ep.permission_is_assignable = true
-                               union
-                               select distinct sp.full_code
-                               from ugs ug
-                                        inner join permission_assignment pa on ug.user_group_id = pa.group_id
-                                        inner join auth.permission p on pa.permission_id = p.permission_id
-                                        inner join auth.permission sp
-                                                   on sp.node_path <@ p.node_path and sp.is_assignable = true),
-         user_assignments as (select distinct ep.permission_code as full_code
-                              from permission_assignment pa
-                                       inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
-                              where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
-                                and pa.user_id = _target_user_id
-                                and ep.perm_set_is_assignable = true
-                                and ep.permission_is_assignable = true
-                              union
-                              select distinct sp.full_code
-                              from permission_assignment pa
-                                       inner join auth.permission p
-                                                  on pa.permission_id = p.permission_id
-                                       inner join auth.permission sp
-                                                  on sp.node_path <@ p.node_path and sp.is_assignable = true
-                              where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
-                                and pa.user_id = _target_user_id),
-         user_permissions as (select distinct full_code
-                              from group_assignments
-                              union
-                              select full_code
-                              from user_assignments
-                              order by full_code)
-    select array_agg(distinct ugs.group_code)                   rs,
-           array_agg(distinct user_permissions.full_code::text) ps
-    from ugs,
-         user_permissions
-    into __gs, __ps;
-
-    if not exists(select from auth.user_permission_cache upc where upc.user_id = _target_user_id) then
-        insert into auth.user_permission_cache (created_by, user_id, tenant_id, groups, permissions)
-        values (_created_by, _target_user_id, _tenant_id, coalesce(__gs, array []::text[]),
-                coalesce(__ps, array []::text[]))
-        returning groups, permissions into __effective_gs, __effective_ps;
-    else
-        update auth.user_permission_cache upc
-        set modified    = now(),
-            modified_by = _created_by,
-            groups      = coalesce(__gs, array []::text[]),
-            permissions = coalesce(__ps, array []::text[])
-        where upc.user_id = _target_user_id
-        returning groups, permissions into __effective_gs, __effective_ps;
-    end if;
+    perform unsecure.recalculate_user_groups(_created_by
+        , _target_user_id
+        , _provider_code
+        , _provider_groups
+        , _provider_roles);
 
     return query
-        select _tenant_id, __effective_gs, __effective_ps;
-
+        select _tenant_id, up.__groups, up.__permissions
+        from unsecure.recalculate_user_permissions(_created_by
+                 , _tenant_id, _target_user_id) up;
 end;
 $$;
 
@@ -2656,6 +2784,9 @@ declare
 begin
 
     -- COMMMON WITH ALL DATABASES
+
+    insert into const.sys_params(created_by, group_code, code, number_value)
+    values ('initial', 'auth', 'perm_cache_timeout_in_s', 15); -- 15seconds intentionally for better debugging
 
     perform unsecure.create_system_user();
     perform unsecure.create_permission_by_path_as_system('System', _is_assignable := true);
