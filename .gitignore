@@ -26,3 +26,7 @@ keen_auth_permissions-*.tar
 /tmp/
 
 .idea
+
+# Generated DB files
+
+/lib/keen_auth_permissions/database/
