@@ -15,7 +15,7 @@ create schema if not exists ext;
 create schema if not exists auth;
 
 alter default privileges
-    in schema public
+    in schema public, auth, const
     grant select, insert, update, delete on tables to keen_auth_sample;
 alter default privileges
     in schema public, helpers, ext, unsecure grant usage, select on sequences to keen_auth_sample;

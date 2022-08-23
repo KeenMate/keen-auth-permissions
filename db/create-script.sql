@@ -155,16 +155,17 @@ create table tenant
 
 create table user_info
 (
-    user_id      bigint generated always as identity not null primary key,
-    code         text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
-    uuid         uuid                                not null default ext.uuid_generate_v4(),      -- if you need this kind of identifier, it's ready for you
-    can_login    bool                                not null default true,
-    username     text                                not null check (length(username) <= 255 ),
-    email        text check (length(email) <= 255 ),
-    display_name text                                not null check (length(display_name) <= 255 ),
-    is_system    bool                                not null default false,
-    is_active    bool                                not null default true,
-    is_locked    bool                                not null default false
+    user_id                 bigint generated always as identity not null primary key,
+    code                    text                                not null default auth.get_user_random_code(), -- if you need this kind of identifier, it's ready for you
+    uuid                    uuid                                not null default ext.uuid_generate_v4(),      -- if you need this kind of identifier, it's ready for you
+    can_login               bool                                not null default true,
+    username                text                                not null check (length(username) <= 255 ),
+    email                   text check (length(email) <= 255 ),
+    display_name            text                                not null check (length(display_name) <= 255 ),
+    is_system               bool                                not null default false,
+    is_active               bool                                not null default true,
+    is_locked               bool                                not null default false,
+    last_used_provider_code text                                references auth.provider (code) on update set null
 ) inherits (_template_timestamps);
 
 create unique index uq_user_info on user_info (email);
@@ -204,6 +205,8 @@ create table user_identity
     provider_code    text                                not null references auth.provider (code) on update cascade on delete cascade,
     uid              text,
     user_id          bigint references user_info (user_id) on delete cascade,
+    provider_groups  text[],
+    provider_roles   text[],
     user_data        jsonb,
     password_hash    text,
     password_salt    text
@@ -529,8 +532,7 @@ where tenant_id = _tenant_id
 $$;
 
 create or replace function unsecure.recalculate_user_groups(_created_by text,
-                                                            _target_user_id bigint, _provider_code text,
-                                                            _provider_groups text[], _provider_roles text[])
+                                                            _target_user_id bigint, _provider_code text)
     returns table
             (
                 __groups text[]
@@ -540,53 +542,61 @@ as
 $$
 declare
     __not_really_used int;
+    __provider_groups text[];
+    __provider_roles  text[];
 begin
 
+    select provider_groups, provider_roles
+    from user_identity
+    where provider_code = _provider_code
+      and user_id = _target_user_id
+    into __provider_groups, __provider_roles;
+
     -- cleanup membership of groups user is no longer part of
-    with deleted_group_tenants as (
+    with affected_deleted_group_tenants as (
         delete
             from user_group_member
                 where user_id = _target_user_id
                     and mapping_id is not null
                     and group_id not in (select distinct ugm.group_id
-                                         from unnest(_provider_groups) g
+                                         from unnest(__provider_groups) g
                                                   inner join public.user_group_mapping ugm
                                                              on ugm.provider_code = _provider_code and ugm.mapped_object_id = g
                                                   inner join user_group u
                                                              on u.user_group_id = ugm.group_id
                                          union
                                          select distinct ugm.group_id
-                                         from unnest(_provider_roles) r
+                                         from unnest(__provider_roles) r
                                                   inner join public.user_group_mapping ugm
                                                              on ugm.provider_code = _provider_code and ugm.mapped_role = r
                                                   inner join user_group u
                                                              on u.user_group_id = ugm.group_id)
                 returning group_id),
-         created_group_tenant as (
+         affected_group_tenants as (
              insert
                  into user_group_member (created_by, user_id, group_id, mapping_id, manual_assignment)
                      select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
-                     from unnest(_provider_groups) g
+                     from unnest(__provider_groups) g
                               inner join public.user_group_mapping ugm
                                          on ugm.provider_code = _provider_code and ugm.mapped_object_id = lower(g)
                      where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id)
                      returning group_id),
-         created_role_tenant as (
+         affected_role_tenants as (
              insert into user_group_member (created_by, user_id, group_id, mapping_id, manual_assignment)
                  select distinct _created_by, _target_user_id, ugm.group_id, ugm.ug_mapping_id, false
-                 from unnest(_provider_roles) r
+                 from unnest(__provider_roles) r
                           inner join public.user_group_mapping ugm
                                      on ugm.provider_code = _provider_code and ugm.mapped_role = lower(r)
                  where ugm.group_id not in (select group_id from user_group_member where user_id = _target_user_id)
                  returning group_id),
          all_group_ids as (select group_id
-                           from deleted_group_tenants
+                           from affected_deleted_group_tenants
                            union
                            select group_id
-                           from created_group_tenant
+                           from affected_group_tenants
                            union
                            select group_id
-                           from created_role_tenant),
+                           from affected_role_tenants),
          all_tenants as (select tenant_id
                          from all_group_ids ids
                                   inner join user_group ug on ids.group_id = ug.user_group_id
@@ -721,8 +731,9 @@ create or replace function auth.has_permissions(_tenant_id int, _target_user_id 
 as
 $$
 declare
-    __perms           text[];
-    __expiration_date timestamptz;
+    __perms                   text[];
+    __expiration_date         timestamptz;
+    __last_used_provider_code text;
 begin
 
     if (_target_user_id = 1) then
@@ -736,9 +747,21 @@ begin
     into __perms, __expiration_date;
 
     if __expiration_date is null or __expiration_date <= now() then
+
+        select last_used_provider_code
+        from user_info
+        where user_id = _target_user_id
+        into __last_used_provider_code;
+
+        perform unsecure.recalculate_user_groups('permission_check'
+            , _target_user_id
+            , __last_used_provider_code
+            );
+
         select __permissions
         from unsecure.recalculate_user_permissions('permission_check', _tenant_id, _target_user_id)
         into __perms;
+
     end if;
 
     if exists(
@@ -2393,6 +2416,15 @@ $$;
  *     #######   ######  ######## ##     ##  ######
  */
 
+create or replace function unsecure.update_last_used_provider(_target_user_id bigint, _provider_code text)
+    returns void
+    language sql
+as
+$$
+update user_info
+set last_used_provider_code = _provider_code
+where user_id = _target_user_id;
+$$;
 
 create or replace function auth.ensure_groups_and_permissions(_created_by text, _user_id bigint, _target_user_id bigint,
                                                               _tenant_id int,
@@ -2412,11 +2444,18 @@ $$
 begin
     perform auth.has_permission(null, _user_id, 'system.authentication.ensure_permissions');
 
+    update user_identity
+    set modified_by     = _created_by,
+        modified        = now(),
+        provider_groups = _provider_groups,
+        provider_roles  = _provider_roles
+    where provider_code = _provider_code
+      and user_id = _target_user_id;
+
     perform unsecure.recalculate_user_groups(_created_by
         , _target_user_id
         , _provider_code
-        , _provider_groups
-        , _provider_roles);
+        );
 
     return query
         select _tenant_id, up.__groups, up.__permissions
@@ -2545,6 +2584,8 @@ create function auth.get_user_by_email_for_authentication(_user_id int, _email t
 as
 $$
 declare
+    __target_user_id   bigint;
+    __target_uid_id    bigint;
     __normalized_email text;
     __is_active        bool;
     __is_locked        bool;
@@ -2556,17 +2597,19 @@ begin
 
     __normalized_email := lower(trim(_email));
 
-    select ui.is_active, ui.is_locked
+    select ui.user_id, uid.user_identity_id, ui.is_active, ui.is_locked
     from user_identity uid
              inner join user_info ui on uid.user_id = ui.user_id
     where uid.provider_code = 'email'
       and uid.uid = __normalized_email
-    into __is_active, __is_locked;
+    into __target_user_id, __target_uid_id, __is_active, __is_locked;
 
     if __is_active is null then
         raise exception 'User identity (uid: %) does not exist', __normalized_email
             using errcode = 52103;
     end if;
+
+    perform update_last_used_provider(__target_user_id, 'email');
 
     if not __is_active then
         raise exception 'User (email: %) is not in active state', __normalized_email
@@ -2625,13 +2668,15 @@ begin
 
     perform auth.validate_provider_is_active(_provider_code);
 
-    if not exists(select
-                  from user_identity uid
-                  where uid.provider_code = _provider_code
-                    and uid.uid = _provider_uid) then
+    select user_id
+    from user_identity uid
+    where uid.provider_code = _provider_code
+      and uid.uid = _provider_uid
+    into __last_id;
 
-        insert into user_info(created_by, modified_by, username, email, display_name)
-        values (_created_by, _created_by, lower(_username), lower(_email), _display_name)
+    if __last_id is null then
+        insert into user_info(created_by, modified_by, username, email, display_name, last_used_provider_code)
+        values (_created_by, _created_by, lower(_username), lower(_email), _display_name, _provider_code)
         returning user_id into __last_id;
 
         insert into user_identity(created_by, modified_by, provider_code, uid, user_id)
@@ -2640,6 +2685,8 @@ begin
         perform auth.update_user_data(_email, _user_id, __last_id, _provider_code, _user_data);
 
     end if;
+
+    perform unsecure.update_last_used_provider(__last_id, _provider_code);
 
     return query
         select ui.user_id,
@@ -2883,7 +2930,7 @@ $$;
  *
  */
 
-grant usage on schema ext, auth, helpers to keen_auth_sample;
+grant usage on schema const, unsecure, ext, auth, helpers to keen_auth_sample;
 
 /***
  *    ██████╗--██████╗-███████╗████████╗-----██████╗██████╗-███████╗-█████╗-████████╗███████╗
