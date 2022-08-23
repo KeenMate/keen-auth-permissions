@@ -77,8 +77,6 @@ from unsecure.assign_permission_as_system(3, 6, null, 'my_external_partners');
 select *
 from auth.ensure_groups_and_permissions('authenticator', 1, 5, 3, 'aad', array ['aad_rada']);
 
-
-
 -- check if user: Jan Rada has permission in tenant: Jan Rada has permission: system.manage_groups.create_group
 -- checks if the record in auth.user_permission_cache is still valid and uses it or reevaluate everything and store it again for 15 seconds
 select *

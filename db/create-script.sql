@@ -1837,42 +1837,70 @@ begin
                     lower(_mapped_role))
             returning ug_mapping_id;
 
+
+    with affected_users as (select user_id
+                            from user_identity uid
+                            where lower(_mapped_object_id) = any (provider_groups)
+                               or lower(_mapped_object_id) = any (provider_roles))
+    update auth.user_permission_cache
+    set modified_by     = _created_by,
+        modified        = now(),
+        expiration_date = now() - '1 sec'::interval
+    where user_id in (select user_id
+                      from affected_users);
+
+
     perform add_journal_msg(_created_by, _tenant_id, _user_id
         , format('User: %s added new provider: %s mapping: %s to group: %s in tenant: %s'
                                 , _created_by, _provider_code, coalesce(_mapped_object_id, _mapped_role),
                  _user_group_id, _tenant_id)
         , 'group', _user_group_id
         ,
-                            array ['mapped_object_id', _mapped_object_id::text, 'mapped_object_name'
+                            array ['provider_code', _provider_code, 'mapped_object_id'
+                                , _mapped_object_id::text, 'mapped_object_name'
                                 , _mapped_object_name, '_mapped_role', _mapped_role]
         , 50231);
 end;
 $$;
 
-create function auth.delete_user_group_mapping(_deleted_by text, _user_id bigint, _tenant_id int, _ug_id int,
-                                               _ug_mapping_id int)
+create function auth.delete_user_group_mapping(_deleted_by text, _user_id bigint, _tenant_id int, _ug_mapping_id int)
     returns void
     language plpgsql
 as
 $$
 declare
+    __user_group_id      int;
+    __provider_code      text;
     __mapped_object_id   text;
     __mapped_object_name text;
+    __mapped_role        text;
 begin
     perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.delete_mapping');
 
+    -- expire user_permission_cache for affected users
+    with affected_users as (select user_id
+                            from user_group_member ugm
+                            where ugm.mapping_id = _ug_mapping_id)
+    update auth.user_permission_cache
+    set modified_by     = _deleted_by,
+        modified        = now(),
+        expiration_date = now() - '1 sec'::interval
+    where user_id in (select user_id
+                      from affected_users);
+
     delete
     from user_group_mapping
-    where group_id = _ug_id
-      and ug_mapping_id = _ug_mapping_id
-    returning mapped_object_id, mapped_object_name into __mapped_object_id, __mapped_object_name;
+    where ug_mapping_id = _ug_mapping_id
+    returning group_id, provider_code, mapped_object_id, mapped_object_name, mapped_role into __user_group_id, __provider_code, __mapped_object_id, __mapped_object_name, __mapped_role;
 
 
     perform add_journal_msg(_deleted_by, _tenant_id, _user_id
         , format('User: %s removed group mapping: %s from group: %s in tenant: %s'
-                                , _deleted_by, __mapped_object_name, _ug_id, _tenant_id)
-        , 'group', _ug_id
-        , array ['mapped_object_id', __mapped_object_id::text, 'mapped_object_name', __mapped_object_name]
+                                , _deleted_by, __mapped_object_name, __user_group_id, _tenant_id)
+        , 'group', __user_group_id
+        ,
+                            array ['provider_code', __provider_code, 'mapped_object_id'
+                                , __mapped_object_id::text, 'mapped_object_name', __mapped_object_name, 'mapped_role', __mapped_role]
         , 50233);
 end;
 $$;
