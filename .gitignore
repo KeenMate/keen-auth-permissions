@@ -29,4 +29,4 @@ keen_auth_permissions-*.tar
 
 # Generated DB files
 
-/lib/keen_auth_permissions/database/
+# /lib/keen_auth_permissions/database/
