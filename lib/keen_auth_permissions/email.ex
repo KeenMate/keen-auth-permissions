@@ -11,7 +11,7 @@ defmodule KeenAuthPermissions.Email do
     db_context = DbContext.current_db_context!(conn)
 
     {:ok, [%{password_hash: password_hash} = user]} =
-      db_context.get_user_by_email_for_authentication(1, email)
+      db_context.auth_get_user_by_email_for_authentication(1, email)
 
     case validation.(password, password_hash) do
       true -> {:ok, user}

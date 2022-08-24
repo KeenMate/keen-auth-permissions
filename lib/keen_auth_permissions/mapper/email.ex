@@ -5,6 +5,6 @@ defmodule KeenAuthPermissions.Mapper.Email do
 
   @impl true
   def map(:email, user) do
-    struct(User, user)
+    struct(User, Map.from_struct(user))
   end
 end
