@@ -20,7 +20,7 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
         "system",
         1,
         "aad",
-        mapped_user.id,
+        mapped_user.user_id,
         mapped_user.username,
         mapped_user.display_name,
         mapped_user.email,
