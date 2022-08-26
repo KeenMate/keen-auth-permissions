@@ -123,7 +123,7 @@ $$;
  *
  */
 
-create table const.sys_params
+create table const.sys_param
 (
     sys_param_id int generated always as identity not null primary key,
     group_code   text                             not null,
@@ -133,7 +133,27 @@ create table const.sys_params
     bool_value   bool
 ) inherits (_template_timestamps);
 
-create unique index uq_sys_params on const.sys_params (group_code, code);
+create unique index uq_sys_params on const.sys_param (group_code, code);
+
+create table const.token_type
+(
+    code text not null primary key
+);
+
+create table const.token_channel
+(
+    code text not null primary key
+);
+
+create table const.token_state
+(
+    code text not null primary key
+);
+
+create table const.auth_event_type
+(
+    code text not null primary key
+);
 
 create table auth.provider
 (
@@ -209,10 +229,11 @@ create table user_identity
     provider_roles   text[],
     user_data        jsonb,
     password_hash    text,
-    password_salt    text
+    password_salt    text,
+    is_active        bool                                not null default true
 ) inherits (_template_timestamps);
 
-create unique index uq_user_identity on user_identity (provider_code, uid);
+create unique index uq_user_identity on user_identity (provider_code, coalesce(uid, '-1'));
 
 create table auth.permission
 (
@@ -247,8 +268,8 @@ execute procedure helpers.trg_generate_code_from_title();
 create table auth.perm_set_perm
 (
     psp_id        int generated always as identity not null primary key,
-    perm_set_id   int                              not null references perm_set (perm_set_id) on delete cascade,
-    permission_id int                              not null references permission (permission_id) on delete cascade
+    perm_set_id   int                              not null references auth.perm_set (perm_set_id) on delete cascade,
+    permission_id int                              not null references auth.permission (permission_id) on delete cascade
 ) inherits (_template_created);
 
 create table user_group
@@ -295,7 +316,7 @@ create table user_group_member
 
 create unique index uq_user_group_member ON user_group_member (group_id, user_id, coalesce(mapping_id, 0));
 
-create table permission_assignment
+create table auth.permission_assignment
 (
     assignment_id int generated always as identity not null primary key,
     tenant_id     int references tenant (tenant_id) on delete cascade,
@@ -307,9 +328,36 @@ create table permission_assignment
     CONSTRAINT pa_either_perm CHECK (perm_set_id is not null or permission_id is not null)
 ) inherits (_template_created);
 
-create unique index uq_permission_assignment ON permission_assignment (group_id, coalesce(user_id, 0),
-                                                                       coalesce(perm_set_id, 0),
-                                                                       coalesce(permission_id, 0));
+create unique index uq_permission_assignment ON auth.permission_assignment (group_id, coalesce(user_id, 0),
+                                                                            coalesce(perm_set_id, 0),
+                                                                            coalesce(permission_id, 0));
+
+create table auth.auth_event
+(
+    auth_event_id      int generated always as identity not null primary key,
+    event_type         text                             not null references const.auth_event_type (code),
+    user_id            bigint                           not null, -- intentionally not referenced to user_info for data retention
+    requester_user_id  bigint,
+    requester_username text,
+    target_user_oid    text,
+    target_username    text,
+    ip_address         text,
+    user_agent         text,
+    origin             text
+) inherits (_template_created);
+
+create table auth.token
+(
+    token_id           int generated always as identity not null primary key,
+    user_oid           text                             not null,
+    uid                text                             not null default helpers.random_string(12),
+    auth_event_id      int references auth.auth_event (auth_event_id) on delete cascade,
+    token_state_code   text                             not null default 'valid' references const.token_state (code),
+    token_type_code    text                             not null references const.token_type (code),
+    token_channel_code text                             not null references const.token_channel (code),
+    token              text                             not null,
+    expires_at         timestamptz                      not null
+) inherits (_template_timestamps);
 
 create table journal
 (
@@ -359,7 +407,7 @@ from user_group_member ugm
          left join user_group_mapping u on ugm.mapping_id = u.ug_mapping_id
     );
 
-create view effective_permissions as
+create view auth.effective_permissions as
 (
 select distinct ps.perm_set_id,
                 ps.code          as perm_set_code,
@@ -647,7 +695,7 @@ begin
     else
 
         select number_value
-        from const.sys_params sp
+        from const.sys_param sp
         where sp.group_code = 'auth'
           and sp.code = 'perm_cache_timeout_in_s'
         into __perm_cache_timeout_in_s;
@@ -662,27 +710,27 @@ begin
                        and user_id = _target_user_id),
              group_assignments as (select distinct ep.permission_code as full_code
                                    from ugs ug
-                                            inner join permission_assignment pa on ug.user_group_id = pa.group_id
-                                            inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
+                                            inner join auth.permission_assignment pa on ug.user_group_id = pa.group_id
+                                            inner join auth.effective_permissions ep on pa.perm_set_id = ep.perm_set_id
                                    where ep.perm_set_is_assignable = true
                                      and ep.permission_is_assignable = true
                                    union
                                    select distinct sp.full_code
                                    from ugs ug
-                                            inner join permission_assignment pa on ug.user_group_id = pa.group_id
+                                            inner join auth.permission_assignment pa on ug.user_group_id = pa.group_id
                                             inner join auth.permission p on pa.permission_id = p.permission_id
                                             inner join auth.permission sp
                                                        on sp.node_path <@ p.node_path and sp.is_assignable = true),
              user_assignments as (select distinct ep.permission_code as full_code
-                                  from permission_assignment pa
-                                           inner join effective_permissions ep on pa.perm_set_id = ep.perm_set_id
+                                  from auth.permission_assignment pa
+                                           inner join auth.effective_permissions ep on pa.perm_set_id = ep.perm_set_id
                                   where (pa.tenant_id = _tenant_id or pa.tenant_id is null)
                                     and pa.user_id = _target_user_id
                                     and ep.perm_set_is_assignable = true
                                     and ep.permission_is_assignable = true
                                   union
                                   select distinct sp.full_code
-                                  from permission_assignment pa
+                                  from auth.permission_assignment pa
                                            inner join auth.permission p
                                                       on pa.permission_id = p.permission_id
                                            inner join auth.permission sp
@@ -747,6 +795,15 @@ begin
     into __perms, __expiration_date;
 
     if __expiration_date is null or __expiration_date <= now() then
+        raise notice '__expiration_date=%', __expiration_date;
+
+        if not exists(select from user_info ui where ui.user_id = _target_user_id) then
+            raise notice 'wtf';
+
+            raise exception 'User (user id: %) does not exist'
+                , _target_user_id
+                using errcode = 52103;
+        end if;
 
         select last_used_provider_code
         from user_info
@@ -893,7 +950,7 @@ begin
 
     perform auth.has_permission(null, _user_id, 'system.providers.create_provider');
 
-    insert into provider (created_by, modified_by, code, name, is_active)
+    insert into auth.provider (created_by, modified_by, code, name, is_active)
     values (_created_by, _created_by, _provider_code, _provider_name, _is_active)
     returning provider_id into __last_id;
 
@@ -926,7 +983,7 @@ begin
     perform auth.has_permission(null, _user_id, 'system.providers.update_provider');
 
     return query
-        update provider
+        update auth.provider
             set
                 modified = now(),
                 modified_by = _modified_by,
@@ -1059,7 +1116,7 @@ begin
     perform auth.has_permission(null, _user_id, 'system.providers.update_provider');
 
     return query
-        update provider
+        update auth.provider
             set is_active = false
             where code = _provider_code
             returning provider_id;
@@ -1072,6 +1129,55 @@ begin
         , 50015);
 end;
 $$;
+
+
+/***
+ *     █████╗ ██╗   ██╗████████╗██╗  ██╗    ███████╗██╗   ██╗███████╗███╗   ██╗████████╗███████╗
+ *    ██╔══██╗██║   ██║╚══██╔══╝██║  ██║    ██╔════╝██║   ██║██╔════╝████╗  ██║╚══██╔══╝██╔════╝
+ *    ███████║██║   ██║   ██║   ███████║    █████╗  ██║   ██║█████╗  ██╔██╗ ██║   ██║   ███████╗
+ *    ██╔══██║██║   ██║   ██║   ██╔══██║    ██╔══╝  ╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ╚════██║
+ *    ██║  ██║╚██████╔╝   ██║   ██║  ██║    ███████╗ ╚████╔╝ ███████╗██║ ╚████║   ██║   ███████║
+ *    ╚═╝  ╚═╝ ╚═════╝    ╚═╝   ╚═╝  ╚═╝    ╚══════╝  ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝   ╚══════╝
+ *
+ */
+
+create function auth.create_auth_event(_created_by text, _user_id bigint)
+    returns table
+            (
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.auth.create_auth_event');
+
+    insert into auth.token()
+
+    create table auth.token
+    (
+        token_id           int generated always as identity not null primary key,
+        user_oid           text                             not null,
+        uid                text                             not null default helpers.random_string(12),
+        auth_event_id      int references auth.auth_event (auth_event_id) on delete cascade,
+        token_state_code   text                             not null default 'valid' references const.token_state (code),
+        token_type_code    text                             not null references const.token_type (code),
+        token_channel_code text                             not null references const.token_channel (code),
+        token              text                             not null,
+        expires_at         timestamptz                      not null
+    ) inherits (_template_timestamps);
+end;
+$$;
+
+
+/***
+ *    ████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗███████╗
+ *    ╚══██╔══╝██╔═══██╗██║ ██╔╝██╔════╝████╗  ██║██╔════╝
+ *       ██║   ██║   ██║█████╔╝ █████╗  ██╔██╗ ██║███████╗
+ *       ██║   ██║   ██║██╔═██╗ ██╔══╝  ██║╚██╗██║╚════██║
+ *       ██║   ╚██████╔╝██║  ██╗███████╗██║ ╚████║███████║
+ *       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚══════╝
+ *
+ */
 
 
 /***
@@ -1172,7 +1278,7 @@ create function unsecure.assign_permission(_created_by text, _user_id bigint, _t
                                            _user_group_id int default null,
                                            _target_user_id bigint default null,
                                            _perm_set_code text default null, _perm_code text default null)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
@@ -1206,7 +1312,7 @@ begin
                                                   from user_info ui
                                                   where ui.user_id = _target_user_id) then
         raise exception 'User (user id: %) does not exist'
-            , _user_group_id
+            , _target_user_id
             using errcode = 52103;
     end if;
 
@@ -1236,12 +1342,12 @@ begin
         end if;
     end if;
 
-    insert into permission_assignment (created_by, tenant_id, group_id, user_id, perm_set_id, permission_id)
+    insert into auth.permission_assignment (created_by, tenant_id, group_id, user_id, perm_set_id, permission_id)
     values (_created_by, _tenant_id, _user_group_id, _user_id, __perm_set_id, __permission_id)
     returning assignment_id into __last_id;
 
     return query
-        select * from permission_assignment where assignment_id = __last_id;
+        select * from auth.permission_assignment where assignment_id = __last_id;
 
     if _user_group_id is not null then
         perform add_journal_msg(_created_by, _tenant_id, _user_id
@@ -1263,7 +1369,7 @@ $$;
 
 create function unsecure.unassign_permission(_deleted_by text, _user_id bigint, _tenant_id int,
                                              _assignment_id int)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
@@ -1273,12 +1379,12 @@ declare
 begin
 
     select group_id, user_id
-    from permission_assignment pa
+    from auth.permission_assignment pa
     where pa.assignment_id = _assignment_id
     into __user_group_id, __target_user_id;
 
     return query
-        delete from permission_assignment
+        delete from auth.permission_assignment
             where assignment_id = _assignment_id
             returning *;
 
@@ -1305,7 +1411,7 @@ create function unsecure.set_permission_as_assignable(_modified_by text, _user_i
                                                       _permission_id int default null,
                                                       _permission_full_code text default null,
                                                       _is_assignable bool default true)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
@@ -1322,7 +1428,7 @@ begin
     __permission_id := _permission_id;
 
     if __permission_id is null then
-        select permission_id from permission where full_code = _permission_full_code into __permission_id;
+        select permission_id from auth.permission where full_code = _permission_full_code into __permission_id;
 
         if __permission_id is null then
             raise exception 'Permission (full code: %s) does not exist'
@@ -1331,7 +1437,7 @@ begin
         end if;
     end if;
 
-    update permission
+    update auth.permission
     set modified      = now(),
         modified_by   = _modified_by,
         is_assignable = _is_assignable
@@ -1351,12 +1457,12 @@ create function auth.set_permission_as_assignable(_modified_by text, _user_id bi
                                                   _permission_id int default null,
                                                   _permission_full_code text default null,
                                                   _is_assignable bool default true)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
 begin
-    perform has_permission(null, _user_id, 'system.manage_permissions.update_permission');
+    perform auth.has_permission(null, _user_id, 'system.manage_permissions.update_permission');
 
     return query
         select *
@@ -1369,7 +1475,7 @@ $$;
 create function unsecure.assign_permission_as_system(_tenant_id int, _user_group_id int, _target_user_id bigint,
                                                      _perm_set_code text,
                                                      _perm_code text default null)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
@@ -1386,12 +1492,12 @@ create function auth.assign_permission(_created_by text, _user_id bigint, _tenan
                                        _target_user_id bigint,
                                        _perm_set_code text,
                                        _perm_code text)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
 begin
-    perform has_permission(_tenant_id, _user_id, 'system.manage_permissions.assign_permission');
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.assign_permission');
 
     return query
         select *
@@ -1404,12 +1510,12 @@ end;
 $$;
 
 create function auth.unassign_permission(_deleted_by text, _user_id bigint, _tenant_id int, _assignment_id int)
-    returns setof permission_assignment
+    returns setof auth.permission_assignment
     language plpgsql
 as
 $$
 begin
-    perform has_permission(_tenant_id, _user_id, 'system.manage_permissions.unassign_permission');
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.unassign_permission');
 
     return query
         select *
@@ -2862,7 +2968,7 @@ begin
 
     -- COMMMON WITH ALL DATABASES
 
-    insert into const.sys_params(created_by, group_code, code, number_value)
+    insert into const.sys_param(created_by, group_code, code, number_value)
     values ('initial', 'auth', 'perm_cache_timeout_in_s', 15); -- 15seconds intentionally for better debugging
 
     perform unsecure.create_system_user();
