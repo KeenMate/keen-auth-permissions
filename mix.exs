@@ -21,7 +21,7 @@ defmodule KeenAuthPermissions.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:keen_auth, git: "https://github.com/KeenMate/keen_auth.git", branch: "new-vision"},
+      {:keen_auth, github: "keenmate/keen_auth", branch: "new-vision"},
       {:jason, "~> 1.3"},
       {:postgrex, "~> 0.16.4"}
       # {:dep_from_hexpm, "~> 0.3.0"},
