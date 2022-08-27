@@ -9,6 +9,363 @@ create extension if not exists "uuid-ossp" schema ext;
 create extension if not exists ltree schema ext;
 create extension if not exists unaccent schema ext;
 
+
+/***
+ *    ███████╗██████╗ ██████╗  ██████╗ ██████╗ ███████╗
+ *    ██╔════╝██╔══██╗██╔══██╗██╔═══██╗██╔══██╗██╔════╝
+ *    █████╗  ██████╔╝██████╔╝██║   ██║██████╔╝███████╗
+ *    ██╔══╝  ██╔══██╗██╔══██╗██║   ██║██╔══██╗╚════██║
+ *    ███████╗██║  ██║██║  ██║╚██████╔╝██║  ██║███████║
+ *    ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚══════╝
+ *
+ */
+
+-- Cannot ensure user for email provider
+
+create function error.raise_52101(_username text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (username: %) cannot be ensured for email provider, use registration for that', _username
+        using errcode = 52101;
+end;
+$$;
+
+-- User cannot register user because the identity is already in use
+
+create function error.raise_52102(_normalized_email text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User identity (uid: %) is already in use', _normalized_email
+        using errcode = 52102;
+end;
+$$;
+
+-- User does not exist
+
+create function error.raise_52103(_user_id bigint, _email text default null) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (user id: %, email: %) does not exist'
+        , _user_id, _email
+        using errcode = 52103;
+end;
+$$;
+
+-- User is a system user
+
+create function error.raise_52104(_user_id bigint) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (user id: %) is a system user'
+        , _user_id
+        using errcode = 52104;
+end;
+$$;
+
+-- User is in inactive state
+
+create function error.raise_52105(_user_id bigint) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (id: %) is not in active state', _user_id
+        using errcode = 52105;
+end;
+$$;
+
+-- User is locked
+
+create function error.raise_52106(_email text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (email: %) is locked out', _email
+        using errcode = 52106;
+end;
+$$;
+
+-- Provider is not active
+
+create function error.raise_52107(_provider_code text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Provider (provider code: %) is not in active state', _provider_code
+        using errcode = 52107;
+end;
+$$;
+
+-- User has no access to tenant
+
+create function error.raise_52108(_tenant_id text, _username text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User(username: %) has no access to tenant(id: %)', _username, _tenant_id
+        using errcode = 52108;
+end;
+$$;
+
+-- User has no correct permission in tenant
+
+create function error.raise_52109(_user_id bigint, _tenant_id int, _perm_codes text[]) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User(id: %) has no permission (codes: %) in tenant(id: %)', _user_id, array_to_string(_perm_codes, '; '), _tenant_id
+        using errcode = 52109;
+end;
+$$;
+
+-- User provider identity is not active
+
+create function error.raise_52110(_user_id bigint, _provider_code text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (id: %) identity for provider (code: %) is not in active state', _user_id, _provider_code
+        using errcode = 52110;
+end;
+$$;
+
+-- User provider identity does not exist
+
+create function error.raise_52111(_user_id bigint, _provider_code text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (id: %) identity for provider (code: %) does not exist', _user_id, _provider_code
+        using errcode = 52110;
+end;
+$$;
+
+-- User group not found
+
+create function error.raise_52171(_user_group_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User group (group id: %) does not exist'
+        , _user_group_id
+        using errcode = 52171;
+end;
+$$;
+
+-- User cannot be added to group because the group is not active
+
+create function error.raise_52172(_user_group_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User group (group id: %) is not active'
+        , _user_group_id
+        using errcode = 52172;
+end;
+$$;
+
+-- User cannot be added to group because it's either not assignable or a
+
+create function error.raise_52173(_user_group_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User group (group id: %) is either is not assignable or is external'
+        , _user_group_id
+        using errcode = 52173;
+end;
+$$;
+
+-- Either mapped object id or role must not be empty
+
+create function error.raise_52174() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Either mapped object id or mapped role must not be empty'
+        using errcode = 52174;
+end;
+$$;
+
+-- Permission set is not assignable
+
+create function error.raise_52175(_perm_set_code text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Permission set (code: %) is not assignable'
+        , _perm_set_code
+        using errcode = 52175;
+end;
+$$;
+
+-- Permission is not assignable
+
+create function error.raise_52176(_perm_set_code text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Permission (code: %) is not assignable'
+        , _perm_set_code
+        using errcode = 52176;
+end;
+$$;
+
+-- Permission set is not defined in tenant
+
+create function error.raise_52177(_perm_set_id int, _tenant_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Permission set (id: %) is not defined in tenant (id: %)', _perm_set_id, _tenant_id
+        using errcode = 52177;
+end;
+$$;
+
+-- Permission is not assignable
+
+create function error.raise_52178() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Some permissions are not assignable'
+        using errcode = 52178;
+end;
+$$;
+
+-- User group cannot be deleted because it's a system group
+
+create function error.raise_52271(_user_group_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User: group (group id: %) is a system group'
+        , _user_group_id
+        using errcode = 52271;
+end;
+$$;
+
+-- Either user group id or target user id has to be not null
+
+create function error.raise_52272() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Either user group is or target user id must not be null'
+        using errcode = 52272;
+end;
+$$;
+
+-- Either permission set code or permission code has to be not null
+
+create function error.raise_52273() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Either permission set code or permission code must not be null'
+        using errcode = 52273;
+end;
+$$;
+
+-- Either permission id or code has to be not null
+
+create function error.raise_52274() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Either permission id or code has to be not null'
+        using errcode = 52274;
+end;
+$$;
+
+-- Permission does not exist
+
+create function error.raise_52275(_permission_full_code text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Permission (full code: %s) does not exist'
+        , _permission_full_code
+        using errcode = 52275;
+end;
+$$;
+
+-- The same token is already used
+
+create function error.raise_52276() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'The same token is already used'
+        using errcode = 52276;
+end;
+$$;
+
+-- Token does not exist
+
+create function error.raise_52277() returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Token does not exist'
+        using errcode = 52277;
+end;
+$$;
+
+-- Token is not valid or has expired
+
+create function error.raise_52278(_token_uid text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Token (uid: %) is not valid or has expired', _token_uid
+        using errcode = 52278;
+end;
+$$;
+
+-- Token was created for different user
+
+create function error.raise_52279(_token_uid text) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'Token (uid: %) was created for different user', _token_uid
+        using errcode = 52279;
+end;
+$$;
+
+
 /***
  *    ██╗--██╗███████╗██╗-----██████╗-███████╗██████╗-███████╗
  *    ██║--██║██╔════╝██║-----██╔══██╗██╔════╝██╔══██╗██╔════╝
@@ -137,7 +494,8 @@ create unique index uq_sys_params on const.sys_param (group_code, code);
 
 create table const.token_type
 (
-    code text not null primary key
+    code                          text not null primary key,
+    default_expiration_in_seconds int
 );
 
 create table const.token_channel
@@ -334,12 +692,11 @@ create unique index uq_permission_assignment ON auth.permission_assignment (grou
 
 create table auth.auth_event
 (
-    auth_event_id      int generated always as identity not null primary key,
-    event_type         text                             not null references const.auth_event_type (code),
-    user_id            bigint                           not null, -- intentionally not referenced to user_info for data retention
+    auth_event_id      bigint generated always as identity not null primary key,
+    event_type_code    text                                not null references const.auth_event_type (code),
     requester_user_id  bigint,
     requester_username text,
-    target_user_oid    text,
+    target_user_id     text,
     target_username    text,
     ip_address         text,
     user_agent         text,
@@ -348,15 +705,19 @@ create table auth.auth_event
 
 create table auth.token
 (
-    token_id           int generated always as identity not null primary key,
-    user_oid           text                             not null,
-    uid                text                             not null default helpers.random_string(12),
-    auth_event_id      int references auth.auth_event (auth_event_id) on delete cascade,
-    token_state_code   text                             not null default 'valid' references const.token_state (code),
-    token_type_code    text                             not null references const.token_type (code),
-    token_channel_code text                             not null references const.token_channel (code),
-    token              text                             not null,
-    expires_at         timestamptz                      not null
+    token_id           bigint generated always as identity not null primary key,
+    user_id            bigint references user_info (user_id),
+    uid                text                                not null default helpers.random_string(12) unique, -- token uid
+    auth_event_id      int references auth.auth_event (auth_event_id) on delete cascade,                      -- related authentication event
+    token_state_code   text                                not null default 'valid' references const.token_state (code),
+    token_type_code    text                                not null references const.token_type (code),
+    token_channel_code text                                not null references const.token_channel (code),
+    token              text                                not null,
+    expires_at         timestamptz                         not null,
+    used_at            timestamptz,
+    ip_address         text,
+    user_agent         text,
+    origin             text
 ) inherits (_template_timestamps);
 
 create table journal
@@ -541,8 +902,7 @@ create function auth.throw_no_access(_tenant_id int, _username text)
 as
 $$
 begin
-    raise exception 'User(username: %) has no access to tenant(id: %)', _username, _tenant_id
-        using errcode = 50004;
+    perform error.raise_52108(_tenant_id, _username);
 end;
 $$;
 
@@ -552,8 +912,7 @@ create function auth.throw_no_permission(_tenant_id int, _user_id bigint, _perm_
 as
 $$
 begin
-    raise exception 'User(id: %) has no permission (codes: %) in tenant(id: %)', _user_id, array_to_string(_perm_codes, '; '), _tenant_id
-        using errcode = 50003;
+    perform error.raise_52109(_tenant_id, _user_id, _perm_codes);
 end;
 $$;
 
@@ -798,11 +1157,9 @@ begin
         raise notice '__expiration_date=%', __expiration_date;
 
         if not exists(select from user_info ui where ui.user_id = _target_user_id) then
-            raise notice 'wtf';
 
-            raise exception 'User (user id: %) does not exist'
-                , _target_user_id
-                using errcode = 52103;
+            perform error.raise_52103(_target_user_id);
+
         end if;
 
         select last_used_provider_code
@@ -917,8 +1274,9 @@ as
 $$
 begin
     if exists(select from auth.provider where code = _provider_code and is_active = false) then
-        raise exception 'Provider (provider code: %) is not active', _provider_code
-            using errcode = 52107;
+        perform error.raise_52107(_provider_code);
+
+
     end if;
 end;
 $$;
@@ -1141,30 +1499,39 @@ $$;
  *
  */
 
-create function auth.create_auth_event(_created_by text, _user_id bigint)
+create function auth.create_auth_event(_created_by text, _user_id bigint, _event_type_code text,
+                                       _requester_user_id bigint, _requester_username text, _target_user_id bigint,
+                                       _target_username text, _ip_address text, _user_agent text, _origin text)
     returns table
             (
+                __auth_event_id bigint
             )
     language plpgsql
 as
 $$
 begin
-    perform auth.has_permission(null, _user_id, 'system.auth.create_auth_event');
+    perform auth.has_permission(null, _user_id, 'system.authentication.create_auth_event');
 
-    insert into auth.token()
-
-    create table auth.token
-    (
-        token_id           int generated always as identity not null primary key,
-        user_oid           text                             not null,
-        uid                text                             not null default helpers.random_string(12),
-        auth_event_id      int references auth.auth_event (auth_event_id) on delete cascade,
-        token_state_code   text                             not null default 'valid' references const.token_state (code),
-        token_type_code    text                             not null references const.token_type (code),
-        token_channel_code text                             not null references const.token_channel (code),
-        token              text                             not null,
-        expires_at         timestamptz                      not null
-    ) inherits (_template_timestamps);
+    return query
+        insert into auth.auth_event (created_by,
+                                     event_type_code,
+                                     requester_user_id,
+                                     requester_username,
+                                     target_user_id,
+                                     target_username,
+                                     ip_address,
+                                     user_agent,
+                                     origin)
+            values (_created_by,
+                    _event_type_code,
+                    _requester_user_id,
+                    _requester_username,
+                    _target_user_id,
+                    _target_username,
+                    _ip_address,
+                    _user_agent,
+                    _origin)
+            returning auth_event_id;
 end;
 $$;
 
@@ -1178,6 +1545,144 @@ $$;
  *       ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═══╝╚══════╝
  *
  */
+
+create function unsecure.expire_tokens(_created_by text)
+    returns void
+    language sql
+as
+$$
+update auth.token
+set modified         = now(),
+    modified_by      = _created_by,
+    token_state_code = 'expired'
+where token_state_code = 'valid'
+  and expires_at < now();
+$$;
+
+
+create function auth.create_token(_created_by text, _user_id bigint,
+                                  _target_user_id bigint,
+                                  _auth_event_id int,
+                                  _token_type_code text,
+                                  _token_channel_code text,
+                                  _token text,
+                                  _expires_at timestamptz default null)
+    returns table
+            (
+                __token_id   bigint,
+                __token_uid  text,
+                __expires_at timestamptz
+            )
+    language plpgsql
+as
+$$
+declare
+    __default_expiration_in_seconds int;
+begin
+    perform auth.has_permission(null, _user_id, 'system.tokens.create_token');
+
+    if _expires_at is null then
+
+        select default_expiration_in_seconds
+        from const.token_type
+        where code = _token_type_code
+        into __default_expiration_in_seconds;
+
+        _expires_at := now() + '1 second'::interval * __default_expiration_in_seconds;
+    end if;
+
+    if _target_user_id is not null then
+        -- invalidate all previous tokens of the same type for the same user that are still valid
+        update auth.token
+        set modified         = now(),
+            modified_by      = _created_by,
+            token_state_code = 'invalid'
+        where user_id = _target_user_id
+          and token_type_code = _token_type_code
+          and token_state_code = 'valid';
+    end if;
+
+    if exists(select
+              from auth.token
+              where token = _token
+                and token_state_code = 'valid'
+                and token_type_code = _token_type_code) then
+        perform error.raise_52276();
+    end if;
+
+    return query
+        insert into auth.token (created_by,
+                                user_id, auth_event_id, token_type_code, token_channel_code,
+                                token, expires_at)
+            values (_created_by,
+                    _target_user_id,
+                    _auth_event_id,
+                    _token_type_code,
+                    _token_channel_code,
+                    _token,
+                    _expires_at)
+            returning token_id, uid, expires_at;
+
+    perform unsecure.expire_tokens(_created_by);
+end;
+$$;
+
+create function auth.validate_token(_modified_by text, _user_id bigint,
+                                    _target_user_id bigint,
+                                    _token text, _ip_address text,
+                                    _user_agent text,
+                                    _origin text)
+    returns table
+            (
+                __token_id         bigint,
+                __token_uid        text,
+                __token_state_code text,
+                __used_at          timestamptz
+            )
+    language plpgsql
+as
+$$
+declare
+    __token_id         bigint;
+    __token_uid        text;
+    __token_state_code text;
+    __token_user_id    bigint;
+begin
+    perform auth.has_permission(null, _user_id, 'system.tokens.validate_token');
+
+    select token_id, uid, token_state_code, user_id
+    from auth.token
+    where token = _token
+      and ((_target_user_id is not null and token.user_id = _target_user_id) or true)
+    into __token_id, __token_uid, __token_state_code, __token_user_id;
+
+    if __token_id is null then
+        perform error.raise_52277();
+    end if;
+
+    if __token_state_code <> 'valid' then
+        perform error.raise_52278(__token_uid);
+    end if;
+
+    if _target_user_id is not null and _target_user_id <> __token_user_id then
+        perform error.raise_52279(__token_uid);
+    end if;
+
+    return query
+        update token
+            set modified_by = _modified_by,
+                modified = now(),
+                token_state_code = 'used',
+                used_at = now(),
+                ip_address = _ip_address,
+                user_agent = _user_agent,
+                origin = _origin
+            where token_id = __token_id
+            returning token_id, uid, token_state_code, used_at;
+
+    perform unsecure.expire_tokens(_modified_by);
+end;
+$$;
 
 
 /***
@@ -1213,24 +1718,21 @@ begin
     into __is_assignable, __is_external, __is_active;
 
     if __is_active is null then
-        raise exception 'User group (group id: %) does not exist'
-            , _user_group_id
-            using errcode = 52171;
+        perform error.raise_52171(_user_group_id);
+
     end if;
 
     if not __is_active then
-        raise exception 'User group (group id: %) is not active'
-            , _user_group_id
-            using errcode = 52172;
+        perform error.raise_52172(_user_group_id);
+
     end if;
 
     raise notice 'Is assignable: %, is external: %'
         , __is_assignable, __is_external;
 
     if not __is_assignable or __is_external then
-        raise exception 'User group (group id: %) is either is not assignable or is external'
-            , _user_group_id
-            using errcode = 52173;
+        perform error.raise_52173(_user_group_id);
+
     end if;
 
     return query
@@ -1291,29 +1793,23 @@ declare
 begin
 
     if _user_group_id is null and _target_user_id is null then
-        raise exception 'Either user group is or target user id must not be null'
-            using errcode = 52272;
+        perform error.raise_52272();
     end if;
 
     if _perm_set_code is null and _perm_code is null then
-        raise exception 'Either user group is or target user id must not be null'
-            using errcode = 52273;
+        perform error.raise_52273();
     end if;
 
     if _user_group_id is not null and not exists(select
                                                  from user_group ug
                                                  where ug.user_group_id = _user_group_id) then
-        raise exception 'User group (group id: %) does not exist'
-            , _user_group_id
-            using errcode = 52171;
+        perform error.raise_52171(_user_group_id);
     end if;
 
     if _target_user_id is not null and not exists(select
                                                   from user_info ui
                                                   where ui.user_id = _target_user_id) then
-        raise exception 'User (user id: %) does not exist'
-            , _target_user_id
-            using errcode = 52103;
+        perform error.raise_52103(_target_user_id);
     end if;
 
     if _perm_set_code is not null then
@@ -1323,9 +1819,8 @@ begin
         into __perm_set_id, __perm_set_assignable;
 
         if __perm_set_id is null then
-            raise exception 'Permission set (code: %) is not assignable'
-                , _perm_set_code
-                using errcode = 52175;
+            perform error.raise_52175(_perm_set_code);
+
         end if;
     end if;
 
@@ -1336,9 +1831,8 @@ begin
         into __permission_id, __permission_assignable;
 
         if __permission_id is null then
-            raise exception 'Permission (code: %) is not assignable'
-                , _perm_set_code
-                using errcode = 52176;
+            perform error.raise_52176(_perm_set_code);
+
         end if;
     end if;
 
@@ -1421,8 +1915,7 @@ declare
 begin
 
     if _permission_id is null and _permission_full_code is null then
-        raise exception 'Either permission id or code has to be not null'
-            using errcode = 52274;
+        perform error.raise_52274();
     end if;
 
     __permission_id := _permission_id;
@@ -1431,9 +1924,7 @@ begin
         select permission_id from auth.permission where full_code = _permission_full_code into __permission_id;
 
         if __permission_id is null then
-            raise exception 'Permission (full code: %s) does not exist'
-                , _permission_full_code
-                using errcode = 52275;
+            perform error.raise_52275(_permission_full_code);
         end if;
     end if;
 
@@ -1830,15 +2321,11 @@ begin
     into __is_system;
 
     if __is_system is null then
-        raise exception 'User: group (group id: %) does not exist'
-            , _user_group_id
-            using errcode = 52171;
+        perform error.raise_52171(_user_group_id);
     end if;
 
-    if not __is_system then
-        raise exception 'User: group (group id: %) is a system group'
-            , _user_group_id
-            using errcode = 52271;
+    if __is_system then
+        perform error.raise_52271(_user_group_id);
     end if;
 
     return query
@@ -1919,8 +2406,8 @@ declare
 begin
 
     if _mapped_object_id is null and _mapped_role is null then
-        raise exception 'Either mapped object id or mapped role must not be empty'
-            using errcode = 52174;
+        perform error.raise_52174();
+
     end if;
 
     perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.create_mapping');
@@ -1931,9 +2418,7 @@ begin
     into __is_group_active;
 
     if __is_group_active is null then
-        raise exception 'User group (group id: %) does not exist'
-            , _user_group_id
-            using errcode = 52171;
+        perform error.raise_52171(_user_group_id);
     end if;
 
     return query
@@ -2402,8 +2887,7 @@ begin
               from unnest(_permissions) as perm_code
                        inner join auth.permission p
                                   on p.full_code = perm_code::ext.ltree and not p.is_assignable) then
-        raise exception 'Some of permissions are not assignable'
-            using errcode = 52176;
+        perform error.raise_52178();
     end if;
 
     -- noinspection SqlInsertValues
@@ -2529,8 +3013,8 @@ $$
 begin
 
     if not exists(select from auth.perm_set where perm_set_id = _perm_set_id and tenant_id = _tenant_id) then
-        raise exception 'Permission set (id: %) is not defined in tenant (id: %)', _perm_set_id, _tenant_id
-            using errcode = 52177;
+        perform error.raise_52177(_perm_set_id, _tenant_id);
+
     end if;
 
     perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.update_permission_set');
@@ -2551,6 +3035,235 @@ $$;
  *    ##     ## ##    ## ##       ##    ##  ##    ##
  *     #######   ######  ######## ##     ##  ######
  */
+
+create function auth.enable_user(_modified_by text, _user_id bigint, _target_user_id bigint)
+    returns table
+            (
+                __user_id   bigint,
+                __is_active bool,
+                __is_locked bool
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.enable_user');
+
+    return query
+        update user_info
+            set modified_by = _modified_by
+                , modified = now()
+                , is_active = true
+            where is_system = false
+                and user_id = _target_user_id
+            returning user_id
+                , is_active
+                , is_locked;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s enabled user: %s'
+                                , _modified_by, _target_user_id)
+        , 'user', _target_user_id
+        , null
+        , 50104);
+end;
+$$;
+
+create function auth.disable_user(_modified_by text, _user_id bigint, _target_user_id bigint)
+    returns table
+            (
+                __user_id   bigint,
+                __is_active bool,
+                __is_locked bool
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.disable_user');
+
+    return query
+        update user_info
+            set modified_by = _modified_by
+                , modified = now()
+                , is_active = false
+            where is_system = false
+                and user_id = _target_user_id
+            returning user_id
+                , is_active
+                , is_locked;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s disabled user: %s'
+                                , _modified_by, _target_user_id)
+        , 'user', _target_user_id
+        , null
+        , 50105);
+end;
+$$;
+
+create function auth.unlock_user(_modified_by text, _user_id bigint, _target_user_id bigint)
+    returns table
+            (
+                __user_id   bigint,
+                __is_active bool,
+                __is_locked bool
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.unlock_user');
+
+    return query
+        update user_info
+            set modified_by = _modified_by
+                , modified = now()
+                , is_locked = false
+            where is_system = false
+                and user_id = _target_user_id
+            returning user_id
+                , is_active
+                , is_locked;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s unlocked user: %s'
+                                , _modified_by, _target_user_id)
+        , 'user', _target_user_id
+        , null
+        , 50106);
+end;
+$$;
+
+create function auth.lock_user(_modified_by text, _user_id bigint, _target_user_id bigint)
+    returns table
+            (
+                __user_id   bigint,
+                __is_active bool,
+                __is_locked bool
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.lock_user');
+
+    return query
+        update user_info
+            set modified_by = _modified_by
+                , modified = now()
+                , is_locked = true
+            where is_system = false
+                and user_id = _target_user_id
+            returning user_id
+                , is_active
+                , is_locked;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s locked user: %s'
+                                , _modified_by, _target_user_id)
+        , 'user', _target_user_id
+        , null
+        , 50107);
+end;
+$$;
+
+create function auth.enable_user_identity(_modified_by text, _user_id bigint, _target_user_id bigint,
+                                          _provider_code text)
+    returns table
+            (
+                __user_identity_id bigint,
+                __is_active        bool
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __user_identity_id bigint;
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.enable_user_identity');
+
+    select user_identity_id
+    from user_identity uid
+             inner join user_info ui on uid.user_id = ui.user_id
+    where not ui.is_system
+      and uid.user_id = _target_user_id
+      and provider_code = _provider_code
+    into __user_identity_id;
+
+    if __user_identity_id is null then
+        perform error.raise_52111(_target_user_id, _provider_code);
+    end if;
+
+    return query
+        update user_identity
+            set modified_by = _modified_by
+                , modified = now()
+                , is_active = true
+            where user_identity_id = __user_identity_id
+            returning user_identity_id
+                , is_active;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s enabled user''s (id: %s) identity (provider code: %s)'
+                                , _modified_by, _user_id, _target_user_id)
+        , 'user', _target_user_id
+        , array ['provider_code', _provider_code]
+        , 50108);
+end;
+$$;
+
+create function auth.disable_user_identity(_modified_by text, _user_id bigint, _target_user_id bigint,
+                                           _provider_code text)
+    returns table
+            (
+                __user_identity_id bigint,
+                __is_active        bool
+            )
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __user_identity_id bigint;
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.disable_user_identity');
+
+    select user_identity_id
+    from user_identity uid
+             inner join user_info ui on uid.user_id = ui.user_id
+    where not ui.is_system
+      and uid.user_id = _target_user_id
+      and provider_code = _provider_code
+    into __user_identity_id;
+
+    if __user_identity_id is null then
+        perform error.raise_52111(_target_user_id, _provider_code);
+    end if;
+
+    return query
+        update user_identity
+            set modified_by = _modified_by
+                , modified = now()
+                , is_active = false
+            where user_identity_id = __user_identity_id
+            returning user_identity_id
+                , is_active;
+
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s disabled user''s (id: %s) identity (provider code: %s)'
+                                , _modified_by, _user_id, _target_user_id)
+        , 'user', _target_user_id
+        , array ['provider_code', _provider_code]
+        , 50109);
+end;
+$$;
+
 
 create or replace function unsecure.update_last_used_provider(_target_user_id bigint, _provider_code text)
     returns void
@@ -2634,8 +3347,9 @@ begin
             where ui.provider_code = 'email'
               and ui.uid = lower(__normalized_email)
         ) then
-        raise exception 'User identity (uid: %) is already in use', __normalized_email
-            using errcode = 52102;
+        perform error.raise_52102(__normalized_email);
+
+
     end if;
 
     insert into user_info (created_by, modified_by, can_login, username, email, display_name)
@@ -2720,11 +3434,12 @@ create function auth.get_user_by_email_for_authentication(_user_id int, _email t
 as
 $$
 declare
-    __target_user_id   bigint;
-    __target_uid_id    bigint;
-    __normalized_email text;
-    __is_active        bool;
-    __is_locked        bool;
+    __target_user_id     bigint;
+    __target_uid_id      bigint;
+    __normalized_email   text;
+    __is_active          bool;
+    __is_locked          bool;
+    __is_identity_active bool;
 begin
 
     perform auth.has_permission(null, _user_id, 'system.authentication.get_data');
@@ -2733,28 +3448,30 @@ begin
 
     __normalized_email := lower(trim(_email));
 
-    select ui.user_id, uid.user_identity_id, ui.is_active, ui.is_locked
+    select ui.user_id, uid.user_identity_id, ui.is_active, ui.is_locked, uid.is_active
     from user_identity uid
              inner join user_info ui on uid.user_id = ui.user_id
     where uid.provider_code = 'email'
       and uid.uid = __normalized_email
-    into __target_user_id, __target_uid_id, __is_active, __is_locked;
+    into __target_user_id, __target_uid_id, __is_active, __is_locked, __is_identity_active;
 
     if __is_active is null then
-        raise exception 'User identity (uid: %) does not exist', __normalized_email
-            using errcode = 52103;
+        perform error.raise_52103(null, __normalized_email);
     end if;
 
     perform update_last_used_provider(__target_user_id, 'email');
 
     if not __is_active then
-        raise exception 'User (email: %) is not in active state', __normalized_email
-            using errcode = 52105;
+        perform error.raise_52105(__target_user_id);
+
+    end if;
+
+    if not __is_identity_active then
+        perform error.raise_52110(__target_user_id, 'email');
     end if;
 
     if __is_locked then
-        raise exception 'User (email: %) is locked out', __normalized_email
-            using errcode = 52106;
+        perform error.raise_52106(__normalized_email);
     end if;
 
     return query
@@ -2794,21 +3511,23 @@ create or replace function auth.ensure_user_from_provider(_created_by text, _use
 as
 $$
 declare
-    __last_id bigint;
+    __last_id            bigint;
+    __is_user_active     bool;
+    __is_identity_active bool;
 begin
 
     if lower(_provider_code) = 'email' then
-        raise exception 'User (username: %) cannot be ensured for email provider, use registration for that', _username
-            using errcode = 52101;
+        perform error.raise_52101(_username);
     end if;
 
     perform auth.validate_provider_is_active(_provider_code);
 
-    select user_id
+    select uid.user_id, u.is_active, uid.is_active
     from user_identity uid
+             inner join user_info u on uid.user_id = u.user_id
     where uid.provider_code = _provider_code
       and uid.uid = _provider_uid
-    into __last_id;
+    into __last_id, __is_user_active, __is_identity_active;
 
     if __last_id is null then
         insert into user_info(created_by, modified_by, username, email, display_name, last_used_provider_code)
@@ -2820,6 +3539,14 @@ begin
 
         perform auth.update_user_data(_email, _user_id, __last_id, _provider_code, _user_data);
 
+    else
+        if not __is_user_active then
+            perform error.raise_52105(null, __last_id);
+        end if;
+
+        if not __is_identity_active then
+            perform error.raise_52110(__last_id, _provider_code);
+        end if;
     end if;
 
     perform unsecure.update_last_used_provider(__last_id, _provider_code);
@@ -2988,6 +3715,7 @@ begin
 
     perform unsecure.create_permission_by_path_as_system('Authentication', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Get data', 'system.authentication');
+    perform unsecure.create_permission_by_path_as_system('Create auth event', 'system.authentication');
 
     perform unsecure.create_permission_by_path_as_system('Areas', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Public', 'system.areas');
@@ -3005,6 +3733,12 @@ begin
 
     perform unsecure.create_permission_by_path_as_system('Manage users', 'system');
     perform unsecure.create_permission_by_path_as_system('Register user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Enable user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Disable user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Lock user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Unlock user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Enable user identity', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Disable user identity', 'system.manage_users');
 
     perform unsecure.create_permission_by_path_as_system('Manage tenants', 'system');
     perform unsecure.create_permission_by_path_as_system('Create tenant', 'system.manage_tenants');
@@ -3047,6 +3781,26 @@ begin
 
     perform auth.create_provider('initial', 1, 'email', 'Email authentication', false);
     perform auth.create_provider('initial', 1, 'aad', 'Azure authentication', false);
+
+
+    insert into const.auth_event_type(code) values ('email_verification');
+    insert into const.auth_event_type(code) values ('phone_verification');
+    insert into const.auth_event_type(code) values ('request_password_reset');
+    insert into const.auth_event_type(code) values ('set_new_password');
+
+    insert into const.token_type(code, default_expiration_in_seconds) values ('email_verification', 1 * 60 * 60);
+    insert into const.token_type(code, default_expiration_in_seconds) values ('phone_verification', 10 * 60);
+    insert into const.token_type(code, default_expiration_in_seconds) values ('password_reset', 10 * 60);
+    insert into const.token_type(code, default_expiration_in_seconds) values ('invitation', 5 * 24 * 60 * 60);
+
+    insert into const.token_channel(code) values ('email');
+    insert into const.token_channel(code) values ('mobile_phone');
+
+    insert into const.token_state(code) values ('valid');
+    insert into const.token_state(code) values ('invalid');
+    insert into const.token_state(code) values ('expired');
+    insert into const.token_state(code) values ('used');
+
 
     -- UNIQUE FOR THIS DATABASE
 

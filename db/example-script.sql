@@ -85,7 +85,56 @@ from auth.has_permission(3, 5, 'system.areas.public');
 select *
 from auth.user_permission_cache;
 
-select * from user_info;
+
+
+select *
+from auth.disable_user('kerberos', 1, 6);
+
+select *
+from auth.enable_user('kerberos', 1, 6);
+
+select *
+from auth.lock_user('kerberos', 1, 6);
+
+select *
+from auth.unlock_user('kerberos', 1, 6);
+
+select *
+from auth.disable_user_identity('kerberos', 1, 6, 'email');
+
+select *
+from auth.enable_user_identity('kerberos', 1, 6, 'email');
+
+
+select * from auth.get_user_by_email_for_authentication(1, 'lucie.novakova1@keenmate.com');
+
+
+select *
+from auth.create_auth_event('authenticator', 1, 'email_verification', 1, 'authenticator', 2,
+                            'ondrej.valenta@keenmate.com', '123.123.232.12', 'the best user agent there is',
+                            'domain.com');
+
+select *
+from auth.create_token('authenticator', 1, 2, 1, 'email_verification', 'email', '111jjjj2222jjjj333');
+
+--4FDC32F629CE
+
+select *
+from auth.validate_token('authenticator', 1, null, '111jjjj2222jjjj333', '123.2.34.5', 'my agent', 'keenmate.com');
+
+select *
+from token;
+
+
+select token_id, token_state_code
+from auth.token
+where token = '4FDC32F629CE'
+  and ((null is not null and token.user_id = null) or true);
+
+
+
+select *
+from user_info;
 
 
 select *
