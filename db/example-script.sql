@@ -106,13 +106,14 @@ select *
 from auth.enable_user_identity('kerberos', 1, 6, 'email');
 
 
-select * from auth.get_user_by_email_for_authentication(1, 'lucie.novakova1@keenmate.com');
+select *
+from auth.get_user_by_email_for_authentication(1, 'lucie.novakova1@keenmate.com');
 
 
 select *
-from auth.create_auth_event('authenticator', 1, 'email_verification', 1, 'authenticator', 2,
-                            'ondrej.valenta@keenmate.com', '123.123.232.12', 'the best user agent there is',
-                            'domain.com');
+from auth.create_auth_event('authenticator', 1, 'email_verification', 6,
+                                '123.123.232.12', 'the best user agent there is',
+                                'domain.com');
 
 select *
 from auth.create_token('authenticator', 1, 2, 1, 'email_verification', 'email', '111jjjj2222jjjj333');

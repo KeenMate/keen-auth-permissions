@@ -150,7 +150,19 @@ $$
 begin
 
     raise exception 'User (id: %) identity for provider (code: %) does not exist', _user_id, _provider_code
-        using errcode = 52110;
+        using errcode = 52111;
+end;
+$$;
+
+-- User provider identity does not exist
+
+create function error.raise_52112(_user_id bigint) returns void
+    language plpgsql as
+$$
+begin
+
+    raise exception 'User (id: %) is not supposed to log in', _user_id
+        using errcode = 52112;
 end;
 $$;
 
@@ -694,9 +706,9 @@ create table auth.auth_event
 (
     auth_event_id      bigint generated always as identity not null primary key,
     event_type_code    text                                not null references const.auth_event_type (code),
-    requester_user_id  bigint,
+    requester_user_id  bigint                              references user_info (user_id) on delete set null,
     requester_username text,
-    target_user_id     text,
+    target_user_id     bigint                              references user_info (user_id) on delete set null,
     target_username    text,
     ip_address         text,
     user_agent         text,
@@ -1499,9 +1511,8 @@ $$;
  *
  */
 
-create function auth.create_auth_event(_created_by text, _user_id bigint, _event_type_code text,
-                                       _requester_user_id bigint, _requester_username text, _target_user_id bigint,
-                                       _target_username text, _ip_address text, _user_agent text, _origin text)
+create function unsecure.create_auth_event(_created_by text, _user_id bigint, _event_type_code text,
+                                           _target_user_id bigint, _ip_address text, _user_agent text, _origin text)
     returns table
             (
                 __auth_event_id bigint
@@ -1509,8 +1520,25 @@ create function auth.create_auth_event(_created_by text, _user_id bigint, _event
     language plpgsql
 as
 $$
+declare
+    __requester_username text;
+    __target_username    text;
 begin
-    perform auth.has_permission(null, _user_id, 'system.authentication.create_auth_event');
+    --     perform auth.has_permission(null, _user_id, 'system.authentication.create_auth_event');
+
+    if _user_id is not null and (__requester_username is null or __requester_username = '') then
+        select username
+        from user_info ui
+        where ui.user_id = _user_id
+        into __requester_username;
+    end if;
+
+    if _target_user_id is not null then
+        select username
+        from user_info ui
+        where ui.user_id = _target_user_id
+        into __target_username;
+    end if;
 
     return query
         insert into auth.auth_event (created_by,
@@ -1524,10 +1552,10 @@ begin
                                      origin)
             values (_created_by,
                     _event_type_code,
-                    _requester_user_id,
-                    _requester_username,
+                    _user_id,
+                    __requester_username,
                     _target_user_id,
-                    _target_username,
+                    __target_username,
                     _ip_address,
                     _user_agent,
                     _origin)
@@ -1535,6 +1563,23 @@ begin
 end;
 $$;
 
+
+create function auth.create_auth_event(_created_by text, _user_id bigint, _event_type_code text,
+                                           _target_user_id bigint, _ip_address text, _user_agent text, _origin text)
+    returns table
+            (
+                ___auth_event_id bigint
+            )
+    language plpgsql
+as
+$$
+begin
+    return query
+        select __auth_event_id
+        from unsecure.create_auth_event(_created_by, _user_id, _event_type_code,
+                                        _target_user_id, _ip_address, _user_agent, _origin);
+end;
+$$;
 
 /***
  *    ████████╗ ██████╗ ██╗  ██╗███████╗███╗   ██╗███████╗
@@ -3313,6 +3358,77 @@ begin
 end;
 $$;
 
+create function unsecure.create_user_info(_created_by text, _user_id bigint, _username text, _email text,
+                                          _display_name text, _last_provider_code text)
+    returns setof user_info
+    language plpgsql
+    rows 1
+as
+$$
+declare
+    __last_id             bigint;
+    __normalized_username text;
+    __normalized_email    text;
+begin
+    __normalized_username := lower(trim(_username));
+    __normalized_email := lower(trim(_email));
+
+
+    insert into user_info (created_by, modified_by, username, email, display_name, last_used_provider_code)
+    values (_created_by, _created_by, __normalized_username, __normalized_email, _display_name, _last_provider_code)
+    returning user_id into __last_id;
+
+    return query
+        select * from user_info where user_id = __last_id;
+
+    perform add_journal_msg('system', null, _user_id
+        , format('User: (id: %s) added new user: %s'
+                                , _user_id, _username)
+        , 'user', __last_id
+        ,
+                            array ['username', __normalized_username, 'email', __normalized_email
+                                , 'display_name', _display_name]
+        , _event_id := 50101);
+end;
+$$;
+
+
+create function unsecure.create_user_identity(_created_by text, _user_id bigint, _target_user_id bigint,
+                                              _provider_code text,
+                                              _provider_uid text,
+                                              _password_hash text default null,
+                                              _user_data text default null,
+                                              _password_salt text default null, _is_active bool default false
+)
+    returns table
+            (
+                __user_id       bigint,
+                __provider_code text,
+                __provider_uid  text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    return query
+        insert into user_identity (created_by, modified_by, provider_code, uid, user_id,
+                                   user_data, password_hash, password_salt, is_active)
+            values (_created_by, _created_by, _provider_code, _provider_uid, _target_user_id,
+                    _user_data::jsonb, _password_hash, _password_salt, _is_active)
+            returning user_id, provider_code, uid;
+
+    perform add_journal_msg('system', null, _user_id
+        , format('User: (id: %s) added new user identity to user: %s'
+                                , _user_id, _target_user_id)
+        , 'user', _target_user_id
+        , array ['provider_code', _provider_code, 'provider_uid', __provider_uid, 'is_active', _is_active::text]
+        , _event_id := 50134);
+end;
+$$;
+
+
 
 -- for email authentication
 create or replace function auth.register_user(_created_by text, _user_id int, _email text, _password_hash text,
@@ -3339,8 +3455,6 @@ begin
 
     perform auth.validate_provider_is_active('email');
 
-    __normalized_email := lower(trim(_email));
-
     if exists(
             select
             from user_identity ui
@@ -3348,16 +3462,15 @@ begin
               and ui.uid = lower(__normalized_email)
         ) then
         perform error.raise_52102(__normalized_email);
-
-
     end if;
 
-    insert into user_info (created_by, modified_by, can_login, username, email, display_name)
-    values (_created_by, __normalized_email, true, __normalized_email, __normalized_email, _display_name)
-    returning * into __new_user;
+    select *
+    from unsecure.create_user_info(_created_by, _user_id, _email, _email, _display_name,
+                                   'email')
+    into __new_user;
 
-    insert into user_identity(created_by, modified_by, provider_code, uid, user_id, password_hash)
-    values (_created_by, __normalized_email, 'email', __normalized_email, __new_user.user_id, _password_hash);
+    perform unsecure.create_user_identity(_created_by, _user_id, __new_user.user_id
+        , 'email', lower(trim(_email)), _password_hash);
 
     perform auth.update_user_data(_created_by, _user_id, __new_user.user_id, 'email', _user_data);
 
@@ -3440,6 +3553,7 @@ declare
     __is_active          bool;
     __is_locked          bool;
     __is_identity_active bool;
+    __can_login          bool;
 begin
 
     perform auth.has_permission(null, _user_id, 'system.authentication.get_data');
@@ -3448,15 +3562,19 @@ begin
 
     __normalized_email := lower(trim(_email));
 
-    select ui.user_id, uid.user_identity_id, ui.is_active, ui.is_locked, uid.is_active
+    select ui.user_id, uid.user_identity_id, ui.is_active, ui.is_locked, uid.is_active, ui.can_login
     from user_identity uid
              inner join user_info ui on uid.user_id = ui.user_id
     where uid.provider_code = 'email'
       and uid.uid = __normalized_email
-    into __target_user_id, __target_uid_id, __is_active, __is_locked, __is_identity_active;
+    into __target_user_id, __target_uid_id, __is_active, __is_locked, __is_identity_active, __can_login;
 
     if __is_active is null then
         perform error.raise_52103(null, __normalized_email);
+    end if;
+
+    if not __can_login then
+        perform error.raise_52112(__target_user_id);
     end if;
 
     perform update_last_used_provider(__target_user_id, 'email');
@@ -3512,6 +3630,7 @@ as
 $$
 declare
     __last_id            bigint;
+    __can_login          bool;
     __is_user_active     bool;
     __is_identity_active bool;
 begin
@@ -3522,26 +3641,31 @@ begin
 
     perform auth.validate_provider_is_active(_provider_code);
 
-    select uid.user_id, u.is_active, uid.is_active
+    select uid.user_id, u.is_active, uid.is_active, u.can_login
     from user_identity uid
              inner join user_info u on uid.user_id = u.user_id
     where uid.provider_code = _provider_code
       and uid.uid = _provider_uid
-    into __last_id, __is_user_active, __is_identity_active;
+    into __last_id, __is_user_active, __is_identity_active, __can_login;
 
     if __last_id is null then
-        insert into user_info(created_by, modified_by, username, email, display_name, last_used_provider_code)
-        values (_created_by, _created_by, lower(_username), lower(_email), _display_name, _provider_code)
-        returning user_id into __last_id;
+        select user_id
+        from unsecure.create_user_info(_created_by, _user_id, lower(_username), lower(_email), _display_name,
+                                       _provider_code)
+        into __last_id;
 
-        insert into user_identity(created_by, modified_by, provider_code, uid, user_id)
-        values (_created_by, _created_by, _provider_code, _provider_uid, __last_id);
+        perform unsecure.create_user_identity(_created_by, _user_id, __last_id
+            , _provider_code, _provider_uid, _is_active := true);
 
         perform auth.update_user_data(_email, _user_id, __last_id, _provider_code, _user_data);
 
     else
+        if not __can_login then
+            perform error.raise_52112(__last_id);
+        end if;
+
         if not __is_user_active then
-            perform error.raise_52105(null, __last_id);
+            perform error.raise_52105(__last_id);
         end if;
 
         if not __is_identity_active then
@@ -3783,6 +3907,8 @@ begin
     perform auth.create_provider('initial', 1, 'aad', 'Azure authentication', false);
 
 
+    insert into const.auth_event_type(code) values ('add_user_identity');
+    insert into const.auth_event_type(code) values ('remove_user_identity');
     insert into const.auth_event_type(code) values ('email_verification');
     insert into const.auth_event_type(code) values ('phone_verification');
     insert into const.auth_event_type(code) values ('request_password_reset');
