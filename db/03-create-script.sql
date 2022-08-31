@@ -3478,7 +3478,6 @@ begin
 end;
 $$;
 
-
 create function unsecure.create_user_identity(_created_by text, _user_id bigint, _target_user_id bigint,
                                               _provider_code text,
                                               _provider_uid text,
@@ -3549,7 +3548,8 @@ $$;
 
 create function auth.update_user_password(_modified_by text, _user_id bigint, _target_user_id bigint,
                                           _password_hash text,
-                                          _ip_address text, _user_agent text, _origin text, _password_salt text default null)
+                                          _ip_address text, _user_agent text, _origin text,
+                                          _password_salt text default null)
     returns table
             (
                 __user_id       bigint,
@@ -3649,7 +3649,6 @@ create function get_user_by_username(_tenant_id int, _username text)
 as
 $$
 begin
-
     if not exists(select
                   from tenant_user tu
                            inner join user_info ui on ui.user_id = tu.user_id
@@ -3674,6 +3673,38 @@ begin
           and ui.username = _username;
 end;
 
+$$;
+
+create function get_user_identity(_user_id bigint, _target_user_id bigint, _provider_code text)
+    returns table
+            (
+                __user_identity_id bigint,
+                __provider_code    text,
+                __uid              text,
+                __user_id          bigint,
+                __provider_groups  text[],
+                __provider_roles   text[],
+                __user_data        jsonb
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.get_user_identity');
+
+    return query
+        select uid.user_identity_id,
+               uid.provider_code,
+               uid.uid,
+               uid.uid,
+               uid.user_id,
+               uid.provider_groups,
+               uid.provider_roles,
+               uid.user_data
+        from user_identity uid
+        where user_id = _target_user_id
+          and provider_code = _provider_code;
+end;
 $$;
 
 
@@ -4009,6 +4040,7 @@ begin
     perform unsecure.create_permission_by_path_as_system('Disable user', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Lock user', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Unlock user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Get user identity', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Enable user identity', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Disable user identity', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Change password', 'system.manage_users');
