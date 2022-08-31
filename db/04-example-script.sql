@@ -32,7 +32,7 @@ from auth.register_user('registrator', 1, 'lucie.novakova1@keenmate.com', '12345
                         _user_data := '{firstName: "Lucie", lastname: "Novakova"}');
 
 select *
-from auth.get_users_by_provider('system', 1, 'aad');
+from auth.get_users_for_provider('system', 1, 'aad');
 
 select *
 from unsecure.add_user_to_group_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
@@ -58,7 +58,7 @@ from assign_tenant_owner('ondrej.valenta', 2, 3, 5);
 
 -- add ondrej.valenta@keenmate.com as member of Tenant Owner of tenant: Jan Rada
 select *
-from auth.create_user_group_member('jan.rada@keenmate.com', 5, 3, 5, 2);
+from auth.create_user_group_member('jan.rada@keenmate.com', 5, 3, 6, 2);
 
 -- create an external group with mapping to aad_rada in aad auth provider in tenant: Jan Rada
 select *
@@ -85,7 +85,11 @@ from auth.has_permission(3, 5, 'system.areas.public');
 select *
 from auth.user_permission_cache;
 
+select *
+from auth.get_users_for_tenant('system', 1, 3);
 
+select *
+from auth.get_groups_for_tenant('system', 1, 2);
 
 select *
 from auth.disable_user('kerberos', 1, 6);

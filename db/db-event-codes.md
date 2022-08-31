@@ -16,6 +16,8 @@
 | 50002      | Tenant updated                   |
 | 50003      | Tenant deleted                   |
 | 50004      | Assign tenant owner              |
+| 50005      | Get tenant users                 |
+| 50006      | Get tenant groups                |
 | 50011      | Provider created                 |
 | 50012      | Provider updated                 |
 | 50013      | Provider deleted                 |
@@ -35,6 +37,7 @@
 | 50133      | User deleted from group          |
 | 50134      | User identity created            |
 | 50135      | User identity deleted            |
+| 50136      | User password changed            |
 | 50201      | Group created                    |
 | 50202      | Group updated                    |
 | 50203      | Group deleted                    |

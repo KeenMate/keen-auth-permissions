@@ -924,7 +924,7 @@ create function auth.throw_no_permission(_tenant_id int, _user_id bigint, _perm_
 as
 $$
 begin
-    perform error.raise_52109(_tenant_id, _user_id, _perm_codes);
+    perform error.raise_52109(_user_id, _tenant_id, _perm_codes);
 end;
 $$;
 
@@ -1402,7 +1402,7 @@ begin
 end;
 $$;
 
-create function auth.get_users_by_provider(_requested_user text, _user_id bigint, _provider_code text)
+create function auth.get_users_for_provider(_requested_by text, _user_id bigint, _provider_code text)
     returns table
             (
                 __user_id          bigint,
@@ -1416,7 +1416,7 @@ $$
 declare
     __provider_id int;
 begin
-    perform auth.has_permission(null, _user_id, 'system.providers.get_users');
+    perform auth.has_permission(null, _user_id, 'system.manage_provider.get_users');
 
     select provider_id
     from auth.provider
@@ -1430,12 +1430,86 @@ begin
         where uid.provider_code = _provider_code
         order by ui.display_name;
 
-    perform add_journal_msg(_requested_user, null, _user_id
+    perform add_journal_msg(_requested_by, null, _user_id
         , format('User: %s requested a list of all users for authentication provider: %s'
-                                , _requested_user, _provider_code)
+                                , _requested_by, _provider_code)
         , 'provider', __provider_id
         , null
         , 50016);
+end;
+$$;
+
+create or replace function auth.get_users_for_tenant(_requested_by text, _user_id bigint, _tenant_id int)
+    returns table
+            (
+                __user_id      bigint,
+                __username     text,
+                __display_name text,
+                __user_groups  text[]
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_users');
+
+    return query
+        with tenant_users as (select ui.user_id,
+                                     ui.username,
+                                     ui.display_name,
+                                     ugs.user_group_id,
+                                     ugs.group_title,
+                                     ugs.group_code,
+                                     jsonb_build_object(variadic
+                                                        array ['user_group_id', ugs.user_group_id::text, 'code', ugs.group_code, 'title', ugs.group_title]) group_data
+                              from user_groups ugs
+                                       inner join user_info ui on ugs.user_id = ui.user_id
+                              where ugs.tenant_id = _tenant_id
+                              order by ui.display_name)
+        select tu.user_id, tu.username, tu.display_name, array_agg(tu.group_data::text)
+        from tenant_users tu
+        group by tu.user_id, tu.username, tu.display_name;
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested a list of all users for tenant: %s'
+                                , _requested_by, _tenant_id)
+        , 'tenant', _tenant_id
+        , null
+        , 50005);
+end;
+$$;
+
+create or replace function auth.get_groups_for_tenant(_requested_by text, _user_id bigint, _tenant_id int)
+    returns table
+            (
+                __user_group_id integer,
+                __group_code    text,
+                __group_title   text,
+                __members_count bigint
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_users');
+
+    return query
+        select ugs.user_group_id,
+               ugs.group_title,
+               ugs.group_code,
+               count(ugs.user_id)
+        from user_groups ugs
+        where ugs.tenant_id = _tenant_id
+        group by ugs.user_group_id, ugs.group_title, ugs.group_code
+        order by ugs.group_title;
+
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested a list of all groups for tenant: %s'
+                                , _requested_by, _tenant_id)
+        , 'tenant', _tenant_id
+        , null
+        , 50006);
 end;
 $$;
 
@@ -1565,7 +1639,7 @@ $$;
 
 
 create function auth.create_auth_event(_created_by text, _user_id bigint, _event_type_code text,
-                                           _target_user_id bigint, _ip_address text, _user_agent text, _origin text)
+                                       _target_user_id bigint, _ip_address text, _user_agent text, _origin text)
     returns table
             (
                 ___auth_event_id bigint
@@ -2650,8 +2724,9 @@ create function public.create_tenant(_created_by text, _user_id bigint, _name te
 as
 $$
 declare
-    __last_id               int;
-    __tenant_owner_group_id int;
+    __last_id                int;
+    __tenant_owner_group_id  int;
+    __tenant_member_group_id int;
 begin
     perform auth.has_permission(1, _user_id, 'system.manage_tenants.create_tenant');
 
@@ -2674,6 +2749,14 @@ begin
 
     perform unsecure.assign_permission(_created_by, _user_id
         , __last_id, __tenant_owner_group_id, null, 'tenant_owner');
+
+    select __group_id
+    from unsecure.create_user_group(_created_by, _user_id, 'Tenant Members'
+        , __last_id, true, true, false, true)
+    into __tenant_member_group_id;
+
+    perform unsecure.assign_permission(_created_by, _user_id
+        , __last_id, __tenant_member_group_id, null, 'tenant_member');
 
     if (_tenant_owner_id is not null) then
         perform unsecure.add_user_group_member(_created_by, _user_id, __last_id, __tenant_owner_group_id,
@@ -3373,10 +3456,13 @@ begin
     __normalized_username := lower(trim(_username));
     __normalized_email := lower(trim(_email));
 
+    select user_id from user_info where username = __normalized_username into __last_id;
 
-    insert into user_info (created_by, modified_by, username, email, display_name, last_used_provider_code)
-    values (_created_by, _created_by, __normalized_username, __normalized_email, _display_name, _last_provider_code)
-    returning user_id into __last_id;
+    if __last_id is null then
+        insert into user_info (created_by, modified_by, username, email, display_name, last_used_provider_code)
+        values (_created_by, _created_by, __normalized_username, __normalized_email, _display_name, _last_provider_code)
+        returning user_id into __last_id;
+    end if;
 
     return query
         select * from user_info where user_id = __last_id;
@@ -3428,6 +3514,68 @@ begin
 end;
 $$;
 
+create function unsecure.update_user_password(_modified_by text, _user_id bigint, _target_user_id bigint,
+                                              _password_hash text default null,
+                                              _password_salt text default null)
+    returns table
+            (
+                __user_id       bigint,
+                __provider_code text,
+                __provider_uid  text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    return query
+        update user_identity
+            set
+                modified = now(),
+                modified_by = _modified_by,
+                password_hash = _password_hash,
+                password_salt = _password_salt
+            where user_id = _target_user_id and provider_code = 'email'
+            returning user_id, provider_code, uid;
+
+    perform add_journal_msg('system', null, _user_id
+        , format('User: (id: %s) changed user''s password (id: %s)'
+                                , _user_id, _target_user_id)
+        , 'user', _target_user_id
+        , _event_id := 50136);
+end;
+$$;
+
+create function auth.update_user_password(_modified_by text, _user_id bigint, _target_user_id bigint,
+                                          _password_hash text,
+                                          _ip_address text, _user_agent text, _origin text, _password_salt text default null)
+    returns table
+            (
+                __user_id       bigint,
+                __provider_code text,
+                __provider_uid  text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    if _user_id <> _target_user_id then
+        perform auth.has_permission(null, _user_id, 'system.manage_users.change_password');
+    end if;
+
+    perform unsecure.create_auth_event(_modified_by, _user_id, 'change_password',
+                                       _target_user_id, _ip_address, _user_agent, _origin);
+
+    return query
+        select *
+        from unsecure.update_user_password(_modified_by, _user_id, _target_user_id,
+                                           _password_hash,
+                                           _password_salt);
+end;
+$$;
 
 
 -- for email authentication
@@ -3863,22 +4011,28 @@ begin
     perform unsecure.create_permission_by_path_as_system('Unlock user', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Enable user identity', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Disable user identity', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Change password', 'system.manage_users');
 
     perform unsecure.create_permission_by_path_as_system('Manage tenants', 'system');
     perform unsecure.create_permission_by_path_as_system('Create tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Update tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Assign owner', 'system.manage_tenants');
+    perform unsecure.create_permission_by_path_as_system('Get users', 'system.manage_tenants');
+    perform unsecure.create_permission_by_path_as_system('Get groups', 'system.manage_tenants');
+
 
     perform unsecure.create_permission_by_path_as_system('Manage providers', 'system');
     perform unsecure.create_permission_by_path_as_system('Create provider', 'system.manage_providers');
     perform unsecure.create_permission_by_path_as_system('Update provider', 'system.manage_providers');
     perform unsecure.create_permission_by_path_as_system('Delete provider', 'system.manage_providers');
+    perform unsecure.create_permission_by_path_as_system('Get users', 'system.manage_providers');
 
     perform unsecure.create_permission_by_path_as_system('Manage groups', 'system');
     perform unsecure.create_permission_by_path_as_system('Create group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Update group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Lock group', 'system.manage_groups');
+    perform unsecure.create_permission_by_path_as_system('Get groups', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create member', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete member', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create mapping', 'system.manage_groups');
@@ -3887,7 +4041,6 @@ begin
     perform unsecure.create_perm_set_as_system('System admin', 1, true, _is_assignable := true,
                                                _permissions := array ['system.manage_tenants', 'system.manage_providers'
                                                    , 'system.manage_users']);
-
 
     perform unsecure.create_perm_set_as_system('Tenant creator', 1, true, _is_assignable := true,
                                                _permissions := array ['system.manage_tenants.create_tenant']);
@@ -3898,7 +4051,12 @@ begin
     perform unsecure.create_perm_set_as_system('Tenant owner', null, true, _is_assignable := true,
                                                _permissions := array ['system.manage_groups'
                                                    , 'system.manage_tenants.update_tenant'
-                                                   , 'system.manage_tenants.assign_owner']);
+                                                   , 'system.manage_tenants.assign_owner'
+                                                   , 'system.manage_tenants.get_users']);
+
+    perform unsecure.create_perm_set_as_system('Tenant member', null, true, _is_assignable := true,
+                                               _permissions := array ['system.manage_tenants.get_groups'
+                                                   , 'system.manage_tenants.get_users']);
 
     perform unsecure.create_user_group_as_system(1, 'Tenant admins', true, true);
     perform unsecure.assign_permission_as_system(1, 2, null, 'tenant_admin');
@@ -3912,7 +4070,7 @@ begin
     insert into const.auth_event_type(code) values ('email_verification');
     insert into const.auth_event_type(code) values ('phone_verification');
     insert into const.auth_event_type(code) values ('request_password_reset');
-    insert into const.auth_event_type(code) values ('set_new_password');
+    insert into const.auth_event_type(code) values ('change_password');
 
     insert into const.token_type(code, default_expiration_in_seconds) values ('email_verification', 1 * 60 * 60);
     insert into const.token_type(code, default_expiration_in_seconds) values ('phone_verification', 10 * 60);
