@@ -4171,7 +4171,7 @@ $$;
  *
  */
 
-grant usage on schema const, unsecure, ext, auth, helpers to keen_auth_sample;
+grant usage on schema const, unsecure, error, ext, auth, helpers to keen_auth_sample;
 
 /***
  *    ██████╗--██████╗-███████╗████████╗-----██████╗██████╗-███████╗-█████╗-████████╗███████╗
