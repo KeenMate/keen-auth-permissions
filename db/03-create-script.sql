@@ -1773,7 +1773,8 @@ create function auth.validate_token(_modified_by text, _user_id bigint,
                 ___token_id         bigint,
                 ___token_uid        text,
                 ___token_state_code text,
-                ___used_at          timestamptz
+                ___used_at          timestamptz,
+                ___user_id          bigint
             )
     language plpgsql
 as
@@ -1819,13 +1820,14 @@ begin
             select used_token.__token_id,
                    used_token.__token_uid,
                    used_token.__token_state_code,
-                   used_token.__used_at
+                   used_token.__used_at,
+                   used_token.__user_id
             from auth.set_token_as_used(_modified_by, _user_id, __token_id, _ip_address, _user_agent,
                                         _origin) used_token;
     else
         return query
-            select token_id, uid, token_state_code, used_at
-            from token
+            select token_id, uid, token_state_code, used_at, user_id
+            from auth.token
             where token_id = __token_id;
     end if;
 
@@ -1843,7 +1845,8 @@ create or replace function auth.set_token_as_used(_modified_by text, _user_id bi
                 __token_id         bigint,
                 __token_uid        text,
                 __token_state_code text,
-                __used_at          timestamptz
+                __used_at          timestamptz,
+                __user_id          bigint
             )
     language plpgsql
 as
@@ -1866,7 +1869,7 @@ begin
                 user_agent = _user_agent,
                 origin = _origin
             where token_id = _token_id
-            returning token_id, uid, token_state_code, used_at;
+            returning token_id, uid, token_state_code, used_at, user_id;
 
     perform add_journal_msg(_modified_by, null, _user_id
         , format('User: %s set token (id: %s) as used'
