@@ -576,17 +576,17 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthGetUserByEmailForAuthenticationParser.parse_auth_get_user_by_email_for_authentication_result()
       end
 
-      @spec auth_get_user_by_username(integer(), binary()) ::
+      @spec auth_get_user_by_id(integer()) ::
               {:error, any()}
-              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserByUsernameItem.t()]}
-      def auth_get_user_by_username(tenant_id, username) do
-        Logger.debug("Calling stored procedure", procedure: "get_user_by_username")
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserByIdItem.t()]}
+      def auth_get_user_by_id(user_id) do
+        Logger.debug("Calling stored procedure", procedure: "get_user_by_id")
 
         query(
-          "select * from auth.get_user_by_username($1, $2)",
-          [tenant_id, username]
+          "select * from auth.get_user_by_id($1)",
+          [user_id]
         )
-        |> KeenAuthPermissions.Database.Parsers.AuthGetUserByUsernameParser.parse_auth_get_user_by_username_result()
+        |> KeenAuthPermissions.Database.Parsers.AuthGetUserByIdParser.parse_auth_get_user_by_id_result()
       end
 
       @spec auth_get_user_identity(integer(), integer(), binary()) ::
@@ -731,6 +731,19 @@ defmodule KeenAuthPermissions.Database do
           [modified_by, user_id, permission_id, permission_full_code, is_assignable]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthSetPermissionAsAssignableParser.parse_auth_set_permission_as_assignable_result()
+      end
+
+      @spec auth_set_token_as_used(binary(), integer(), integer(), binary(), binary(), binary()) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthSetTokenAsUsedItem.t()]}
+      def auth_set_token_as_used(modified_by, user_id, token_id, ip_address, user_agent, origin) do
+        Logger.debug("Calling stored procedure", procedure: "set_token_as_used")
+
+        query(
+          "select * from auth.set_token_as_used($1, $2, $3, $4, $5, $6)",
+          [modified_by, user_id, token_id, ip_address, user_agent, origin]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthSetTokenAsUsedParser.parse_auth_set_token_as_used_result()
       end
 
       @spec auth_set_user_group_as_external(binary(), integer(), integer(), integer()) ::
@@ -961,7 +974,8 @@ defmodule KeenAuthPermissions.Database do
               binary(),
               binary(),
               binary(),
-              binary()
+              binary(),
+              boolean()
             ) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthValidateTokenItem.t()]}
@@ -972,13 +986,23 @@ defmodule KeenAuthPermissions.Database do
             token,
             ip_address,
             user_agent,
-            origin
+            origin,
+            set_as_used
           ) do
         Logger.debug("Calling stored procedure", procedure: "validate_token")
 
         query(
-          "select * from auth.validate_token($1, $2, $3, $4, $5, $6, $7)",
-          [modified_by, user_id, target_user_id, token, ip_address, user_agent, origin]
+          "select * from auth.validate_token($1, $2, $3, $4, $5, $6, $7, $8)",
+          [
+            modified_by,
+            user_id,
+            target_user_id,
+            token,
+            ip_address,
+            user_agent,
+            origin,
+            set_as_used
+          ]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthValidateTokenParser.parse_auth_validate_token_result()
       end
