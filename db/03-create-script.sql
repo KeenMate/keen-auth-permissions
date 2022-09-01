@@ -3775,7 +3775,7 @@ begin
     return query
         select user_id,
                code,
-               uuid,
+               uuid::text,
                username,
                email,
                display_name
