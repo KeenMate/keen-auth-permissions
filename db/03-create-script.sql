@@ -3633,7 +3633,7 @@ begin
 end;
 $$;
 
-create function get_user_by_username(_tenant_id int, _username text)
+create function auth.get_user_by_username(_tenant_id int, _username text)
     returns table
             (
                 __user_id      bigint,
@@ -3675,7 +3675,7 @@ end;
 
 $$;
 
-create function get_user_identity(_user_id bigint, _target_user_id bigint, _provider_code text)
+create function auth.get_user_identity(_user_id bigint, _target_user_id bigint, _provider_code text)
     returns table
             (
                 __user_identity_id bigint,
@@ -3708,7 +3708,7 @@ end;
 $$;
 
 
-create function get_user_identity_by_email(_user_id bigint, _email text, _provider_code text)
+create function auth.get_user_identity_by_email(_user_id bigint, _email text, _provider_code text)
     returns table
             (
                 __user_identity_id bigint,
