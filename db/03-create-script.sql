@@ -1820,7 +1820,8 @@ begin
                    used_token.__token_uid,
                    used_token.__token_state_code,
                    used_token.__used_at
-            from auth.set_token_as_used(_modified_by, _user_id, __token_id, _ip_address, _user_agent, _origin) used_token;
+            from auth.set_token_as_used(_modified_by, _user_id, __token_id, _ip_address, _user_agent,
+                                        _origin) used_token;
     else
         return query
             select token_id, uid, token_state_code, used_at
@@ -1833,9 +1834,10 @@ begin
 end;
 $$;
 
-create or replace function auth.set_token_as_used(_modified_by text, _user_id bigint, _token_id bigint, _ip_address text,
-                                       _user_agent text,
-                                       _origin text)
+create or replace function auth.set_token_as_used(_modified_by text, _user_id bigint, _token_id bigint,
+                                                  _ip_address text,
+                                                  _user_agent text,
+                                                  _origin text)
     returns table
             (
                 __token_id         bigint,
@@ -3707,7 +3709,49 @@ begin
 end;
 $$;
 
-create function auth.get_user_by_username(_tenant_id int, _username text)
+-- create function auth.get_user_by_username(_username text)
+--     returns table
+--             (
+--                 __user_id      bigint,
+--                 __code         text,
+--                 __uuid         text,
+--                 __username     text,
+--                 __email        text,
+--                 __display_name text,
+--                 __roles        text,
+--                 __permissions  text
+--             )
+--     language plpgsql
+-- as
+-- $$
+-- begin
+--     if not exists(select
+--                   from tenant_user tu
+--                            inner join user_info ui on ui.user_id = tu.user_id
+--                   where tenant_id = _tenant_id
+--                     and ui.username = lower(_username)) then
+--         perform auth.throw_no_access(_tenant_id, _username);
+--     end if;
+--
+--     return query
+--         select tu.user_id,
+--                ui.code,
+--                ui.uuid,
+--                ui.username,
+--                ui.email,
+--                ui.display_name,
+--                upc.groups,
+--                upc.permissions
+--         from tenant_user tu
+--                  inner join user_info ui on ui.user_id = tu.user_id
+--                  inner join auth.user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
+--         where tu.tenant_id = _tenant_id
+--           and ui.username = _username;
+-- end;
+--
+-- $$;
+
+create function auth.get_user_by_id(_user_id bigint)
     returns table
             (
                 __user_id      bigint,
@@ -3715,36 +3759,28 @@ create function auth.get_user_by_username(_tenant_id int, _username text)
                 __uuid         text,
                 __username     text,
                 __email        text,
-                __display_name text,
-                __roles        text,
-                __permissions  text
+                __display_name text
             )
     language plpgsql
 as
 $$
 begin
     if not exists(select
-                  from tenant_user tu
-                           inner join user_info ui on ui.user_id = tu.user_id
-                  where tenant_id = _tenant_id
-                    and ui.username = lower(_username)) then
-        perform auth.throw_no_access(_tenant_id, _username);
+                  from user_info ui
+                  where user_id = _user_id
+        ) then
+        perform error.raise_52103(_user_id);
     end if;
 
     return query
-        select tu.user_id,
-               ui.code,
-               ui.uuid,
-               ui.username,
-               ui.email,
-               ui.display_name,
-               upc.groups,
-               upc.permissions
-        from tenant_user tu
-                 inner join user_info ui on ui.user_id = tu.user_id
-                 inner join auth.user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
-        where tu.tenant_id = _tenant_id
-          and ui.username = _username;
+        select user_id,
+               code,
+               uuid,
+               username,
+               email,
+               display_name
+        from user_info ui
+        where user_id = _user_id;
 end;
 
 $$;
