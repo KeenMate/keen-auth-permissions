@@ -3708,6 +3708,41 @@ end;
 $$;
 
 
+create function get_user_identity_by_email(_user_id bigint, _email text, _provider_code text)
+    returns table
+            (
+                __user_identity_id bigint,
+                __provider_code    text,
+                __uid              text,
+                __user_id          bigint,
+                __provider_groups  text[],
+                __provider_roles   text[],
+                __user_data        jsonb
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(null, _user_id, 'system.manage_users.get_user_identity');
+
+    return query
+        select uid.user_identity_id,
+               uid.provider_code,
+               uid.uid,
+               uid.uid,
+               uid.user_id,
+               uid.provider_groups,
+               uid.provider_roles,
+               uid.user_data
+        from user_info ui
+                 inner join user_identity uid on ui.user_id = uid.user_id
+        where ui.email = _email
+          and uid.provider_code = _provider_code;
+end;
+$$;
+
+
+
 -- WARNING: returns password hash, do not use for anything else than authentication, SYSTEM account is the only one with proper permission
 create function auth.get_user_by_email_for_authentication(_user_id int, _email text)
     returns table
