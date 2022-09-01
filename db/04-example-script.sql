@@ -125,7 +125,9 @@ from auth.create_token('authenticator', 1, 2, 1, 'email_verification', 'email', 
 --4FDC32F629CE
 
 select *
-from auth.validate_token('authenticator', 1, null, '111jjjj2222jjjj333', '123.2.34.5', 'my agent', 'keenmate.com');
+from auth.validate_token('authenticator', 1, null, '111jjjj2222jjjj333', '123.2.34.5', 'my agent', 'keenmate.com', true);
+
+
 
 select *
 from token;

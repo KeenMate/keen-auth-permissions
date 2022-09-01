@@ -1688,15 +1688,18 @@ create function auth.create_token(_created_by text, _user_id bigint,
                                   _expires_at timestamptz default null)
     returns table
             (
-                __token_id   bigint,
-                __token_uid  text,
-                __expires_at timestamptz
+                ___token_id   bigint,
+                ___token_uid  text,
+                ___expires_at timestamptz
             )
     language plpgsql
 as
 $$
 declare
     __default_expiration_in_seconds int;
+    __last_id                       bigint;
+    __token_uid                     text;
+    __token_expires_at              timestamptz;
 begin
     perform auth.has_permission(null, _user_id, 'system.tokens.create_token');
 
@@ -1729,18 +1732,30 @@ begin
         perform error.raise_52276();
     end if;
 
+
+    insert into auth.token (created_by,
+                            user_id, auth_event_id, token_type_code, token_channel_code,
+                            token, expires_at)
+    values (_created_by,
+            _target_user_id,
+            _auth_event_id,
+            _token_type_code,
+            _token_channel_code,
+            _token,
+            _expires_at)
+    returning token_id, uid, expires_at into __last_id, __token_uid, __token_expires_at;
+
+    perform add_journal_msg(_created_by, null, _user_id
+        , format('User: %s created a new token for user: %s'
+                                , _created_by, _target_user_id)
+        , case when _target_user_id is not null then 'user' else 'token' end
+        , case when _target_user_id is not null then _target_user_id else __last_id end
+        ,
+                            array ['token_type_code', _token_type_code, 'token_channel_code', _token_channel_code, 'token_expires_at', _expires_at::text]
+        , 50401);
+
     return query
-        insert into auth.token (created_by,
-                                user_id, auth_event_id, token_type_code, token_channel_code,
-                                token, expires_at)
-            values (_created_by,
-                    _target_user_id,
-                    _auth_event_id,
-                    _token_type_code,
-                    _token_channel_code,
-                    _token,
-                    _expires_at)
-            returning token_id, uid, expires_at;
+        select __last_id, __token_uid, __token_expires_at;
 
     perform unsecure.expire_tokens(_created_by);
 end;
@@ -1748,15 +1763,17 @@ $$;
 
 create function auth.validate_token(_modified_by text, _user_id bigint,
                                     _target_user_id bigint,
-                                    _token text, _ip_address text,
+                                    _token text,
+                                    _ip_address text,
                                     _user_agent text,
-                                    _origin text)
+                                    _origin text,
+                                    _set_as_used bool default false)
     returns table
             (
-                __token_id         bigint,
-                __token_uid        text,
-                __token_state_code text,
-                __used_at          timestamptz
+                ___token_id         bigint,
+                ___token_uid        text,
+                ___token_state_code text,
+                ___used_at          timestamptz
             )
     language plpgsql
 as
@@ -1787,6 +1804,56 @@ begin
         perform error.raise_52279(__token_uid);
     end if;
 
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s validated a token for user: %s'
+                                , _modified_by, _target_user_id)
+        , case when _target_user_id is not null then 'user' else 'token' end
+        , case when _target_user_id is not null then _target_user_id else __token_id end
+        ,
+                            array ['ip_address', _ip_address, 'user_agent', _user_agent, 'origin', _origin]
+        , 50402);
+
+
+    if _set_as_used then
+        return query
+            select used_token.__token_id,
+                   used_token.__token_uid,
+                   used_token.__token_state_code,
+                   used_token.__used_at
+            from auth.set_token_as_used(_modified_by, _user_id, __token_id, _ip_address, _user_agent, _origin) used_token;
+    else
+        return query
+            select token_id, uid, token_state_code, used_at
+            from token
+            where token_id = __token_id;
+    end if;
+
+
+    perform unsecure.expire_tokens(_modified_by);
+end;
+$$;
+
+create or replace function auth.set_token_as_used(_modified_by text, _user_id bigint, _token_id bigint, _ip_address text,
+                                       _user_agent text,
+                                       _origin text)
+    returns table
+            (
+                __token_id         bigint,
+                __token_uid        text,
+                __token_state_code text,
+                __used_at          timestamptz
+            )
+    language plpgsql
+as
+$$
+begin
+
+    perform auth.has_permission(null, _user_id, 'system.tokens.set_as_used');
+
+    if not exists(select from token where token_id = _token_id and token_state_code = 'valid') then
+        perform error.raise_52278(_token_id);
+    end if;
+
     return query
         update token
             set modified_by = _modified_by,
@@ -1796,10 +1863,17 @@ begin
                 ip_address = _ip_address,
                 user_agent = _user_agent,
                 origin = _origin
-            where token_id = __token_id
+            where token_id = _token_id
             returning token_id, uid, token_state_code, used_at;
 
-    perform unsecure.expire_tokens(_modified_by);
+    perform add_journal_msg(_modified_by, null, _user_id
+        , format('User: %s set token (id: %s) as used'
+                                , _modified_by, _token_id)
+        , 'token'
+        , _token_id
+        , array ['ip_address', _ip_address, 'user_agent', _user_agent, 'origin', _origin]
+        , _event_id := 50403);
+
 end;
 $$;
 
@@ -3729,7 +3803,6 @@ begin
         select uid.user_identity_id,
                uid.provider_code,
                uid.uid,
-               uid.uid,
                uid.user_id,
                uid.provider_groups,
                uid.provider_roles,
@@ -4056,6 +4129,10 @@ begin
     perform unsecure.create_permission_by_path_as_system('Create auth event', 'system.authentication');
 
     perform unsecure.create_permission_by_path_as_system('Areas', 'system', false);
+    perform unsecure.create_permission_by_path_as_system('Public', 'system.areas');
+    perform unsecure.create_permission_by_path_as_system('Admin', 'system.areas');
+
+    perform unsecure.create_permission_by_path_as_system('Token', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Public', 'system.areas');
     perform unsecure.create_permission_by_path_as_system('Admin', 'system.areas');
 

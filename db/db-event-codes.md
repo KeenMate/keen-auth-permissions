@@ -55,6 +55,9 @@
 | 50304      | Permission assigned              |
 | 50305      | Permission unassigned            |
 | 50306      | Permission assignability changed |
+| 50401      | Token created                    |
+| 50402      | Token validated                  |
+| 50403      | Token set as used                |
 
 ## Security Error codes
 | Event code | Description                                                                           |
