@@ -6,7 +6,8 @@ defmodule KeenAuthPermissions.Database.Models.AuthValidateTokenItem do
     :token_id,
     :token_uid,
     :token_state_code,
-    :used_at
+    :used_at,
+    :user_id
   ]
 
   @enforce_keys @fields

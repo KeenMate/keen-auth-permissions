@@ -42,14 +42,21 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthValidateTokenParser do
     {:ok, successful_results}
   end
 
-  def parse_auth_validate_token_result_row([token_id, token_uid, token_state_code, used_at]) do
+  def parse_auth_validate_token_result_row([
+        token_id,
+        token_uid,
+        token_state_code,
+        used_at,
+        user_id
+      ]) do
     {
       :ok,
       %KeenAuthPermissions.Database.Models.AuthValidateTokenItem{
         token_id: token_id,
         token_uid: token_uid,
         token_state_code: token_state_code,
-        used_at: used_at
+        used_at: used_at,
+        user_id: user_id
       }
     }
   end
