@@ -21,7 +21,7 @@ defmodule KeenAuthPermissions.Error.ErrorParsers do
         }
       }) do
     {code, _} = Integer.parse(code, 10)
-    {:error, create(parse_reason(code), msg)}
+    create(parse_reason(code), msg)
   end
 
   def parse_reason(50003), do: :permission_denied
