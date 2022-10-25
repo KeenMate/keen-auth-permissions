@@ -1,12 +1,10 @@
-# Database event codes 
-
+# Database event codes
 
 ## Common
 
 | Event code  | Description |
 | ------------- | ------------- |
 | 50003  | Permission denied  |
-
 
 ## Security
 
@@ -55,11 +53,14 @@
 | 50304      | Permission assigned              |
 | 50305      | Permission unassigned            |
 | 50306      | Permission assignability changed |
+| 50311      | Permissions added to perm set |
+| 50313      | Permissions removed from perm set |
 | 50401      | Token created                    |
 | 50402      | Token validated                  |
 | 50403      | Token set as used                |
 
 ## Security Error codes
+
 | Event code | Description                                                                           |
 |------------|---------------------------------------------------------------------------------------|
 | 52101      | Cannot ensure user for email provider                                                 |

@@ -5,6 +5,65 @@
 
  */
 
+/***
+ *    ██████╗  █████╗ ████████╗ █████╗ ██████╗  █████╗ ███████╗███████╗    ██╗   ██╗███████╗██████╗ ███████╗██╗ ██████╗ ███╗   ██╗
+ *    ██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝    ██║   ██║██╔════╝██╔══██╗██╔════╝██║██╔═══██╗████╗  ██║
+ *    ██║  ██║███████║   ██║   ███████║██████╔╝███████║███████╗█████╗      ██║   ██║█████╗  ██████╔╝███████╗██║██║   ██║██╔██╗ ██║
+ *    ██║  ██║██╔══██║   ██║   ██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝      ╚██╗ ██╔╝██╔══╝  ██╔══██╗╚════██║██║██║   ██║██║╚██╗██║
+ *    ██████╔╝██║  ██║   ██║   ██║  ██║██████╔╝██║  ██║███████║███████╗     ╚████╔╝ ███████╗██║  ██║███████║██║╚██████╔╝██║ ╚████║
+ *    ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝      ╚═══╝  ╚══════╝╚═╝  ╚═╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝
+ *
+ */
+
+create table __version
+(
+    version_id         int generated always as identity not null primary key,
+    version            text                             not null unique,
+    title              text                             not null,
+    description        text,
+    execution_started  timestamptz                      not null default now(),
+    execution_finished timestamptz
+) inherits (_template_created);
+
+
+create function start_version_update(_version text, _title text, _description text default null)
+    returns setof __version
+    language sql
+as
+$$
+
+insert into __version(created_by, version, title, description)
+VALUES ('db_update', _version, _title, _description)
+returning *;
+
+$$;
+
+create function stop_version_update(_version text)
+    returns setof __version
+    language sql
+as
+$$
+
+update __version
+set execution_finished = now()
+where version = _version
+returning *;
+
+$$;
+
+select *
+from start_version_update('1', 'Initial version');
+
+/***
+ *    ███████╗██╗  ██╗████████╗███████╗███╗   ██╗███████╗██╗ ██████╗ ███╗   ██╗███████╗
+ *    ██╔════╝╚██╗██╔╝╚══██╔══╝██╔════╝████╗  ██║██╔════╝██║██╔═══██╗████╗  ██║██╔════╝
+ *    █████╗   ╚███╔╝    ██║   █████╗  ██╔██╗ ██║███████╗██║██║   ██║██╔██╗ ██║███████╗
+ *    ██╔══╝   ██╔██╗    ██║   ██╔══╝  ██║╚██╗██║╚════██║██║██║   ██║██║╚██╗██║╚════██║
+ *    ███████╗██╔╝ ██╗   ██║   ███████╗██║ ╚████║███████║██║╚██████╔╝██║ ╚████║███████║
+ *    ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝╚═╝  ╚═══╝╚══════╝╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
+ *
+ */
+
 create extension if not exists "uuid-ossp" schema ext;
 create extension if not exists ltree schema ext;
 create extension if not exists unaccent schema ext;
@@ -1930,7 +1989,6 @@ begin
 
     if not __is_assignable or __is_external then
         perform error.raise_52173(_user_group_id);
-
     end if;
 
     return query
@@ -2694,7 +2752,7 @@ begin
 end;
 $$;
 
-
+-- Creates a group with mapping that is locked so no members can be added manually
 create function auth.create_external_user_group(_created_by text, _user_id bigint, _title text, _tenant_id int,
                                                 _provider text,
                                                 _is_assignable bool default true, _is_active bool default true,
@@ -3230,6 +3288,123 @@ begin
         select *
         from unsecure.update_perm_set(_modified_by, _user_id, _tenant_id
             , _perm_set_id, _title, _is_assignable);
+end;
+$$;
+
+create or replace function unsecure.add_permissions_to_perm_set(_created_by text, _user_id bigint, _tenant_id int,
+                                                               _perm_set_id int, _permissions text[] default null)
+    returns table
+            (
+                __perm_set_id     int,
+                __perm_set_code   text,
+                __permission_id   int,
+                __permission_code text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    insert into perm_set_perm(created_by, perm_set_id, permission_id)
+    SELECT _created_by, __perm_set_id, p.permission_id
+    from unnest(_permissions) as perm_code
+             left join permission p on p.full_code = perm_code::ext.ltree
+             left join perm_set_perm psp on p.permission_id = psp.permission_id and psp.perm_set_id = __perm_set_id
+    where p.code is not null
+      and psp.perm_set_id is null;
+
+    perform add_journal_msg(_created_by, _tenant_id, _user_id
+        , format('User: %s added permission to permission set: %s'
+                                , _created_by, array_to_string(_permissions, ', '))
+        , 'perm_set', _perm_set_id
+        , array ['permissions', array_to_string(_permissions, ', ')]
+        , 50311);
+
+    return query
+        select ps.perm_set_id, ps.code, p.permission_id, p.full_code::text
+        from perm_set ps
+                 inner join perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
+                 inner join permission p on p.permission_id = psp.permission_id
+        where ps.perm_set_id = __perm_set_id
+        order by p.full_code::text;
+end;
+$$;
+
+create function auth.add_permissions_to_perm_set(_created_by text, _user_id int, _tenant_id int, _perm_set_id text,
+                                                _permissions text[] default null)
+    returns setof auth.perm_set
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.update_permission_set');
+
+    return query
+        select *
+        from unsecure.add_permissions_to_perm_set(_created_by, _user_id, _tenant_id
+            , _perm_set_id, _permissions);
+end;
+$$;
+
+
+create or replace function unsecure.delete_permissions_to_perm_set(_created_by text, _user_id bigint, _tenant_id int,
+                                                               _perm_set_id int, _permissions text[] default null)
+    returns table
+            (
+                __perm_set_id     int,
+                __perm_set_code   text,
+                __permission_id   int,
+                __permission_code text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    insert into perm_set_perm(created_by, perm_set_id, permission_id)
+    SELECT _created_by, __perm_set_id, p.permission_id
+    from unnest(_permissions) as perm_code
+             left join permission p on p.full_code = perm_code::ext.ltree
+             left join perm_set_perm psp on p.permission_id = psp.permission_id and psp.perm_set_id = __perm_set_id
+    where p.code is not null
+      and psp.perm_set_id is null;
+
+    perform add_journal_msg(_created_by, _tenant_id, _user_id
+        , format('User: %s added permission to permission set: %s'
+                                , _created_by, array_to_string(_permissions, ', '))
+        , 'perm_set', _perm_set_id
+        , array ['permissions', array_to_string(_permissions, ', ')]
+        , 50311);
+
+    return query
+        select ps.perm_set_id, ps.code, p.permission_id, p.full_code::text
+        from perm_set ps
+                 inner join perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
+                 inner join permission p on p.permission_id = psp.permission_id
+        where ps.perm_set_id = __perm_set_id
+        order by p.full_code::text;
+end;
+$$;
+
+create function auth.delete_permissions_from_perm_set(_created_by text, _user_id int, _tenant_id int, _perm_set_id text,
+                                                _permissions text[] default null)
+    returns setof auth.perm_set
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_permissions.update_permission_set');
+
+    return query
+        select *
+        from unsecure.add_permissions_to_perm_set(_created_by, _user_id, _tenant_id
+            , _perm_set_id, _permissions);
 end;
 $$;
 
@@ -4244,9 +4419,9 @@ begin
     perform unsecure.create_user_group_as_system(1, 'Tenant admins', true, true);
     perform unsecure.assign_permission_as_system(1, 2, null, 'tenant_admin');
 
+
     perform auth.create_provider('initial', 1, 'email', 'Email authentication', false);
     perform auth.create_provider('initial', 1, 'aad', 'Azure authentication', false);
-
 
     insert into const.auth_event_type(code) values ('add_user_identity');
     insert into const.auth_event_type(code) values ('remove_user_identity');
@@ -4302,5 +4477,5 @@ grant usage on schema const, unsecure, error, ext, auth, helpers to keen_auth_sa
 select *
 from load_initial_data();
 
-select now(), version();
-
+select *
+from stop_version_update('1');
