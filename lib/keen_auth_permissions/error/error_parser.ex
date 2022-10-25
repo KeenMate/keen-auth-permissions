@@ -102,5 +102,5 @@ defmodule KeenAuthPermissions.Error.ErrorParsers do
   def parse_reason(52279), do: :token_wrong_user
 
   # * FALLBACK
-  def parse_reason(code), do: :unknown
+  def parse_reason(_), do: :unknown
 end
