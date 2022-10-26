@@ -32,7 +32,7 @@ from auth.register_user('registrator', 1, 'lucie.novakova1@keenmate.com', '12345
                         _user_data := '{firstName: "Lucie", lastname: "Novakova"}');
 
 select *
-from auth.get_users_for_provider('system', 1, 'aad');
+from auth.get_provider_users('system', 1, 'aad');
 
 select *
 from unsecure.add_user_to_group_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
@@ -68,6 +68,17 @@ from auth.create_external_user_group('system', 2, 'External group 1', 3, 'aad', 
 select *
 from unsecure.create_perm_set_as_system('My external partners', 3, false, true,
                                         array ['system.areas.public', 'system.areas.admin', 'system.manage_providers', 'system.manage_permissions.create_permission']);
+
+-- remove incorrect permissions from My external partners permission set
+select *
+from auth.delete_perm_set_permissions('ondrej.valenta', 1::bigint, 3, 7,
+                                           array ['system.manage_providers', 'system.manage_permissions.create_permission']);
+
+-- Add correct permissions to My external partners permission set
+select *
+from auth.add_perm_set_permissions('ondrej.valenta', 1::bigint, 3, 7,
+                                           array ['system.manage_tenants.get_users']);
+
 -- assign my_external_partners rule set to External group 1 in tenant: Jan Rada
 select *
 from unsecure.assign_permission_as_system(3, 6, null, 'my_external_partners');
@@ -86,10 +97,10 @@ select *
 from auth.user_permission_cache;
 
 select *
-from auth.get_users_for_tenant('system', 1, 3);
+from auth.get_tenant_users('system', 1, 3);
 
 select *
-from auth.get_groups_for_tenant('system', 1, 2);
+from auth.get_tenant_groups('system', 1, 2);
 
 select *
 from auth.disable_user('kerberos', 1, 6);
@@ -116,8 +127,8 @@ from auth.get_user_by_email_for_authentication(1, 'lucie.novakova1@keenmate.com'
 
 select *
 from auth.create_auth_event('authenticator', 1, 'email_verification', 6,
-                                '123.123.232.12', 'the best user agent there is',
-                                'domain.com');
+                            '123.123.232.12', 'the best user agent there is',
+                            'domain.com');
 
 select *
 from auth.create_token('authenticator', 1, 2, 1, 'email_verification', 'email', '111jjjj2222jjjj333');
@@ -125,7 +136,12 @@ from auth.create_token('authenticator', 1, 2, 1, 'email_verification', 'email', 
 --4FDC32F629CE
 
 select *
-from auth.validate_token('authenticator', 1, null, '111jjjj2222jjjj333', '123.2.34.5', 'my agent', 'keenmate.com', true);
+from auth.validate_token('authenticator', 1, null, '111jjjj2222jjjj333', '123.2.34.5', 'my agent', 'keenmate.com',
+                         true);
+
+
+
+
 
 
 
@@ -190,7 +206,7 @@ from tenant;
 
 
 select *
-from has_permissions(1)
+from has_permissions(1);
 
 select *
 from throw_no_permission(1, 2, 'system.a.b');

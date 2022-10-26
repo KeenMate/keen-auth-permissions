@@ -23,7 +23,7 @@ create table __version
     description        text,
     execution_started  timestamptz                      not null default now(),
     execution_finished timestamptz
-) inherits (_template_created);
+);
 
 
 create function start_version_update(_version text, _title text, _description text default null)
@@ -32,8 +32,8 @@ create function start_version_update(_version text, _title text, _description te
 as
 $$
 
-insert into __version(created_by, version, title, description)
-VALUES ('db_update', _version, _title, _description)
+insert into __version(version, title, description)
+VALUES (_version, _title, _description)
 returning *;
 
 $$;
@@ -596,7 +596,7 @@ create table tenant
 (
     tenant_id     int generated always as identity not null primary key,
     uuid          uuid                             not null default ext.uuid_generate_v4(), -- if you need this kind of identifier, it's ready for you
-    name          text                             not null,
+    title         text                             not null,
     code          text                             not null,
     is_removable  bool                             not null default true,
     is_assignable bool                             not null default true
@@ -676,6 +676,7 @@ create table auth.permission
     full_title    text
 ) inherits (_template_timestamps);
 
+create unique index uq_permission_full_code on auth.permission (full_code);
 create index ix_permission_node_path on auth.permission using GIST (node_path);
 
 create table auth.perm_set
@@ -707,11 +708,11 @@ create table user_group
     tenant_id     int references tenant (tenant_id),
     title         text                             not null,
     code          text                             not null, -- set with trigger
-    is_default    bool                             not null default false,
     is_system     bool                             not null default false,
     is_external   bool                             not null default false,
     is_assignable bool                             not null default true,
-    is_active     bool                             not null default true
+    is_active     bool                             not null default true,
+    is_default    bool                             not null default false
 ) inherits (_template_timestamps);
 
 create trigger c_user_group_code
@@ -815,7 +816,7 @@ create index ix_journal on journal (tenant_id, data_group, data_object_id);
  *
  */
 
-create view user_groups as
+create view user_group_members as
 (
 select ug.tenant_id
      , case when t.code is null then 'system' else t.code end                             as tenant_code
@@ -837,6 +838,24 @@ from user_group_member ugm
          inner join user_group ug on ugm.group_id = ug.user_group_id
          inner join tenant t on ug.tenant_id = t.tenant_id
          left join user_group_mapping u on ugm.mapping_id = u.ug_mapping_id
+    );
+
+create view active_user_groups as
+(
+select ug.user_group_id
+     , ug.is_system
+     , ug.is_external
+     , ug.is_assignable
+     , ug.is_active
+     , ug.is_default
+     , ug.title as group_title
+     , ug.code  as group_code
+     , ug.tenant_id
+     , t.code   as tenant_code
+     , t.title  as tenant_title
+from user_group ug
+         left join tenant t on ug.tenant_id = t.tenant_id
+where ug.is_active
     );
 
 create view auth.effective_permissions as
@@ -1135,7 +1154,7 @@ begin
         end if;
 
         with ugs as (select user_group_id, group_code
-                     from user_groups
+                     from user_group_members
                      where (tenant_id = _tenant_id or tenant_id is null)
                        and user_id = _target_user_id),
              group_assignments as (select distinct ep.permission_code as full_code
@@ -1308,7 +1327,7 @@ create function unsecure.create_primary_tenant()
     rows 1
 as
 $$
-insert into tenant(created_by, modified_by, name, code, is_removable, is_assignable)
+insert into tenant(created_by, modified_by, title, code, is_removable, is_assignable)
 values ('initial_script', 'initial_script', 'Primary', 'primary', false, true)
 returning *;
 $$;
@@ -1461,7 +1480,7 @@ begin
 end;
 $$;
 
-create function auth.get_users_for_provider(_requested_by text, _user_id bigint, _provider_code text)
+create function auth.get_provider_users(_requested_by text, _user_id bigint, _provider_code text)
     returns table
             (
                 __user_id          bigint,
@@ -1497,81 +1516,6 @@ begin
         , 50016);
 end;
 $$;
-
-create or replace function auth.get_users_for_tenant(_requested_by text, _user_id bigint, _tenant_id int)
-    returns table
-            (
-                __user_id      bigint,
-                __username     text,
-                __display_name text,
-                __user_groups  text[]
-            )
-    language plpgsql
-as
-$$
-begin
-    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_users');
-
-    return query
-        with tenant_users as (select ui.user_id,
-                                     ui.username,
-                                     ui.display_name,
-                                     ugs.user_group_id,
-                                     ugs.group_title,
-                                     ugs.group_code,
-                                     jsonb_build_object(variadic
-                                                        array ['user_group_id', ugs.user_group_id::text, 'code', ugs.group_code, 'title', ugs.group_title]) group_data
-                              from user_groups ugs
-                                       inner join user_info ui on ugs.user_id = ui.user_id
-                              where ugs.tenant_id = _tenant_id
-                              order by ui.display_name)
-        select tu.user_id, tu.username, tu.display_name, array_agg(tu.group_data::text)
-        from tenant_users tu
-        group by tu.user_id, tu.username, tu.display_name;
-
-    perform add_journal_msg(_requested_by, _tenant_id, _user_id
-        , format('User: %s requested a list of all users for tenant: %s'
-                                , _requested_by, _tenant_id)
-        , 'tenant', _tenant_id
-        , null
-        , 50005);
-end;
-$$;
-
-create or replace function auth.get_groups_for_tenant(_requested_by text, _user_id bigint, _tenant_id int)
-    returns table
-            (
-                __user_group_id integer,
-                __group_code    text,
-                __group_title   text,
-                __members_count bigint
-            )
-    language plpgsql
-as
-$$
-begin
-    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_users');
-
-    return query
-        select ugs.user_group_id,
-               ugs.group_title,
-               ugs.group_code,
-               count(ugs.user_id)
-        from user_groups ugs
-        where ugs.tenant_id = _tenant_id
-        group by ugs.user_group_id, ugs.group_title, ugs.group_code
-        order by ugs.group_title;
-
-
-    perform add_journal_msg(_requested_by, _tenant_id, _user_id
-        , format('User: %s requested a list of all groups for tenant: %s'
-                                , _requested_by, _tenant_id)
-        , 'tenant', _tenant_id
-        , null
-        , 50006);
-end;
-$$;
-
 
 create function auth.enable_provider(_modified_by text, _user_id bigint, _provider_code text)
     returns table
@@ -2378,7 +2322,7 @@ end ;
 $$;
 
 create function auth.update_user_group(_modified_by text, _user_id bigint, _tenant_id int, _ug_id int, _title text,
-                                       _is_assignable bool, _is_active bool)
+                                       _is_assignable bool, _is_active bool, _is_external bool, _is_default bool)
     returns table
             (
                 __group_id int
@@ -2397,6 +2341,8 @@ begin
                 , title = _title
                 , is_assignable = _is_assignable
                 , is_active = _is_active
+                , is_external = _is_external
+                , is_default = _is_default
             where tenant_id = _tenant_id
                 and user_group_id = _ug_id
             returning user_group_id;
@@ -2852,7 +2798,7 @@ $$;
  */
 
 
-create function public.create_tenant(_created_by text, _user_id bigint, _name text, _code text default null,
+create function public.create_tenant(_created_by text, _user_id bigint, _title text, _code text default null,
                                      _is_removable bool default true, _is_assignable bool default true,
                                      _tenant_owner_id bigint default null)
     returns setof tenant
@@ -2867,16 +2813,16 @@ declare
 begin
     perform auth.has_permission(1, _user_id, 'system.manage_tenants.create_tenant');
 
-    insert into tenant (created_by, modified_by, name, code, is_removable, is_assignable)
-    values (_created_by, _created_by, _name, coalesce(_code, helpers.get_code(_name)), _is_removable,
+    insert into tenant (created_by, modified_by, title, code, is_removable, is_assignable)
+    values (_created_by, _created_by, _title, coalesce(_code, helpers.get_code(_title)), _is_removable,
             _is_assignable)
     returning tenant_id into __last_id;
 
     perform add_journal_msg(_created_by, __last_id, _user_id
         , format('User: %s created new tenant: %s'
-                                , _created_by, _name)
+                                , _created_by, _title)
         , 'tenant', __last_id
-        , array ['title', _name]
+        , array ['title', _title]
         , 50001);
 
     select __group_id
@@ -2902,6 +2848,178 @@ begin
 
     return query
         select * from tenant where tenant_id = __last_id;
+end;
+$$;
+
+create function auth.get_tenants(_user_id bigint)
+    returns table
+            (
+                __created       timestamptz,
+                __created_by    text,
+                __tenant_id     int,
+                __uuid          text,
+                __title         text,
+                __code          text,
+                __is_removable  bool,
+                __is_assignable bool
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(1, _user_id, 'system.manage_tenants.get_tenants');
+
+    return query
+        select created,
+               created_by,
+               modified,
+               modified_by,
+               tenant_id,
+               uuid::text,
+               title,
+               code,
+               is_removable,
+               is_assignable
+        from tenant t;
+end;
+$$;
+
+create function auth.get_tenant_by_id(_tenant_id int)
+    returns table
+            (
+                __created       timestamptz,
+                __created_by    text,
+                __modified      timestamptz,
+                __modified_by   text,
+                __tenant_id     int,
+                __uuid          text,
+                __title         text,
+                __code          text,
+                __is_removable  bool,
+                __is_assignable bool
+            )
+    language sql
+as
+$$
+select created,
+       created_by,
+       modified,
+       modified_by,
+       tenant_id,
+       uuid::text,
+       title,
+       code,
+       is_removable,
+       is_assignable
+from tenant t
+where tenant_id = _tenant_id;
+$$;
+
+create or replace function auth.get_tenant_users(_requested_by text, _user_id bigint, _tenant_id int)
+    returns table
+            (
+                __user_id      bigint,
+                __username     text,
+                __display_name text,
+                __user_groups  text[]
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_users');
+
+    return query
+        with tenant_users as (select ui.user_id,
+                                     ui.username,
+                                     ui.display_name,
+                                     ugs.user_group_id,
+                                     ugs.group_title,
+                                     ugs.group_code,
+                                     jsonb_build_object(variadic
+                                                        array ['user_group_id', ugs.user_group_id::text, 'code', ugs.group_code, 'title', ugs.group_title]) group_data
+                              from user_group_members ugs
+                                       inner join user_info ui on ugs.user_id = ui.user_id
+                              where ugs.tenant_id = _tenant_id
+                              order by ui.display_name)
+        select tu.user_id, tu.username, tu.display_name, array_agg(tu.group_data::text)
+        from tenant_users tu
+        group by tu.user_id, tu.username, tu.display_name;
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested a list of all users for tenant: %s'
+                                , _requested_by, _tenant_id)
+        , 'tenant', _tenant_id
+        , null
+        , 50005);
+end;
+$$;
+
+create or replace function auth.get_tenant_groups(_requested_by text, _user_id bigint, _tenant_id int)
+    returns table
+            (
+                __user_group_id integer,
+                __group_code    text,
+                __group_title   text,
+                __members_count bigint
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_groups');
+
+    return query
+        select ugs.user_group_id,
+               ugs.group_title,
+               ugs.group_code,
+               count(ugs.user_id)
+        from user_group_members ugs
+        where ugs.tenant_id = _tenant_id
+        group by ugs.user_group_id, ugs.group_title, ugs.group_code
+        order by ugs.group_title;
+
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested a list of all groups for tenant: %s'
+                                , _requested_by, _tenant_id)
+        , 'tenant', _tenant_id
+        , null
+        , 50006);
+end;
+$$;
+
+create or replace function auth.get_tenant_members(_requested_by text, _user_id bigint, _tenant_id int)
+    returns table
+            (
+                __user_group_id integer,
+                __group_code    text,
+                __group_title   text,
+                __members_count bigint
+            )
+    language plpgsql
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_groups');
+
+    return query
+        select ugs.user_group_id,
+               ugs.group_title,
+               ugs.group_code,
+               count(ugs.user_id)
+        from user_group_members ugs
+        where ugs.tenant_id = _tenant_id
+        group by ugs.user_group_id, ugs.group_title, ugs.group_code
+        order by ugs.group_title;
+
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested a list of all groups for tenant: %s'
+                                , _requested_by, _tenant_id)
+        , 'tenant', _tenant_id
+        , null
+        , 50006);
 end;
 $$;
 
@@ -3291,8 +3409,8 @@ begin
 end;
 $$;
 
-create or replace function unsecure.add_permissions_to_perm_set(_created_by text, _user_id bigint, _tenant_id int,
-                                                               _perm_set_id int, _permissions text[] default null)
+create or replace function unsecure.add_perm_set_permissions(_created_by text, _user_id bigint, _tenant_id int,
+                                                             _perm_set_id int, _permissions text[] default null)
     returns table
             (
                 __perm_set_id     int,
@@ -3306,11 +3424,16 @@ as
 $$
 begin
 
+    if not exists(select from perm_set where perm_set_id = _perm_set_id and tenant_id = _tenant_id) then
+        perform error.raise_52177(_perm_set_id, _tenant_id);
+    end if;
+
     insert into perm_set_perm(created_by, perm_set_id, permission_id)
-    SELECT _created_by, __perm_set_id, p.permission_id
+    SELECT _created_by, _perm_set_id, p.permission_id
     from unnest(_permissions) as perm_code
              left join permission p on p.full_code = perm_code::ext.ltree
-             left join perm_set_perm psp on p.permission_id = psp.permission_id and psp.perm_set_id = __perm_set_id
+             left join perm_set_perm psp on p.permission_id = psp.permission_id and psp.perm_set_id = _perm_set_id
+             left join perm_set ps on psp.perm_set_id = ps.perm_set_id
     where p.code is not null
       and psp.perm_set_id is null;
 
@@ -3326,14 +3449,21 @@ begin
         from perm_set ps
                  inner join perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
                  inner join permission p on p.permission_id = psp.permission_id
-        where ps.perm_set_id = __perm_set_id
+        where ps.perm_set_id = _perm_set_id
+          and ps.tenant_id = _tenant_id
         order by p.full_code::text;
 end;
 $$;
 
-create function auth.add_permissions_to_perm_set(_created_by text, _user_id int, _tenant_id int, _perm_set_id text,
-                                                _permissions text[] default null)
-    returns setof auth.perm_set
+create function auth.add_perm_set_permissions(_created_by text, _user_id bigint, _tenant_id int, _perm_set_id int,
+                                              _permissions text[] default null)
+    returns table
+            (
+                __perm_set_id     int,
+                __perm_set_code   text,
+                __permission_id   int,
+                __permission_code text
+            )
     language plpgsql
     rows 1
 as
@@ -3344,14 +3474,14 @@ begin
 
     return query
         select *
-        from unsecure.add_permissions_to_perm_set(_created_by, _user_id, _tenant_id
+        from unsecure.add_perm_set_permissions(_created_by, _user_id, _tenant_id
             , _perm_set_id, _permissions);
 end;
 $$;
 
 
-create or replace function unsecure.delete_permissions_to_perm_set(_created_by text, _user_id bigint, _tenant_id int,
-                                                               _perm_set_id int, _permissions text[] default null)
+create or replace function unsecure.delete_perm_set_permissions(_deleted_by text, _user_id bigint, _tenant_id int,
+                                                                _perm_set_id int, _permissions text[] default null)
     returns table
             (
                 __perm_set_id     int,
@@ -3365,34 +3495,48 @@ as
 $$
 begin
 
-    insert into perm_set_perm(created_by, perm_set_id, permission_id)
-    SELECT _created_by, __perm_set_id, p.permission_id
-    from unnest(_permissions) as perm_code
-             left join permission p on p.full_code = perm_code::ext.ltree
-             left join perm_set_perm psp on p.permission_id = psp.permission_id and psp.perm_set_id = __perm_set_id
-    where p.code is not null
-      and psp.perm_set_id is null;
+    if not exists(select from perm_set where perm_set_id = _perm_set_id and tenant_id = _tenant_id) then
+        perform error.raise_52177(_perm_set_id, _tenant_id);
+    end if;
 
-    perform add_journal_msg(_created_by, _tenant_id, _user_id
-        , format('User: %s added permission to permission set: %s'
-                                , _created_by, array_to_string(_permissions, ', '))
+    delete
+    from perm_set_perm
+    where perm_set_id = _perm_set_id
+      and permission_id in (SELECT p.permission_id
+                            from unnest(_permissions) as perm_code
+                                     inner join permission p on p.full_code = perm_code::ext.ltree
+                                     inner join perm_set_perm psp
+                                                on p.permission_id = psp.permission_id and psp.perm_set_id = _perm_set_id
+                                     inner join perm_set ps
+                                                on psp.perm_set_id = ps.perm_set_id and ps.tenant_id = _tenant_id);
+
+    perform add_journal_msg(_deleted_by, _tenant_id, _user_id
+        , format('User: %s deleted permission from permission set: %s'
+                                , _deleted_by, array_to_string(_permissions, ', '))
         , 'perm_set', _perm_set_id
         , array ['permissions', array_to_string(_permissions, ', ')]
-        , 50311);
+        , 50313);
 
     return query
         select ps.perm_set_id, ps.code, p.permission_id, p.full_code::text
         from perm_set ps
                  inner join perm_set_perm psp on ps.perm_set_id = psp.perm_set_id
                  inner join permission p on p.permission_id = psp.permission_id
-        where ps.perm_set_id = __perm_set_id
+        where ps.perm_set_id = _perm_set_id
+          and ps.tenant_id = _tenant_id
         order by p.full_code::text;
 end;
 $$;
 
-create function auth.delete_permissions_from_perm_set(_created_by text, _user_id int, _tenant_id int, _perm_set_id text,
-                                                _permissions text[] default null)
-    returns setof auth.perm_set
+create function auth.delete_perm_set_permissions(_created_by text, _user_id bigint, _tenant_id int, _perm_set_id int,
+                                                 _permissions text[] default null)
+    returns table
+            (
+                __perm_set_id     int,
+                __perm_set_code   text,
+                __permission_id   int,
+                __permission_code text
+            )
     language plpgsql
     rows 1
 as
@@ -3403,7 +3547,7 @@ begin
 
     return query
         select *
-        from unsecure.add_permissions_to_perm_set(_created_by, _user_id, _tenant_id
+        from unsecure.delete_perm_set_permissions(_created_by, _user_id, _tenant_id
             , _perm_set_id, _permissions);
 end;
 $$;
@@ -3887,47 +4031,75 @@ begin
 end;
 $$;
 
--- create function auth.get_user_by_username(_username text)
---     returns table
---             (
---                 __user_id      bigint,
---                 __code         text,
---                 __uuid         text,
---                 __username     text,
---                 __email        text,
---                 __display_name text,
---                 __roles        text,
---                 __permissions  text
---             )
---     language plpgsql
--- as
--- $$
--- begin
---     if not exists(select
---                   from tenant_user tu
---                            inner join user_info ui on ui.user_id = tu.user_id
---                   where tenant_id = _tenant_id
---                     and ui.username = lower(_username)) then
---         perform auth.throw_no_access(_tenant_id, _username);
---     end if;
---
---     return query
---         select tu.user_id,
---                ui.code,
---                ui.uuid,
---                ui.username,
---                ui.email,
---                ui.display_name,
---                upc.groups,
---                upc.permissions
---         from tenant_user tu
---                  inner join user_info ui on ui.user_id = tu.user_id
---                  inner join auth.user_permission_cache upc on ui.user_id = upc.user_id and upc.tenant_id = _tenant_id
---         where tu.tenant_id = _tenant_id
---           and ui.username = _username;
--- end;
---
--- $$;
+create function unsecure.add_user_to_default_groups(_created_by text, _user_id bigint, _target_user_id bigint,
+                                                    _tenant_id int)
+    returns table
+            (
+                __user_id          bigint,
+                __user_group_id    int,
+                __user_group_code  text,
+                __user_group_title text
+            )
+    language plpgsql
+as
+$$
+DECLARE
+    group_data RECORD;
+begin
+
+    if not exists(select from user_info where user_id = _user_id) then
+        perform error.raise_52103(_user_id);
+    end if;
+
+    perform has_permission(_tenant_id, _user_id, 'system.manage_users.add_to_default_groups');
+
+    create temporary table tmp_default_groups as
+    select aug.user_group_id
+    from active_user_groups aug
+    where aug.tenant_id = _tenant_id
+      and aug.is_default;
+
+    FOR group_data IN
+        SELECT dg.*
+        FROM tmp_default_groups dg
+        LOOP
+            perform unsecure.add_user_group_member(_created_by, _user_id,
+                                                   _tenant_id, group_data.user_group_id,
+                                                   _target_user_id) member;
+        END LOOP;
+
+    return query
+        select user_id, user_group_id, group_code, group_title
+        from user_group_members ugms
+        where ugms.tenant_id = _tenant_id
+          and ugms.user_id = _target_user_id;
+
+    drop table tmp_default_groups;
+end;
+$$;
+
+create function auth.add_user_to_default_groups(_created_by text, _user_id bigint, _target_user_id bigint,
+                                                _tenant_id int)
+    returns table
+            (
+                __user_id          bigint,
+                __user_group_id    int,
+                __user_group_code  text,
+                __user_group_title text
+            )
+    language plpgsql
+as
+$$
+begin
+
+    perform has_permission(_tenant_id, _user_id, 'system.manage_users.add_to_default_groups');
+
+    return query
+        select *
+        from unsecure.auth.add_user_to_default_groups(_created_by, _user_id, _target_user_id,
+                                                      _tenant_id);
+end;
+$$;
 
 create function auth.get_user_by_id(_user_id bigint)
     returns table
@@ -4347,8 +4519,6 @@ begin
     perform unsecure.create_permission_by_path_as_system('Admin', 'system.areas');
 
     perform unsecure.create_permission_by_path_as_system('Token', 'system', false);
-    perform unsecure.create_permission_by_path_as_system('Public', 'system.areas');
-    perform unsecure.create_permission_by_path_as_system('Admin', 'system.areas');
 
     perform unsecure.create_permission_by_path_as_system('Manage permissions', 'system', false);
     perform unsecure.create_permission_by_path_as_system('Create permission', 'system.manage_permissions');
@@ -4362,6 +4532,7 @@ begin
 
     perform unsecure.create_permission_by_path_as_system('Manage users', 'system');
     perform unsecure.create_permission_by_path_as_system('Register user', 'system.manage_users');
+    perform unsecure.create_permission_by_path_as_system('Add to default groups', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Enable user', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Disable user', 'system.manage_users');
     perform unsecure.create_permission_by_path_as_system('Lock user', 'system.manage_users');
@@ -4375,6 +4546,7 @@ begin
     perform unsecure.create_permission_by_path_as_system('Create tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Update tenant', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Assign owner', 'system.manage_tenants');
+    perform unsecure.create_permission_by_path_as_system('Get tenants', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Get users', 'system.manage_tenants');
     perform unsecure.create_permission_by_path_as_system('Get groups', 'system.manage_tenants');
 
@@ -4477,5 +4649,5 @@ grant usage on schema const, unsecure, error, ext, auth, helpers to keen_auth_sa
 select *
 from load_initial_data();
 
-select *
+select *, execution_finished - execution_started elapsed
 from stop_version_update('1');

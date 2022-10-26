@@ -67,7 +67,7 @@
 | 52102      | User cannot register user because the identity is already in use                      |
 | 52103      | User does not exist                                                                   |
 | 52104      | User is a system user                                                                 |
-| 52105      | User is in inactive state                                                             |
+| 52105      | User is not active                                                                    |
 | 52106      | User is locked                                                                        |
 | 52107      | Provider is not active                                                                |
 | 52108      | User has no access to tenant                                                          |
