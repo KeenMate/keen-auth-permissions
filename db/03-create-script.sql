@@ -2646,7 +2646,7 @@ begin
          , ugma.mapped_object_name
          , ugma.provider_code
     from user_group_member ugm
-             inner join user_group_mapping ugma on ugma.ug_mapping_id = ugm.mapping_id
+             left join user_group_mapping ugma on ugma.ug_mapping_id = ugm.mapping_id
              inner join user_info ui on ui.user_id = ugm.user_id
     where ugm.group_id = _user_group_id;
 
