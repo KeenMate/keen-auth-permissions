@@ -1,9 +1,9 @@
 $templateName = "keen_auth_sample"
 
 $dbHost = "localhost"
-$dbUser = "username"
-$dbPassword = "password"
-$database = "database"
+$dbUser = "postgres"
+$dbPassword = "Password3000!!"
+$database = "keen_auth_sample"
 $regenerateDbContext = $false
 
 $psqlArguments = @(
@@ -24,24 +24,24 @@ $createScript = ((Get-Content -path ./db/03-create-script.sql) -replace $templat
 Write-Host "Running drop script"
 $dropScript | & psql $psqlArguments "postgres"
 
-if( !$? ) {
-	Write-Host "Drop script failed with error code $LASTEXITCODE"
+if ( !$? ) {
+  Write-Host "Drop script failed with error code $LASTEXITCODE"
   Return
 }
 
 Write-Host "Running create structure script"
 $createStructureScript | & psql $psqlArguments "--single-transaction" $database
 
-if( !$? ) {
-	Write-Host "Create structure script failed with error code $LASTEXITCODE"
+if ( !$? ) {
+  Write-Host "Create structure script failed with error code $LASTEXITCODE"
   Return
 }
 
 Write-Host "Running create script"
 $createScript | & psql $psqlArguments "--single-transaction" $database
 
-if( !$? ) {
-	Write-Host "Create script failed with error code $LASTEXITCODE"
+if ( !$? ) {
+  Write-Host "Create script failed with error code $LASTEXITCODE"
   Return
 }
 

@@ -96,6 +96,9 @@ from auth.has_permission(3, 5, 'system.areas.public');
 select *
 from auth.user_permission_cache;
 
+
+select * from user_group_member where group_id = 1;
+
 select *
 from auth.get_tenant_users('system', 1, 3);
 

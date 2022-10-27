@@ -1,7 +1,7 @@
 # This code has been auto-generated
 # Changes to this file will be lost on next generation
 
-defmodule KeenAuthPermissions.Database.Models.AuthGetUsersForProviderItem do
+defmodule KeenAuthPermissions.Database.Models.AuthGetProviderUsersItem do
   @fields [
     :user_id,
     :user_identity_id,
@@ -13,5 +13,5 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUsersForProviderItem do
 
   defstruct @fields
 
-  @type t() :: %KeenAuthPermissions.Database.Models.AuthGetUsersForProviderItem{}
+  @type t() :: %KeenAuthPermissions.Database.Models.AuthGetProviderUsersItem{}
 end

@@ -1,7 +1,7 @@
 # This code has been auto-generated
 # Changes to this file will be lost on next generation
 
-defmodule KeenAuthPermissions.Database.Models.AuthGetUsersForTenantItem do
+defmodule KeenAuthPermissions.Database.Models.AuthGetTenantUsersItem do
   @fields [
     :user_id,
     :username,
@@ -13,5 +13,5 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUsersForTenantItem do
 
   defstruct @fields
 
-  @type t() :: %KeenAuthPermissions.Database.Models.AuthGetUsersForTenantItem{}
+  @type t() :: %KeenAuthPermissions.Database.Models.AuthGetTenantUsersItem{}
 end
