@@ -712,7 +712,7 @@ create table user_group
     is_external   bool                             not null default false,
     is_assignable bool                             not null default true,
     is_active     bool                             not null default true,
-    is_default    bool                             not null default false
+    is_default    bool                             not null default false check ( !is_external )
 ) inherits (_template_timestamps);
 
 create trigger c_user_group_code
@@ -2590,6 +2590,105 @@ begin
 end;
 $$;
 
+
+create function unsecure.create_user_group_as_system(_tenant_id int, _title text
+, _is_system bool default false, _is_assignable bool default true)
+    returns setof user_group
+    language sql
+    rows 1
+as
+$$
+select ug.*
+from unsecure.create_user_group('system', 1, _title, _tenant_id, _is_assignable, true, false, _is_system) g
+         inner join user_group ug on ug.user_group_id = g.__group_id ;
+
+$$;
+
+create function unsecure.get_user_group_members(_requested_by text, _user_id bigint, _tenant_id int, _user_group_id int)
+    returns table
+            (
+                __created                    timestamptz,
+                __created_by                 text,
+                __member_id                  bigint,
+                __manual_assignment          bool,
+                __user_id                    bigint,
+                __user_display_name          text,
+                __user_is_system             bool,
+                __user_is_active             bool,
+                __user_is_locked             bool,
+                __mapping_id                 int,
+                __mapping_mapped_object_name text,
+                __mapping_provider_code      text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+
+    if (not exists(select
+                   from user_group
+                   where user_group_id = _user_group_id
+                     and (tenant_id = _tenant_id or _tenant_id is null))) then
+        perform error.raise_52171(_user_group_id);
+    end if;
+
+    select ugm.created
+         , ugm.created_by
+         , ugm.member_id
+         , ugm.user_id
+         , ui.display_name
+         , ui.is_system
+         , ui.is_active
+         , ui.is_locked
+         , ugm.manual_assignment
+         , ugm.mapping_id
+         , ugma.mapped_object_name
+         , ugma.provider_code
+    from user_group_member ugm
+             left join user_group_mapping ugma on ugma.ug_mapping_id = ugm.mapping_id
+             inner join user_info ui on ui.user_id = ugm.user_id
+    where ugm.group_id = _user_group_id;
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested user group members: %s in tenant: %s'
+                                , _requested_by, _user_group_id, _tenant_id)
+        , 'group', _user_group_id
+        , null
+        , 50210);
+end;
+$$;
+
+create function auth.get_user_group_members(_requested_by text, _user_id bigint, _tenant_id int, _user_group_id int)
+    returns table
+            (
+                __created                    timestamptz,
+                __created_by                 text,
+                __member_id                  bigint,
+                __manual_assignment          bool,
+                __user_id                    bigint,
+                __user_display_name          text,
+                __user_is_system             bool,
+                __user_is_active             bool,
+                __user_is_locked             bool,
+                __mapping_id                 int,
+                __mapping_mapped_object_name text,
+                __mapping_provider_code      text
+            )
+    language plpgsql
+    rows 1
+as
+$$
+begin
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.get_members');
+
+    return query
+        select *
+        from unsecure.get_user_group_members(_requested_by, _user_id
+            , _tenant_id, _user_group_id);
+end;
+$$;
+
 create function auth.create_user_group_mapping(_created_by text, _user_id bigint, _tenant_id int, _user_group_id int,
                                                _provider_code text,
                                                _mapped_object_id text default null,
@@ -2607,6 +2706,19 @@ declare
     __is_group_active bool;
 begin
 
+$$
+begin
+perform
+auth.has_permissions(_tenant_id, _user_id,
+                                 array ['system.manage_groups.create_group']);
+
+return query
+select *
+from unsecure.create_user_group(_created_by, _user_id, _title, _tenant_id
+    , _is_assignable, _is_active, _is_external, false,
+                                false);
+end;
+$$;
     if _mapped_object_id is null and _mapped_role is null then
         perform error.raise_52174();
 
@@ -4051,7 +4163,7 @@ begin
         perform error.raise_52103(_user_id);
     end if;
 
-    perform has_permission(_tenant_id, _user_id, 'system.manage_users.add_to_default_groups');
+    drop table if exists tmp_default_groups;
 
     create temporary table tmp_default_groups as
     select aug.user_group_id
@@ -4565,6 +4677,7 @@ begin
     perform unsecure.create_permission_by_path_as_system('Get groups', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create member', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete member', 'system.manage_groups');
+    perform unsecure.create_permission_by_path_as_system('Get members', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create mapping', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete mapping', 'system.manage_groups');
 
