@@ -712,7 +712,7 @@ create table user_group
     is_external   bool                             not null default false,
     is_assignable bool                             not null default true,
     is_active     bool                             not null default true,
-    is_default    bool                             not null default false check ( !is_external )
+    is_default    bool                             not null default false check ( is_external = false )
 ) inherits (_template_timestamps);
 
 create trigger c_user_group_code
@@ -2590,19 +2590,6 @@ begin
 end;
 $$;
 
-
-create function unsecure.create_user_group_as_system(_tenant_id int, _title text
-, _is_system bool default false, _is_assignable bool default true)
-    returns setof user_group
-    language sql
-    rows 1
-as
-$$
-select ug.*
-from unsecure.create_user_group('system', 1, _title, _tenant_id, _is_assignable, true, false, _is_system) g
-         inner join user_group ug on ug.user_group_id = g.__group_id ;
-
-$$;
 
 create function unsecure.get_user_group_members(_requested_by text, _user_id bigint, _tenant_id int, _user_group_id int)
     returns table
