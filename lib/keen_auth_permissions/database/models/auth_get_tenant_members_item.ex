@@ -3,10 +3,11 @@
 
 defmodule KeenAuthPermissions.Database.Models.AuthGetTenantMembersItem do
   @fields [
-    :user_group_id,
-    :group_code,
-    :group_title,
-    :members_count
+    :user_id,
+    :user_display_name,
+    :user_code,
+    :user_uuid,
+    :user_tenant_groups
   ]
 
   @enforce_keys @fields

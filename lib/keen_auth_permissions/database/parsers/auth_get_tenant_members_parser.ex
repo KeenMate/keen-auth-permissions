@@ -43,18 +43,20 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetTenantMembersParser do
   end
 
   def parse_auth_get_tenant_members_result_row([
-        user_group_id,
-        group_code,
-        group_title,
-        members_count
+        user_id,
+        user_display_name,
+        user_code,
+        user_uuid,
+        user_tenant_groups
       ]) do
     {
       :ok,
       %KeenAuthPermissions.Database.Models.AuthGetTenantMembersItem{
-        user_group_id: user_group_id,
-        group_code: group_code,
-        group_title: group_title,
-        members_count: members_count
+        user_id: user_id,
+        user_display_name: user_display_name,
+        user_code: user_code,
+        user_uuid: user_uuid,
+        user_tenant_groups: user_tenant_groups
       }
     }
   end
