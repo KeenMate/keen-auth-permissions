@@ -712,7 +712,7 @@ create table user_group
     is_external   bool                             not null default false,
     is_assignable bool                             not null default true,
     is_active     bool                             not null default true,
-    is_default    bool                             not null default false check ( is_external = false )
+    is_default    bool                             not null default false check ( is_external = false or (is_external and not is_default) )
 ) inherits (_template_timestamps);
 
 create trigger c_user_group_code
@@ -739,7 +739,7 @@ create table user_group_member
 (
     member_id         bigint generated always as identity not null primary key,
     group_id          int                                 not null references user_group (user_group_id) on delete cascade,
-    user_id           int                                 not null references user_info (user_id) on delete cascade,
+    user_id           bigint                              not null references user_info (user_id) on delete cascade,
     mapping_id        int references user_group_mapping (ug_mapping_id) on delete cascade,
     manual_assignment bool                                not null default false
 ) inherits (_template_created);
@@ -819,6 +819,7 @@ create index ix_journal on journal (tenant_id, data_group, data_object_id);
 create view user_group_members as
 (
 select ug.tenant_id
+     , ugm.member_id
      , case when t.code is null then 'system' else t.code end                             as tenant_code
      , ui.user_id
      , ui.display_name                                                                    as user_display_name
@@ -2591,7 +2592,8 @@ end;
 $$;
 
 
-create function unsecure.get_user_group_members(_requested_by text, _user_id bigint, _tenant_id int, _user_group_id int)
+create or replace function unsecure.get_user_group_members(_requested_by text, _user_id bigint, _tenant_id int,
+                                                           _user_group_id int)
     returns table
             (
                 __created                    timestamptz,
@@ -2620,22 +2622,23 @@ begin
         perform error.raise_52171(_user_group_id);
     end if;
 
-    select ugm.created
-         , ugm.created_by
-         , ugm.member_id
-         , ugm.user_id
-         , ui.display_name
-         , ui.is_system
-         , ui.is_active
-         , ui.is_locked
-         , ugm.manual_assignment
-         , ugm.mapping_id
-         , ugma.mapped_object_name
-         , ugma.provider_code
-    from user_group_member ugm
-             left join user_group_mapping ugma on ugma.ug_mapping_id = ugm.mapping_id
-             inner join user_info ui on ui.user_id = ugm.user_id
-    where ugm.group_id = _user_group_id;
+    return query
+        select ugm.created
+             , ugm.created_by
+             , ugm.member_id
+             , ugm.manual_assignment
+             , ugm.user_id
+             , ui.display_name
+             , ui.is_system
+             , ui.is_active
+             , ui.is_locked
+             , ugm.mapping_id
+             , ugma.mapped_object_name
+             , ugma.provider_code
+        from user_group_member ugm
+                 left join user_group_mapping ugma on ugma.ug_mapping_id = ugm.mapping_id
+                 inner join user_info ui on ui.user_id = ugm.user_id
+        where ugm.group_id = _user_group_id;
 
     perform add_journal_msg(_requested_by, _tenant_id, _user_id
         , format('User: %s requested user group members: %s in tenant: %s'
@@ -2693,19 +2696,6 @@ declare
     __is_group_active bool;
 begin
 
-$$
-begin
-perform
-auth.has_permissions(_tenant_id, _user_id,
-                                 array ['system.manage_groups.create_group']);
-
-return query
-select *
-from unsecure.create_user_group(_created_by, _user_id, _title, _tenant_id
-    , _is_assignable, _is_active, _is_external, false,
-                                false);
-end;
-$$;
     if _mapped_object_id is null and _mapped_role is null then
         perform error.raise_52174();
 
@@ -3091,34 +3081,39 @@ $$;
 create or replace function auth.get_tenant_members(_requested_by text, _user_id bigint, _tenant_id int)
     returns table
             (
-                __user_group_id integer,
-                __group_code    text,
-                __group_title   text,
-                __members_count bigint
+                __user_id            bigint,
+                __user_display_name  text,
+                __user_code          text,
+                __user_uuid          text,
+                __user_tenant_groups text
             )
     language plpgsql
 as
 $$
 begin
-    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_groups');
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_tenants.get_tenants');
 
     return query
-        select ugs.user_group_id,
-               ugs.group_title,
-               ugs.group_code,
-               count(ugs.user_id)
+        select ugs.user_id,
+               ui.display_name as user_display_name,
+               ui.code         as user_code,
+               ui.uuid::text   as user_uuid,
+               array_to_json(array_agg(distinct
+                                       jsonb_build_object('user_group_id', ugs.user_group_id, 'group_title',
+                                                          ugs.group_title,
+                                                          'group_code', ugs.group_code)))::text
         from user_group_members ugs
+                 inner join user_info ui on ugs.user_id = ui.user_id
         where ugs.tenant_id = _tenant_id
-        group by ugs.user_group_id, ugs.group_title, ugs.group_code
-        order by ugs.group_title;
-
+        group by ugs.user_id, ui.display_name, ui.code, ui.uuid
+        order by ui.display_name;
 
     perform add_journal_msg(_requested_by, _tenant_id, _user_id
-        , format('User: %s requested a list of all groups for tenant: %s'
+        , format('User: %s requested a list of members for tenant: %s'
                                 , _requested_by, _tenant_id)
         , 'tenant', _tenant_id
         , null
-        , 50006);
+        , 50005);
 end;
 $$;
 

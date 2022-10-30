@@ -142,10 +142,11 @@ select *
 from auth.validate_token('authenticator', 1, null, '111jjjj2222jjjj333', '123.2.34.5', 'my agent', 'keenmate.com',
                          true);
 
+select * from auth.get_user_group_members('ondrej', 1, 3, 8);
 
+select * from auth.get_tenant_members('ondrej', 1, 3);
 
-
-
+select * from auth.get_tenant_groups('ondrej', 1, 3);
 
 
 select *
