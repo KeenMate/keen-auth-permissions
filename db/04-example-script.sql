@@ -1,7 +1,15 @@
 select *
+from auth.create_user_group_member('System', 1, 1, 2, 2);
+select *
+from auth.create_user_group_member('System', 1, 1, 3, 2);
+
+
+select *
 from auth.enable_provider('system', 1, 'aad');
 select *
 from auth.enable_provider('system', 1, 'email');
+
+
 
 select * from auth.get_user_group_by_id('system',1,1,2);
 

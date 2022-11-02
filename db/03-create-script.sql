@@ -2917,7 +2917,7 @@ end
 $$;
 
 create function auth.get_user_group_by_id(_requested_by text, _user_id bigint, _tenant_id int,
-                                              _user_group_id int)
+                                          _user_group_id int)
     returns table
             (
                 __user_group_id int,
@@ -3141,7 +3141,7 @@ begin
         group by ugs.user_group_id, ugs.group_title, ugs.group_code, ugs.is_external, ugs.is_assignable,
                  ugs.is_active
         order by ugs.group_title;
-    
+
     perform add_journal_msg(_requested_by, _tenant_id, _user_id
         , format('User: %s requested a list of all groups for tenant: %s'
                                 , _requested_by, _tenant_id)
@@ -4739,7 +4739,7 @@ begin
 
     perform unsecure.create_perm_set_as_system('System admin', 1, true, _is_assignable := true,
                                                _permissions := array ['system.manage_tenants', 'system.manage_providers'
-                                                   , 'system.manage_users']);
+                                                   , 'system.manage_users','system.manage_groups']);
 
     perform unsecure.create_perm_set_as_system('Tenant creator', 1, true, _is_assignable := true,
                                                _permissions := array ['system.manage_tenants.create_tenant']);
@@ -4759,6 +4759,9 @@ begin
 
     perform unsecure.create_user_group_as_system(1, 'Tenant admins', true, true);
     perform unsecure.assign_permission_as_system(1, 2, null, 'tenant_admin');
+
+    perform unsecure.create_user_group_as_system(1, 'System admins', true, true);
+    perform unsecure.assign_permission_as_system(1, 3, null, 'system_admin');
 
 
     perform auth.create_provider('initial', 1, 'email', 'Email authentication', false);
@@ -4790,8 +4793,15 @@ begin
 --     insert into tenant (created_by, modified_by, name, code, is_removable, is_assignable)
 --     values ('system', 'system', 'App 1', 'app1', true, true)
 --          , ('system', 'system', 'App 2', 'app2', true, true);
+
+    perform auth.enable_provider('system', 1, 'aad');
+    perform auth.enable_provider('system', 1, 'email');
+
 end
+
+
 $$;
+
 
 /***
  *    ██████╗ ██████╗     ██████╗ ███████╗██████╗ ███╗   ███╗██╗███████╗███████╗██╗ ██████╗ ███╗   ██╗███████╗
