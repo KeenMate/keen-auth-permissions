@@ -827,6 +827,8 @@ select ug.tenant_id
      , ui.code                                                                            as user_code
      , ug.user_group_id
      , ug.is_external
+     , ug.is_active
+     , ug.is_assignable
      , ug.title                                                                           as group_title
      , ug.code                                                                            as group_code
      , case when ugm.mapping_id is not null then 'mapped_member' else 'direct_member' end as member_type
@@ -3050,7 +3052,11 @@ create or replace function auth.get_tenant_groups(_requested_by text, _user_id b
                 __user_group_id integer,
                 __group_code    text,
                 __group_title   text,
+                __is_external   bool,
+                __is_assignable bool,
+                __is_active     bool,
                 __members_count bigint
+
             )
     language plpgsql
 as
@@ -3062,10 +3068,14 @@ begin
         select ugs.user_group_id,
                ugs.group_title,
                ugs.group_code,
+               ugs.is_external,
+               ugs.is_assignable,
+               ugs.is_active,
                count(ugs.user_id)
         from user_group_members ugs
         where ugs.tenant_id = _tenant_id
-        group by ugs.user_group_id, ugs.group_title, ugs.group_code
+        group by ugs.user_group_id, ugs.group_title, ugs.group_code, ugs.is_external, ugs.is_assignable,
+                 ugs.is_active
         order by ugs.group_title;
 
 

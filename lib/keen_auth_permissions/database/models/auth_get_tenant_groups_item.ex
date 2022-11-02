@@ -6,6 +6,9 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetTenantGroupsItem do
     :user_group_id,
     :group_code,
     :group_title,
+    :is_external,
+    :is_assignable,
+    :is_active,
     :members_count
   ]
 

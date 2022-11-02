@@ -46,6 +46,9 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetTenantGroupsParser do
         user_group_id,
         group_code,
         group_title,
+        is_external,
+        is_assignable,
+        is_active,
         members_count
       ]) do
     {
@@ -54,6 +57,9 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetTenantGroupsParser do
         user_group_id: user_group_id,
         group_code: group_code,
         group_title: group_title,
+        is_external: is_external,
+        is_assignable: is_assignable,
+        is_active: is_active,
         members_count: members_count
       }
     }
