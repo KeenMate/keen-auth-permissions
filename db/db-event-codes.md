@@ -46,6 +46,7 @@
 | 50208      | Group set as external group       |
 | 50209      | Group set as hybrid group         |
 | 50210      | User requested group members list |
+| 50211      | User requested user group info    |
 | 50231      | Group mapping created             |
 | 50233      | Group mapping deleted             |
 | 50301      | Permission set created            |

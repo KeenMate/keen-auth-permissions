@@ -2877,6 +2877,70 @@ begin
 end;
 $$;
 
+create function unsecure.get_user_group_by_id(_requested_by text, _user_id bigint, _tenant_id int,
+                                              _user_group_id int)
+    returns table
+            (
+                __user_group_id int,
+                __tenant_id     int,
+                __title         text,
+                __code          text,
+                __is_system     bool,
+                __is_external   bool,
+                __is_assignable bool,
+                __is_active     bool,
+                __is_default    bool
+            )
+    language plpgsql
+as
+$$
+BEGIN
+    return query select user_group_id
+                      , tenant_id
+                      , title
+                      , code
+                      , is_system
+                      , is_external
+                      , is_assignable
+                      , is_active
+                      , is_default
+                 from user_group
+                 where user_group_id = _user_group_id;
+
+    perform add_journal_msg(_requested_by, _tenant_id, _user_id
+        , format('User: %s requested group info: %s in tenant: %s'
+                                , _requested_by, _user_group_id, _tenant_id)
+        , 'group', _user_group_id
+        , null
+        , 50211);
+end
+$$;
+
+create function auth.get_user_group_by_id(_requested_by text, _user_id bigint, _tenant_id int,
+                                              _user_group_id int)
+    returns table
+            (
+                __user_group_id int,
+                __tenant_id     int,
+                __title         text,
+                __code          text,
+                __is_system     bool,
+                __is_external   bool,
+                __is_assignable bool,
+                __is_active     bool,
+                __is_default    bool
+            )
+    language plpgsql
+as
+$$
+BEGIN
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.get_group');
+
+    return query
+        select * from unsecure.get_user_group_by_id(_requested_by, _user_id, _tenant_id, _user_group_id);
+end
+$$;
+
 
 /***
  *    ######## ######## ##    ##    ###    ##    ## ########  ######
@@ -3077,8 +3141,7 @@ begin
         group by ugs.user_group_id, ugs.group_title, ugs.group_code, ugs.is_external, ugs.is_assignable,
                  ugs.is_active
         order by ugs.group_title;
-
-
+    
     perform add_journal_msg(_requested_by, _tenant_id, _user_id
         , format('User: %s requested a list of all groups for tenant: %s'
                                 , _requested_by, _tenant_id)
@@ -4662,6 +4725,7 @@ begin
     perform unsecure.create_permission_by_path_as_system('Get users', 'system.manage_providers');
 
     perform unsecure.create_permission_by_path_as_system('Manage groups', 'system');
+    perform unsecure.create_permission_by_path_as_system('Get group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Create group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Update group', 'system.manage_groups');
     perform unsecure.create_permission_by_path_as_system('Delete group', 'system.manage_groups');

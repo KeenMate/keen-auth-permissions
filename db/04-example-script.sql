@@ -3,6 +3,8 @@ from auth.enable_provider('system', 1, 'aad');
 select *
 from auth.enable_provider('system', 1, 'email');
 
+select * from auth.get_user_group_by_id('system',1,1,2);
+
 select *
 from auth.ensure_user_from_provider(_created_by := 'system', _user_id := 1, _provider_code := 'aad',
                                     _provider_uid := '123456',
@@ -216,3 +218,6 @@ select *
 from throw_no_permission(1, 2, 'system.a.b');
 select *
 from throw_no_permission(1, 2, array ['system.a.b', 'd.e.f'])
+
+select *
+from auth.create_user_group_member('System', 1, 1, 2, 2);
