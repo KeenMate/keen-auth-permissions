@@ -835,10 +835,10 @@ select ug.tenant_id
      , ugm.manual_assignment
      , u.mapped_object_name
      , u.mapped_role
-from user_group_member ugm
+from user_group ug
+         left join user_group_member ugm on ugm.group_id = ug.user_group_id
          left join user_info ui
                     on ui.user_id = ugm.user_id
-         inner join user_group ug on ugm.group_id = ug.user_group_id
          inner join tenant t on ug.tenant_id = t.tenant_id
          left join user_group_mapping u on ugm.mapping_id = u.ug_mapping_id
     );

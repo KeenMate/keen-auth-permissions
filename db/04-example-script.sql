@@ -113,7 +113,9 @@ select *
 from auth.get_tenant_users('system', 1, 3);
 
 select *
-from auth.get_tenant_groups('system', 1, 2);
+from auth.get_tenant_groups('system', 1, 1);
+
+select * from user_group_members;
 
 select *
 from auth.disable_user('kerberos', 1, 6);
@@ -228,4 +230,6 @@ select *
 from throw_no_permission(1, 2, array ['system.a.b', 'd.e.f'])
 
 select *
-from auth.create_user_group_member('System', 1, 1, 2, 2);
+from auth.create_user_group_member('System', 1, 1, 3, 2);
+
+select * from user_group_members;
