@@ -836,7 +836,7 @@ select ug.tenant_id
      , u.mapped_object_name
      , u.mapped_role
 from user_group_member ugm
-         inner join user_info ui
+         left join user_info ui
                     on ui.user_id = ugm.user_id
          inner join user_group ug on ugm.group_id = ug.user_group_id
          inner join tenant t on ug.tenant_id = t.tenant_id
