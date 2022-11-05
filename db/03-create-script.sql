@@ -2508,7 +2508,7 @@ $$;
 create function auth.delete_user_group(_deleted_by text, _user_id bigint, _tenant_id int, _user_group_id int)
     returns table
             (
-                __group_id int
+                __user_group_id int
             )
     language plpgsql
     rows 1
@@ -2537,7 +2537,8 @@ begin
         delete
             from user_group
                 where tenant_id = _tenant_id
-                    and user_group_id = _user_group_id;
+                    and user_group_id = _user_group_id
+    returning user_group_id;
 
     perform add_journal_msg(_deleted_by, _tenant_id, _user_id
         , format('User: %s removed user group: %s in tenant: %s'
