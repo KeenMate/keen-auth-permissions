@@ -2568,32 +2568,28 @@ begin
 end;
 $$;
 
-create function auth.delete_user_group_member(_deleted_by text, _user_id bigint, _tenant_id int, _ug_id int,
-                                              _user_member_id bigint)
+create or replace function auth.delete_user_group_member(_deleted_by text, _user_id bigint, _tenant_id int, _ug_id int,
+                                              _target_user_id bigint)
     returns void
     language plpgsql
 as
 $$
-declare
-    __target_user_id int;
 begin
-    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.delete_member');
+    perform auth.has_permission(_tenant_id, _target_user_id, 'system.manage_groups.delete_member');
 
     delete
     from user_group_member
     where group_id = _ug_id
-      and member_id = _user_member_id
-    returning user_id into __target_user_id;
+      and user_id = _target_user_id;
 
     perform add_journal_msg(_deleted_by, _tenant_id, _user_id
         , format('User: %s removed user: %s from group: %s in tenant: %s'
-                                , _deleted_by, __target_user_id, _ug_id, _tenant_id)
+                                , _deleted_by, _target_user_id, _ug_id, _tenant_id)
         , 'group', _ug_id
-        , array ['target_user_id', __target_user_id::text]
+        , array ['target_user_id', _target_user_id::text]
         , 50133);
 end;
 $$;
-
 
 create or replace function unsecure.get_user_group_members(_requested_by text, _user_id bigint, _tenant_id int,
                                                            _user_group_id int)
