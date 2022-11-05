@@ -13,6 +13,14 @@ defmodule KeenAuthPermissions.Error.ErrorParsers do
       }) do
     create(:user_with_email_exists, "User identity with same email already exists")
   end
+  def parse_error(%Postgrex.Error{
+        postgres: %{
+          constraint: "uq_user_group_member",
+          pg_code: "23505"
+        }
+      }) do
+    create(:user_already_member, "User is already member of this group")
+  end
 
   def parse_error(%Postgrex.Error{
         postgres: %{
