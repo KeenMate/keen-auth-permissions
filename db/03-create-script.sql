@@ -2303,7 +2303,7 @@ $$;
 
 create function auth.create_user_group(_created_by text, _user_id bigint, _title text, _tenant_id int,
                                        _is_assignable bool default true, _is_active bool default true,
-                                       _is_external bool default false)
+                                       _is_external bool default false,_is_default bool default false)
     returns table
             (
                 __group_id int
@@ -2320,9 +2320,10 @@ begin
         select *
         from unsecure.create_user_group(_created_by, _user_id, _title, _tenant_id
             , _is_assignable, _is_active, _is_external, false,
-                                        false);
+                                        _is_default);
 end ;
 $$;
+
 
 create function auth.update_user_group(_modified_by text, _user_id bigint, _tenant_id int, _ug_id int, _title text,
                                        _is_assignable bool, _is_active bool, _is_external bool, _is_default bool)
@@ -4256,11 +4257,11 @@ as
 $$
 begin
 
-    perform has_permission(_tenant_id, _user_id, 'system.manage_users.add_to_default_groups');
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_users.add_to_default_groups');
 
     return query
         select *
-        from unsecure.auth.add_user_to_default_groups(_created_by, _user_id, _target_user_id,
+        from unsecure.add_user_to_default_groups(_created_by, _user_id, _target_user_id,
                                                       _tenant_id);
 end;
 $$;
