@@ -2575,7 +2575,7 @@ create or replace function auth.delete_user_group_member(_deleted_by text, _user
 as
 $$
 begin
-    perform auth.has_permission(_tenant_id, _target_user_id, 'system.manage_groups.delete_member');
+    perform auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.delete_member');
 
     delete
     from user_group_member
