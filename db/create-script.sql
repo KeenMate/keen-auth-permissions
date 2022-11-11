@@ -226,6 +226,12 @@ create table user_group
     is_active       bool                             not null default true
 ) inherits (_template_timestamps);
 
+create table user_group_owner (
+ user_group_owner_id int generated always as identity not null primary key,
+ user_group_id int not null references user_group(user_group_id) on delete cascade,
+ user_id bigint not null references user(user_id) on delete cascade
+ ) inherits (_template_created);
+ 
 create table user_group_mapping
 (
     ug_mapping_id      int generated always as identity not null primary key,
