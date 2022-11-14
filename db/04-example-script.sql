@@ -1,15 +1,7 @@
 select *
-from auth.create_user_group_member('System', 1, 1, 2, 2);
-select *
-from auth.create_user_group_member('System', 1, 1, 3, 2);
-
-
-select *
 from auth.enable_provider('system', 1, 'aad');
 select *
 from auth.enable_provider('system', 1, 'email');
-
-
 
 select * from auth.get_user_group_by_id('system',1,1,2);
 
@@ -45,13 +37,13 @@ select *
 from auth.get_provider_users('system', 1, 'aad');
 
 select *
-from unsecure.add_user_to_group_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
+from unsecure.create_user_group_member_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
 
 select *
-from create_tenant('ondrej.valenta', 2, 'Albert Moravec', _tenant_owner_id := 3);
+from create_tenant('ondrej.valenta', 1, 'Albert Moravec', _tenant_owner_id := 3);
 
 select *
-from assign_tenant_owner('ondrej.valenta', 2, 2, 4);
+from auth.create_owner('ondrej.valenta', 1, 4, 3, null);
 
 select *
 from auth.create_user_group('filip.jakab', 4, 'Our customers', 2);
@@ -105,6 +97,12 @@ from auth.has_permission(3, 5, 'system.areas.public');
 -- user permission check does not change for user: Jan Rada for 15 seconds and then on next check it is reevaluated
 select *
 from auth.user_permission_cache;
+
+
+select *
+from auth.create_user_group_member('System', 1, 1, 2, 2);
+select *
+from auth.create_user_group_member('System', 1, 1, 3, 2);
 
 
 select * from user_group_member where group_id = 1;

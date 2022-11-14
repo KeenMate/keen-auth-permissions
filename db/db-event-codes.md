@@ -94,5 +94,8 @@
 | 52277      | Token does not exist                                                                  |
 | 52278      | Token is not valid or has expired                                                     |
 | 52279      | Token was created for different user                                                  |
+| 52280      | User is not tenant owner                                                              |
+| 52281      | User is not tenant or group owner                                                     |
+| 52281      | User is not tenant or group owner                                                     |
 
 

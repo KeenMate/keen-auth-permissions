@@ -27,7 +27,8 @@ create table __version
 );
 
 
-create function start_version_update(_version text, _title text, _description text default null, _component text default 'main')
+create function start_version_update(_version text, _title text, _description text default null,
+                                     _component text default 'main')
     returns setof __version
     language sql
 as
@@ -469,6 +470,29 @@ begin
 end;
 $$;
 
+-- User is not tenant owner
+create function error.raise_52280(_user_id bigint, _tenant_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise
+        exception 'User (uid: %) is not tenant (id: %) owner', _user_id, _tenant_id
+        using errcode = 52280;
+end;
+$$;
+
+-- User is not tenant or user group owner
+create function error.raise_52281(_user_id bigint, _tenant_id int, _user_group_id int) returns void
+    language plpgsql as
+$$
+begin
+
+    raise
+        exception 'User (uid: %) is not tenant (id: %) or user group (id: %) owner', _user_id, _tenant_id, _user_group_id
+        using errcode = 52281;
+end;
+$$;
 
 /***
  *    ██╗--██╗███████╗██╗-----██████╗-███████╗██████╗-███████╗
@@ -738,17 +762,17 @@ create table auth.perm_set_perm
 
 create table user_group
 (
-    user_group_id          int generated always as identity not null primary key,
-    tenant_id              int references tenant (tenant_id),
-    title                  text                             not null,
-    code                   text                             not null, -- set with trigger
-    is_system              bool                             not null default false,
-    is_external            bool                             not null default false,
-    is_assignable          bool                             not null default true,
-    is_active              bool                             not null default true,
-    is_default             bool                             not null default false check ( is_external = false or (is_external and not is_default) ),
-    can_members_add_others bool                             not null default false,
-    can_members_see_others bool                             not null default true
+    user_group_id             int generated always as identity not null primary key,
+    tenant_id                 int references tenant (tenant_id),
+    title                     text                             not null,
+    code                      text                             not null, -- set with trigger
+    is_system                 bool                             not null default false,
+    is_external               bool                             not null default false,
+    is_assignable             bool                             not null default true,
+    is_active                 bool                             not null default true,
+    is_default                bool                             not null default false check ( is_external = false or (is_external and not is_default) ),
+    can_members_manage_others bool                             not null default false,
+    can_members_see_others    bool                             not null default true
 ) inherits (_template_timestamps);
 
 create trigger c_user_group_code
@@ -784,10 +808,10 @@ create unique index uq_user_group_member ON user_group_member (group_id, user_id
 
 create table owner
 (
-    owner_id      int generated always as identity not null primary key,
-    tenant_id     int                              not null references tenant (tenant_id) on delete cascade,
-    user_group_id int                              not null references user_group (user_group_id) on delete cascade,
-    user_id       bigint                           not null references user_info (user_id) on delete cascade
+    owner_id      bigint generated always as identity not null primary key,
+    tenant_id     int                                 not null references tenant (tenant_id) on delete cascade,
+    user_group_id int references user_group (user_group_id) on delete cascade,
+    user_id       bigint                              not null references user_info (user_id) on delete cascade
 ) inherits (_template_created);
 
 create unique index ix_owner on owner using btree (user_id, tenant_id, user_group_id);
@@ -1309,11 +1333,71 @@ create function auth.is_owner(_user_id bigint, _tenant_id int, _user_group_id in
 as
 $$
 begin
-    if exists(select from owner where user_id = _user_id and tenant_id = _tenant_id and user_group_id = _user_group_id) then
+    if exists(select
+              from owner
+              where user_id = _user_id
+                and tenant_id = _tenant_id
+                and user_group_id = _user_group_id) then
         return true;
     end if;
 
     return false;
+end;
+$$;
+
+create function auth.is_group_member(_user_id bigint, _tenant_id int, _user_group_id int default null)
+    returns bool
+    language plpgsql
+    immutable
+as
+$$
+begin
+    if exists(select
+              from user_group_members
+              where user_id = _user_id
+                and tenant_id = _tenant_id
+                and user_group_id = _user_group_id) then
+        return true;
+    end if;
+
+    return false;
+end;
+$$;
+
+create function auth.can_manage_user_group(_user_id bigint, _tenant_id int, _user_group_id int, _permission text) returns bool
+    language plpgsql
+    immutable
+as
+$$
+declare
+    __can_members_manage_others bool;
+    __has_owner                 bool;
+    __is_member                 bool;
+begin
+    select can_members_manage_others, member_id is not null
+    from user_group ug
+             left join user_group_member ugm on ug.user_group_id = ugm.group_id
+    where user_group_id = _user_group_id
+      and ugm.user_id = _user_id
+    into __can_members_manage_others, __is_member;
+
+    if not (__can_members_manage_others and __is_member) then
+        __has_owner := auth.has_owner(_tenant_id, _user_group_id);
+
+        if not (auth.is_owner(_user_id, _tenant_id)) then
+            if __has_owner then
+                -- if user group has owner and user is not one of them throw 52281 exception
+                if not auth.is_owner(_user_id, _tenant_id, _user_group_id) then
+                    perform error.raise_52281(_user_id, _tenant_id, _user_group_id);
+                end if;
+            else
+                -- when there is no owner anybody with the right permission can add new members
+                perform auth.has_permission(_tenant_id, _user_id, _permission);
+            end if;
+        end if;
+    end if;
+
+    return true;
 end;
 $$;
 
@@ -1711,7 +1795,7 @@ begin
     --     perform auth.has_permission(null, _user_id, 'system.authentication.create_auth_event');
 
     if
-        _user_id is not null and (__requester_username is null or __requester_username = '') then
+            _user_id is not null and (__requester_username is null or __requester_username = '') then
         select username
         from user_info ui
         where ui.user_id = _user_id
@@ -2419,7 +2503,7 @@ begin
 end;
 $$;
 
-create function unsecure.create_user_member_as_system(_user_name text, _group_title text, _tenant_id int default null)
+create function unsecure.create_user_group_member_as_system(_user_name text, _group_title text, _tenant_id int default null)
     returns setof user_group_member
     language plpgsql
 as
@@ -2456,59 +2540,36 @@ create function auth.create_user_group_member(_created_by text, _user_id bigint,
     rows 1
 as
 $$
-declare
-    __can_create_member      bool;
-    __can_members_add_others bool;
-    __has_owner              bool;
-    __is_member              bigint;
 begin
-    if not auth.is_owner(_user_id, _tenant_id, _user_group_id)
-        and not auth.is_owner(_user_id, _tenant_id) then
-
-        __has_owner := auth.has_owner(_tenant_id, _user_group_id);
-
-        select can_members_add_others, member_id is not null
-        from user_group ug
-                 left join user_group_member ugm on ug.user_group_id = ugm.group_id
-        where user_group_id = _user_group_id
-          and ugm.user_id = _target_user_id
-        into __can_members_add_others, __is_member;
-
-        select auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.create_member', _throw_err := false)
-        into __can_create_member;
-
---         if (__can_members_add_others is null or not __can_members_add_others)
---                and not __can_create_member
---         end if;
-    end if;
+    perform auth.can_manage_user_group(_user_id, _tenant_id, _user_group_id, 'system.manage_groups.create_member');
 
     return query
         select *
-        from unsecure.create_user_group_member(_created_by, _user_id, _tenant_id, _user_group_id, _target_user_id);
+        from unsecure.create_user_group_member(_created_by, _user_id, _tenant_id
+            , _user_group_id, _target_user_id);
 end;
 
 $$;
 
-create function auth.delete_user_group_member(_deleted_by text, _user_id bigint, _tenant_id int, _ug_id int,
+create function auth.delete_user_group_member(_deleted_by text, _user_id bigint, _tenant_id int, _user_group_id int,
                                               _target_user_id bigint)
     returns void
     language plpgsql
 as
 $$
 begin
-    perform
-        auth.has_permission(_tenant_id, _user_id, 'system.manage_groups.delete_member');
+    perform auth.can_manage_user_group(_user_id, _tenant_id, _user_group_id, 'system.manage_groups.delete_member');
 
     delete
     from user_group_member
-    where group_id = _ug_id
+    where group_id = _user_group_id
       and user_id = _target_user_id;
 
     perform
         add_journal_msg(_deleted_by, _tenant_id, _user_id
             , format('User: %s removed user: %s from group: %s in tenant: %s'
-                            , _deleted_by, _target_user_id, _ug_id, _tenant_id)
-            , 'group', _ug_id
+                            , _deleted_by, _target_user_id, _user_group_id, _tenant_id)
+            , 'group', _user_group_id
             , array ['target_user_id', _target_user_id::text]
             , 50133);
 end;
@@ -2940,8 +3001,9 @@ begin
 
     if
         (_tenant_owner_id is not null) then
-        perform unsecure.create_user_group_member(_created_by, _user_id, __last_id, __tenant_owner_group_id,
-                                                  _tenant_owner_id);
+        perform auth.create_owner(_created_by, _user_id, _tenant_owner_id, __last_id);
+        --         perform unsecure.create_user_group_member(_created_by, _user_id, __last_id, __tenant_owner_group_id,
+--                                                   _tenant_owner_id);
     end if;
 
     return query
@@ -3155,8 +3217,8 @@ $$;
  *     #######   ###  ###  ##    ## ######## ##     ##  ######
  */
 
-create function auth.create_owner(_created_by text, _user_id bigint, _target_user_id bigint, _tenant_id int
-, _user_group_id int)
+create or replace function auth.create_owner(_created_by text, _user_id bigint, _target_user_id bigint, _tenant_id int
+, _user_group_id int default null)
     returns table
             (
                 __owner_id bigint
@@ -3181,7 +3243,7 @@ begin
 
     return query
         insert into owner (created_by, tenant_id, user_group_id, user_id)
-            values (_created_by, tenant_id, _user_group_id, _target_user_id)
+            values (_created_by, _tenant_id, _user_group_id, _target_user_id)
             returning owner_id;
 
     perform
@@ -5055,7 +5117,7 @@ begin
 
     perform unsecure.create_user_group_as_system(null, 'System', true, true);
 
-    perform unsecure.create_user_member_as_system('system', 'System', null);
+    perform unsecure.create_user_group_member_as_system('system', 'System', null);
     perform auth.lock_user_group('system', 1, null, 1);
 
     perform unsecure.create_perm_set_as_system('System', null, true, _is_assignable := true,
