@@ -142,6 +142,18 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthCreateExternalUserGroupParser.parse_auth_create_external_user_group_result()
       end
 
+      @spec auth_create_owner(binary(), integer(), integer(), integer(), integer()) ::
+              {:error, any()} | {:ok, [integer()]}
+      def auth_create_owner(created_by, user_id, target_user_id, tenant_id, user_group_id) do
+        Logger.debug("Calling stored procedure", procedure: "create_owner")
+
+        query(
+          "select * from auth.create_owner($1, $2, $3, $4, $5)",
+          [created_by, user_id, target_user_id, tenant_id, user_group_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthCreateOwnerParser.parse_auth_create_owner_result()
+      end
+
       @spec auth_create_perm_set(
               binary(),
               binary(),
@@ -355,6 +367,18 @@ defmodule KeenAuthPermissions.Database do
           [created_by, user_id, tenant_id, user_group_id, target_user_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthCreateUserGroupMemberParser.parse_auth_create_user_group_member_result()
+      end
+
+      @spec auth_delete_owner(binary(), integer(), integer(), integer(), integer()) ::
+              {:error, any()} | {:ok, [any()]}
+      def auth_delete_owner(deleted_by, user_id, target_user_id, tenant_id, user_group_id) do
+        Logger.debug("Calling stored procedure", procedure: "delete_owner")
+
+        query(
+          "select * from auth.delete_owner($1, $2, $3, $4, $5)",
+          [deleted_by, user_id, target_user_id, tenant_id, user_group_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthDeleteOwnerParser.parse_auth_delete_owner_result()
       end
 
       @spec auth_delete_perm_set_permissions(binary(), integer(), integer(), integer(), any()) ::
@@ -773,6 +797,17 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthGetUserRandomCodeParser.parse_auth_get_user_random_code_result()
       end
 
+      @spec auth_has_owner(integer(), integer()) :: {:error, any()} | {:ok, [boolean()]}
+      def auth_has_owner(tenant_id, user_group_id) do
+        Logger.debug("Calling stored procedure", procedure: "has_owner")
+
+        query(
+          "select * from auth.has_owner($1, $2)",
+          [tenant_id, user_group_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthHasOwnerParser.parse_auth_has_owner_result()
+      end
+
       @spec auth_has_permission(integer(), integer(), binary(), boolean()) ::
               {:error, any()} | {:ok, [boolean()]}
       def auth_has_permission(tenant_id, target_user_id, perm_code, throw_err) do
@@ -795,6 +830,17 @@ defmodule KeenAuthPermissions.Database do
           [tenant_id, target_user_id, perm_codes, throw_err]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthHasPermissionsParser.parse_auth_has_permissions_result()
+      end
+
+      @spec auth_is_owner(integer(), integer(), integer()) :: {:error, any()} | {:ok, [boolean()]}
+      def auth_is_owner(user_id, tenant_id, user_group_id) do
+        Logger.debug("Calling stored procedure", procedure: "is_owner")
+
+        query(
+          "select * from auth.is_owner($1, $2, $3)",
+          [user_id, tenant_id, user_group_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthIsOwnerParser.parse_auth_is_owner_result()
       end
 
       @spec auth_lock_user(binary(), integer(), integer()) ::
@@ -902,26 +948,26 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthThrowNoAccessParser.parse_auth_throw_no_access_result()
       end
 
-      @spec auth_throw_no_permission(integer(), integer(), any()) ::
+      @spec auth_throw_no_permission(integer(), integer(), binary()) ::
               {:error, any()} | {:ok, [any()]}
-      def auth_throw_no_permission(tenant_id, user_id, perm_codes) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        query(
-          "select * from auth.throw_no_permission($1, $2, $3)",
-          [tenant_id, user_id, perm_codes]
-        )
-        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermissionParser.parse_auth_throw_no_permission_result()
-      end
-
-      @spec auth_throw_no_permission_1(integer(), integer(), binary()) ::
-              {:error, any()} | {:ok, [any()]}
-      def auth_throw_no_permission_1(tenant_id, user_id, perm_code) do
+      def auth_throw_no_permission(tenant_id, user_id, perm_code) do
         Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
 
         query(
           "select * from auth.throw_no_permission($1, $2, $3)",
           [tenant_id, user_id, perm_code]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermissionParser.parse_auth_throw_no_permission_result()
+      end
+
+      @spec auth_throw_no_permission_1(integer(), integer(), any()) ::
+              {:error, any()} | {:ok, [any()]}
+      def auth_throw_no_permission_1(tenant_id, user_id, perm_codes) do
+        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
+
+        query(
+          "select * from auth.throw_no_permission($1, $2, $3)",
+          [tenant_id, user_id, perm_codes]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission1Parser.parse_auth_throw_no_permission_1_result()
       end
