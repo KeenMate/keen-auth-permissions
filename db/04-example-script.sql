@@ -3,8 +3,6 @@ from auth.enable_provider('system', 1, 'aad');
 select *
 from auth.enable_provider('system', 1, 'email');
 
-select * from auth.get_user_group_by_id('system',1,1,2);
-
 select *
 from auth.ensure_user_from_provider(_created_by := 'system', _user_id := 1, _provider_code := 'aad',
                                     _provider_uid := '123456',
@@ -40,7 +38,9 @@ select *
 from unsecure.create_user_group_member_as_system('ondrej.valenta@keenmate.com', 'Tenant admins', 1);
 
 select *
-from create_tenant('ondrej.valenta', 1, 'Albert Moravec', _tenant_owner_id := 3);
+from create_tenant('ondrej.valenta', 2, 'Albert Moravec', _tenant_owner_id := 3);
+
+select * from owner;
 
 select *
 from auth.create_owner('ondrej.valenta', 1, 4, 3, null);
