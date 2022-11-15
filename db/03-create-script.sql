@@ -1420,7 +1420,7 @@ begin
 
     select permissions, expiration_date
     from auth.user_permission_cache upc
-    where upc.tenant_id = _tenant_id or upc.tenant_id = 1 -- master tenant
+    where upc.tenant_id = _tenant_id or upc.tenant_id = 1 -- primary/master tenant
       and user_id = _target_user_id
     into __perms, __expiration_date;
 
