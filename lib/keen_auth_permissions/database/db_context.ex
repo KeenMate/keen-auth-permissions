@@ -71,6 +71,18 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthAssignPermissionParser.parse_auth_assign_permission_result()
       end
 
+      @spec auth_can_manage_user_group(integer(), integer(), integer(), binary()) ::
+              {:error, any()} | {:ok, [boolean()]}
+      def auth_can_manage_user_group(user_id, tenant_id, user_group_id, permission) do
+        Logger.debug("Calling stored procedure", procedure: "can_manage_user_group")
+
+        query(
+          "select * from auth.can_manage_user_group($1, $2, $3, $4)",
+          [user_id, tenant_id, user_group_id, permission]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthCanManageUserGroupParser.parse_auth_can_manage_user_group_result()
+      end
+
       @spec auth_create_auth_event(
               binary(),
               integer(),
@@ -439,12 +451,18 @@ defmodule KeenAuthPermissions.Database do
 
       @spec auth_delete_user_group_member(binary(), integer(), integer(), integer(), integer()) ::
               {:error, any()} | {:ok, [any()]}
-      def auth_delete_user_group_member(deleted_by, user_id, tenant_id, ug_id, target_user_id) do
+      def auth_delete_user_group_member(
+            deleted_by,
+            user_id,
+            tenant_id,
+            user_group_id,
+            target_user_id
+          ) do
         Logger.debug("Calling stored procedure", procedure: "delete_user_group_member")
 
         query(
           "select * from auth.delete_user_group_member($1, $2, $3, $4, $5)",
-          [deleted_by, user_id, tenant_id, ug_id, target_user_id]
+          [deleted_by, user_id, tenant_id, user_group_id, target_user_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthDeleteUserGroupMemberParser.parse_auth_delete_user_group_member_result()
       end
@@ -830,6 +848,18 @@ defmodule KeenAuthPermissions.Database do
           [tenant_id, target_user_id, perm_codes, throw_err]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthHasPermissionsParser.parse_auth_has_permissions_result()
+      end
+
+      @spec auth_is_group_member(integer(), integer(), integer()) ::
+              {:error, any()} | {:ok, [boolean()]}
+      def auth_is_group_member(user_id, tenant_id, user_group_id) do
+        Logger.debug("Calling stored procedure", procedure: "is_group_member")
+
+        query(
+          "select * from auth.is_group_member($1, $2, $3)",
+          [user_id, tenant_id, user_group_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthIsGroupMemberParser.parse_auth_is_group_member_result()
       end
 
       @spec auth_is_owner(integer(), integer(), integer()) :: {:error, any()} | {:ok, [boolean()]}
