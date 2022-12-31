@@ -765,6 +765,19 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthGetUserGroupByIdParser.parse_auth_get_user_group_by_id_result()
       end
 
+      @spec auth_get_user_group_mappings(binary(), integer(), integer(), integer()) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserGroupMappingsItem.t()]}
+      def auth_get_user_group_mappings(requested_by, user_id, tenant_id, user_group_id) do
+        Logger.debug("Calling stored procedure", procedure: "get_user_group_mappings")
+
+        query(
+          "select * from auth.get_user_group_mappings($1, $2, $3, $4)",
+          [requested_by, user_id, tenant_id, user_group_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthGetUserGroupMappingsParser.parse_auth_get_user_group_mappings_result()
+      end
+
       @spec auth_get_user_group_members(binary(), integer(), integer(), integer()) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserGroupMembersItem.t()]}
