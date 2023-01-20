@@ -83,38 +83,11 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthCanManageUserGroupParser.parse_auth_can_manage_user_group_result()
       end
 
-      @spec auth_create_auth_event(
-              binary(),
-              integer(),
-              binary(),
-              integer(),
-              binary(),
-              binary(),
-              binary()
-            ) :: {:error, any()} | {:ok, [integer()]}
-      def auth_create_auth_event(
-            created_by,
-            user_id,
-            event_type_code,
-            target_user_id,
-            ip_address,
-            user_agent,
-            origin
-          ) do
-        Logger.debug("Calling stored procedure", procedure: "create_auth_event")
-
-        query(
-          "select * from auth.create_auth_event($1, $2, $3, $4, $5, $6, $7)",
-          [created_by, user_id, event_type_code, target_user_id, ip_address, user_agent, origin]
-        )
-        |> KeenAuthPermissions.Database.Parsers.AuthCreateAuthEventParser.parse_auth_create_auth_event_result()
-      end
-
       @spec auth_create_external_user_group(
               binary(),
               integer(),
-              binary(),
               integer(),
+              binary(),
               binary(),
               boolean(),
               boolean(),
@@ -125,8 +98,8 @@ defmodule KeenAuthPermissions.Database do
       def auth_create_external_user_group(
             created_by,
             user_id,
-            title,
             tenant_id,
+            title,
             provider,
             is_assignable,
             is_active,
@@ -141,8 +114,8 @@ defmodule KeenAuthPermissions.Database do
           [
             created_by,
             user_id,
-            title,
             tenant_id,
+            title,
             provider,
             is_assignable,
             is_active,
@@ -247,15 +220,46 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthCreateProviderParser.parse_auth_create_provider_result()
       end
 
+      @spec auth_create_tenant(
+              binary(),
+              integer(),
+              binary(),
+              binary(),
+              boolean(),
+              boolean(),
+              integer()
+            ) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthCreateTenantItem.t()]}
+      def auth_create_tenant(
+            created_by,
+            user_id,
+            title,
+            code,
+            is_removable,
+            is_assignable,
+            tenant_owner_id
+          ) do
+        Logger.debug("Calling stored procedure", procedure: "create_tenant")
+
+        query(
+          "select * from auth.create_tenant($1, $2, $3, $4, $5, $6, $7)",
+          [created_by, user_id, title, code, is_removable, is_assignable, tenant_owner_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthCreateTenantParser.parse_auth_create_tenant_result()
+      end
+
       @spec auth_create_token(
               binary(),
               integer(),
               integer(),
+              binary(),
               integer(),
               binary(),
               binary(),
               binary(),
-              DateTime.t()
+              DateTime.t(),
+              any()
             ) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthCreateTokenItem.t()]}
@@ -263,28 +267,76 @@ defmodule KeenAuthPermissions.Database do
             created_by,
             user_id,
             target_user_id,
-            auth_event_id,
+            target_user_oid,
+            user_event_id,
             token_type_code,
             token_channel_code,
             token,
-            expires_at
+            expires_at,
+            token_data
           ) do
         Logger.debug("Calling stored procedure", procedure: "create_token")
 
         query(
-          "select * from auth.create_token($1, $2, $3, $4, $5, $6, $7, $8)",
+          "select * from auth.create_token($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
           [
             created_by,
             user_id,
             target_user_id,
-            auth_event_id,
+            target_user_oid,
+            user_event_id,
             token_type_code,
             token_channel_code,
             token,
-            expires_at
+            expires_at,
+            token_data
           ]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthCreateTokenParser.parse_auth_create_token_result()
+      end
+
+      @spec auth_create_user_event(
+              binary(),
+              integer(),
+              binary(),
+              integer(),
+              binary(),
+              binary(),
+              binary(),
+              any(),
+              binary(),
+              binary()
+            ) :: {:error, any()} | {:ok, [integer()]}
+      def auth_create_user_event(
+            created_by,
+            user_id,
+            event_type_code,
+            target_user_id,
+            ip_address,
+            user_agent,
+            origin,
+            event_data,
+            target_user_oid,
+            target_username
+          ) do
+        Logger.debug("Calling stored procedure", procedure: "create_user_event")
+
+        query(
+          "select * from auth.create_user_event($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+          [
+            created_by,
+            user_id,
+            event_type_code,
+            target_user_id,
+            ip_address,
+            user_agent,
+            origin,
+            event_data,
+            target_user_oid,
+            target_username
+          ]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthCreateUserEventParser.parse_auth_create_user_event_result()
       end
 
       @spec auth_create_user_group(
@@ -615,7 +667,7 @@ defmodule KeenAuthPermissions.Database do
               binary(),
               binary(),
               binary(),
-              binary()
+              any()
             ) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthEnsureUserFromProviderItem.t()]}
@@ -645,6 +697,35 @@ defmodule KeenAuthPermissions.Database do
           ]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthEnsureUserFromProviderParser.parse_auth_ensure_user_from_provider_result()
+      end
+
+      @spec auth_ensure_user_info(
+              binary(),
+              integer(),
+              binary(),
+              binary(),
+              binary(),
+              binary(),
+              any()
+            ) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthEnsureUserInfoItem.t()]}
+      def auth_ensure_user_info(
+            created_by,
+            user_id,
+            username,
+            display_name,
+            provider_code,
+            email,
+            user_data
+          ) do
+        Logger.debug("Calling stored procedure", procedure: "ensure_user_info")
+
+        query(
+          "select * from auth.ensure_user_info($1, $2, $3, $4, $5, $6, $7)",
+          [created_by, user_id, username, display_name, provider_code, email, user_data]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthEnsureUserInfoParser.parse_auth_ensure_user_info_result()
       end
 
       @spec auth_get_provider_users(binary(), integer(), binary()) ::
@@ -752,6 +833,19 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthGetUserByIdParser.parse_auth_get_user_by_id_result()
       end
 
+      @spec auth_get_user_data(integer(), integer()) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserDataItem.t()]}
+      def auth_get_user_data(user_id, target_user_id) do
+        Logger.debug("Calling stored procedure", procedure: "get_user_data")
+
+        query(
+          "select * from auth.get_user_data($1, $2)",
+          [user_id, target_user_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthGetUserDataParser.parse_auth_get_user_data_result()
+      end
+
       @spec auth_get_user_group_by_id(binary(), integer(), integer(), integer()) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserGroupByIdItem.t()]}
@@ -763,19 +857,6 @@ defmodule KeenAuthPermissions.Database do
           [requested_by, user_id, tenant_id, user_group_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthGetUserGroupByIdParser.parse_auth_get_user_group_by_id_result()
-      end
-
-      @spec auth_get_user_group_mappings(binary(), integer(), integer(), integer()) ::
-              {:error, any()}
-              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserGroupMappingsItem.t()]}
-      def auth_get_user_group_mappings(requested_by, user_id, tenant_id, user_group_id) do
-        Logger.debug("Calling stored procedure", procedure: "get_user_group_mappings")
-
-        query(
-          "select * from auth.get_user_group_mappings($1, $2, $3, $4)",
-          [requested_by, user_id, tenant_id, user_group_id]
-        )
-        |> KeenAuthPermissions.Database.Parsers.AuthGetUserGroupMappingsParser.parse_auth_get_user_group_mappings_result()
       end
 
       @spec auth_get_user_group_members(binary(), integer(), integer(), integer()) ::
@@ -839,28 +920,52 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthHasOwnerParser.parse_auth_has_owner_result()
       end
 
-      @spec auth_has_permission(integer(), integer(), binary(), boolean()) ::
+      @spec auth_has_permission(integer(), binary(), boolean()) ::
               {:error, any()} | {:ok, [boolean()]}
-      def auth_has_permission(tenant_id, target_user_id, perm_code, throw_err) do
+      def auth_has_permission(target_user_id, perm_code, throw_err) do
+        Logger.debug("Calling stored procedure", procedure: "has_permission")
+
+        query(
+          "select * from auth.has_permission($1, $2, $3)",
+          [target_user_id, perm_code, throw_err]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthHasPermissionParser.parse_auth_has_permission_result()
+      end
+
+      @spec auth_has_permission_1(integer(), integer(), binary(), boolean()) ::
+              {:error, any()} | {:ok, [boolean()]}
+      def auth_has_permission_1(tenant_id, target_user_id, perm_code, throw_err) do
         Logger.debug("Calling stored procedure", procedure: "has_permission")
 
         query(
           "select * from auth.has_permission($1, $2, $3, $4)",
           [tenant_id, target_user_id, perm_code, throw_err]
         )
-        |> KeenAuthPermissions.Database.Parsers.AuthHasPermissionParser.parse_auth_has_permission_result()
+        |> KeenAuthPermissions.Database.Parsers.AuthHasPermission1Parser.parse_auth_has_permission_1_result()
       end
 
-      @spec auth_has_permissions(integer(), integer(), any(), boolean()) ::
+      @spec auth_has_permissions(integer(), any(), boolean()) ::
               {:error, any()} | {:ok, [boolean()]}
-      def auth_has_permissions(tenant_id, target_user_id, perm_codes, throw_err) do
+      def auth_has_permissions(target_user_id, perm_codes, throw_err) do
+        Logger.debug("Calling stored procedure", procedure: "has_permissions")
+
+        query(
+          "select * from auth.has_permissions($1, $2, $3)",
+          [target_user_id, perm_codes, throw_err]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthHasPermissionsParser.parse_auth_has_permissions_result()
+      end
+
+      @spec auth_has_permissions_1(integer(), integer(), any(), boolean()) ::
+              {:error, any()} | {:ok, [boolean()]}
+      def auth_has_permissions_1(tenant_id, target_user_id, perm_codes, throw_err) do
         Logger.debug("Calling stored procedure", procedure: "has_permissions")
 
         query(
           "select * from auth.has_permissions($1, $2, $3, $4)",
           [tenant_id, target_user_id, perm_codes, throw_err]
         )
-        |> KeenAuthPermissions.Database.Parsers.AuthHasPermissionsParser.parse_auth_has_permissions_result()
+        |> KeenAuthPermissions.Database.Parsers.AuthHasPermissions1Parser.parse_auth_has_permissions_1_result()
       end
 
       @spec auth_is_group_member(integer(), integer(), integer()) ::
@@ -884,6 +989,17 @@ defmodule KeenAuthPermissions.Database do
           [user_id, tenant_id, user_group_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthIsOwnerParser.parse_auth_is_owner_result()
+      end
+
+      @spec auth_load_permission_initial_data() :: {:error, any()} | {:ok, [integer()]}
+      def auth_load_permission_initial_data() do
+        Logger.debug("Calling stored procedure", procedure: "load_permission_initial_data")
+
+        query(
+          "select * from auth.load_permission_initial_data()",
+          []
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthLoadPermissionInitialDataParser.parse_auth_load_permission_initial_data_result()
       end
 
       @spec auth_lock_user(binary(), integer(), integer()) ::
@@ -911,7 +1027,7 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthLockUserGroupParser.parse_auth_lock_user_group_result()
       end
 
-      @spec auth_register_user(binary(), integer(), binary(), binary(), binary(), binary()) ::
+      @spec auth_register_user(binary(), integer(), binary(), binary(), binary(), any()) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthRegisterUserItem.t()]}
       def auth_register_user(created_by, user_id, email, password_hash, display_name, user_data) do
@@ -943,17 +1059,73 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthSetPermissionAsAssignableParser.parse_auth_set_permission_as_assignable_result()
       end
 
-      @spec auth_set_token_as_used(binary(), integer(), integer(), binary(), binary(), binary()) ::
+      @spec auth_set_token_as_used(
+              binary(),
+              integer(),
+              binary(),
+              binary(),
+              binary(),
+              binary(),
+              binary(),
+              binary()
+            ) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthSetTokenAsUsedItem.t()]}
-      def auth_set_token_as_used(modified_by, user_id, token_id, ip_address, user_agent, origin) do
+      def auth_set_token_as_used(
+            modified_by,
+            user_id,
+            token_uid,
+            token,
+            token_type_code,
+            ip_address,
+            user_agent,
+            origin
+          ) do
         Logger.debug("Calling stored procedure", procedure: "set_token_as_used")
 
         query(
-          "select * from auth.set_token_as_used($1, $2, $3, $4, $5, $6)",
-          [modified_by, user_id, token_id, ip_address, user_agent, origin]
+          "select * from auth.set_token_as_used($1, $2, $3, $4, $5, $6, $7, $8)",
+          [
+            modified_by,
+            user_id,
+            token_uid,
+            token,
+            token_type_code,
+            ip_address,
+            user_agent,
+            origin
+          ]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthSetTokenAsUsedParser.parse_auth_set_token_as_used_result()
+      end
+
+      @spec auth_set_token_as_used_by_token(
+              binary(),
+              integer(),
+              binary(),
+              binary(),
+              binary(),
+              binary(),
+              binary()
+            ) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthSetTokenAsUsedByTokenItem.t()]}
+      def auth_set_token_as_used_by_token(
+            modified_by,
+            user_id,
+            token,
+            token_type,
+            ip_address,
+            user_agent,
+            origin
+          ) do
+        Logger.debug("Calling stored procedure", procedure: "set_token_as_used_by_token")
+
+        query(
+          "select * from auth.set_token_as_used_by_token($1, $2, $3, $4, $5, $6, $7)",
+          [modified_by, user_id, token, token_type, ip_address, user_agent, origin]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthSetTokenAsUsedByTokenParser.parse_auth_set_token_as_used_by_token_result()
       end
 
       @spec auth_set_user_group_as_external(binary(), integer(), integer(), integer()) ::
@@ -991,28 +1163,50 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthThrowNoAccessParser.parse_auth_throw_no_access_result()
       end
 
-      @spec auth_throw_no_permission(integer(), integer(), binary()) ::
+      @spec auth_throw_no_permission(integer(), integer(), any()) ::
               {:error, any()} | {:ok, [any()]}
-      def auth_throw_no_permission(tenant_id, user_id, perm_code) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        query(
-          "select * from auth.throw_no_permission($1, $2, $3)",
-          [tenant_id, user_id, perm_code]
-        )
-        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermissionParser.parse_auth_throw_no_permission_result()
-      end
-
-      @spec auth_throw_no_permission_1(integer(), integer(), any()) ::
-              {:error, any()} | {:ok, [any()]}
-      def auth_throw_no_permission_1(tenant_id, user_id, perm_codes) do
+      def auth_throw_no_permission(tenant_id, user_id, perm_codes) do
         Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
 
         query(
           "select * from auth.throw_no_permission($1, $2, $3)",
           [tenant_id, user_id, perm_codes]
         )
+        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermissionParser.parse_auth_throw_no_permission_result()
+      end
+
+      @spec auth_throw_no_permission_1(integer(), binary()) :: {:error, any()} | {:ok, [any()]}
+      def auth_throw_no_permission_1(user_id, perm_code) do
+        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
+
+        query(
+          "select * from auth.throw_no_permission($1, $2)",
+          [user_id, perm_code]
+        )
         |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission1Parser.parse_auth_throw_no_permission_1_result()
+      end
+
+      @spec auth_throw_no_permission_2(integer(), integer(), binary()) ::
+              {:error, any()} | {:ok, [any()]}
+      def auth_throw_no_permission_2(tenant_id, user_id, perm_code) do
+        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
+
+        query(
+          "select * from auth.throw_no_permission($1, $2, $3)",
+          [tenant_id, user_id, perm_code]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission2Parser.parse_auth_throw_no_permission_2_result()
+      end
+
+      @spec auth_throw_no_permission_3(integer(), any()) :: {:error, any()} | {:ok, [any()]}
+      def auth_throw_no_permission_3(user_id, perm_codes) do
+        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
+
+        query(
+          "select * from auth.throw_no_permission($1, $2)",
+          [user_id, perm_codes]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission3Parser.parse_auth_throw_no_permission_3_result()
       end
 
       @spec auth_unassign_permission(binary(), integer(), integer(), integer()) ::
@@ -1086,7 +1280,7 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthUpdateProviderParser.parse_auth_update_provider_result()
       end
 
-      @spec auth_update_user_data(binary(), integer(), integer(), binary(), binary()) ::
+      @spec auth_update_user_data(binary(), integer(), integer(), binary(), any()) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthUpdateUserDataItem.t()]}
       def auth_update_user_data(modified_by, user_id, target_user_id, provider, user_data) do
@@ -1199,6 +1393,8 @@ defmodule KeenAuthPermissions.Database do
               binary(),
               binary(),
               binary(),
+              binary(),
+              binary(),
               boolean()
             ) ::
               {:error, any()}
@@ -1207,7 +1403,9 @@ defmodule KeenAuthPermissions.Database do
             modified_by,
             user_id,
             target_user_id,
+            token_uid,
             token,
+            token_type,
             ip_address,
             user_agent,
             origin,
@@ -1216,12 +1414,14 @@ defmodule KeenAuthPermissions.Database do
         Logger.debug("Calling stored procedure", procedure: "validate_token")
 
         query(
-          "select * from auth.validate_token($1, $2, $3, $4, $5, $6, $7, $8)",
+          "select * from auth.validate_token($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
           [
             modified_by,
             user_id,
             target_user_id,
+            token_uid,
             token,
+            token_type,
             ip_address,
             user_agent,
             origin,

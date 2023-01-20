@@ -47,7 +47,8 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthValidateTokenParser do
         token_uid,
         token_state_code,
         used_at,
-        user_id
+        user_id,
+        user_oid
       ]) do
     {
       :ok,
@@ -56,7 +57,8 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthValidateTokenParser do
         token_uid: token_uid,
         token_state_code: token_state_code,
         used_at: used_at,
-        user_id: user_id
+        user_id: user_id,
+        user_oid: user_oid
       }
     }
   end

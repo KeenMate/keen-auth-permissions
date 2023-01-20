@@ -1,7 +1,7 @@
 # This code has been auto-generated
 # Changes to this file will be lost on next generation
 
-defmodule KeenAuthPermissions.Database.Models.AuthGetTenantsItem do
+defmodule KeenAuthPermissions.Database.Models.AuthCreateTenantItem do
   @fields [
     :created,
     :created_by,
@@ -12,12 +12,13 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetTenantsItem do
     :title,
     :code,
     :is_removable,
-    :is_assignable
+    :is_assignable,
+    :access_type_code
   ]
 
   @enforce_keys @fields
 
   defstruct @fields
 
-  @type t() :: %KeenAuthPermissions.Database.Models.AuthGetTenantsItem{}
+  @type t() :: %KeenAuthPermissions.Database.Models.AuthCreateTenantItem{}
 end

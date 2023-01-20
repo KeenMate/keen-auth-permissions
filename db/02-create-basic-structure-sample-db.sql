@@ -13,7 +13,7 @@ create schema if not exists const;
 create schema if not exists unsecure; -- functions without any permission validation
 create schema if not exists helpers;
 create schema if not exists ext;
-create schema if not exists auth;
+create schema if not exists auth; 
 
 alter default privileges
     in schema public, auth, const

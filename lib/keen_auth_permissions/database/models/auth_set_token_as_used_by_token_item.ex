@@ -1,7 +1,7 @@
 # This code has been auto-generated
 # Changes to this file will be lost on next generation
 
-defmodule KeenAuthPermissions.Database.Models.AuthValidateTokenItem do
+defmodule KeenAuthPermissions.Database.Models.AuthSetTokenAsUsedByTokenItem do
   @fields [
     :token_id,
     :token_uid,
@@ -15,5 +15,5 @@ defmodule KeenAuthPermissions.Database.Models.AuthValidateTokenItem do
 
   defstruct @fields
 
-  @type t() :: %KeenAuthPermissions.Database.Models.AuthValidateTokenItem{}
+  @type t() :: %KeenAuthPermissions.Database.Models.AuthSetTokenAsUsedByTokenItem{}
 end

@@ -43,7 +43,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnableUserGroupParser do
   end
 
   def parse_auth_enable_user_group_result_row([
-        group_id,
+        user_group_id,
         is_active,
         is_assignable,
         modified,
@@ -52,7 +52,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnableUserGroupParser do
     {
       :ok,
       %KeenAuthPermissions.Database.Models.AuthEnableUserGroupItem{
-        group_id: group_id,
+        user_group_id: user_group_id,
         is_active: is_active,
         is_assignable: is_assignable,
         modified: modified,

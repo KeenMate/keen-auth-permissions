@@ -3,7 +3,7 @@
 
 defmodule KeenAuthPermissions.Database.Models.AuthEnableUserGroupItem do
   @fields [
-    :group_id,
+    :user_group_id,
     :is_active,
     :is_assignable,
     :modified,
