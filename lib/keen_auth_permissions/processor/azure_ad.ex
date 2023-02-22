@@ -36,8 +36,7 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
         permissions_user.user_id,
         "aad",
         [],
-        mapped_user.roles
-				,
+        mapped_user.roles,
         TenantResolver.resolve_tenant(conn)
       )
 
