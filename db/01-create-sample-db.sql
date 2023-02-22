@@ -1,4 +1,4 @@
--- create role keen_auth_sample with password 'Protect yourself with KeenAuth' login;
+create role keen_auth_sample with password 'Protect yourself with KeenAuth' login;
 
 SELECT pg_terminate_backend(pg_stat_activity.pid)
 FROM pg_stat_activity
