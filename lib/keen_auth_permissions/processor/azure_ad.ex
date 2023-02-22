@@ -34,10 +34,11 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
         "system",
         1,
         permissions_user.user_id,
-        TenantResolver.resolve_tenant(conn),
         "aad",
         [],
         mapped_user.roles
+				,
+        TenantResolver.resolve_tenant(conn)
       )
 
     {:ok, conn, %{permissions_user | groups: groups, permissions: permissions}, response}

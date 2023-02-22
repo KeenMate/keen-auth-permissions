@@ -19,10 +19,10 @@ defmodule KeenAuthPermissions.Processor.Email do
         "system",
         1,
         mapped_user.user_id,
-        TenantResolver.resolve_tenant(conn),
         "email",
         fetch_groups(mapped_user),
-        fetch_roles(mapped_user)
+        fetch_roles(mapped_user),
+        TenantResolver.resolve_tenant(conn)
       )
 
     {:ok, conn, %{mapped_user | groups: groups, permissions: permissions}, response}
