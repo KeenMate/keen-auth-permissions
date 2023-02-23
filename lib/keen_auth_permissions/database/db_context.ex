@@ -413,21 +413,21 @@ defmodule KeenAuthPermissions.Database do
               binary(),
               integer(),
               binary(),
-              integer(),
               boolean(),
               boolean(),
               boolean(),
-              boolean()
+              boolean(),
+              integer()
             ) :: {:error, any()} | {:ok, [integer()]}
       def auth_create_user_group(
             created_by,
             user_id,
             title,
-            tenant_id,
             is_assignable,
             is_active,
             is_external,
-            is_default
+            is_default,
+            tenant_id
           ) do
         Logger.debug("Calling stored procedure", procedure: "create_user_group")
 
@@ -437,11 +437,11 @@ defmodule KeenAuthPermissions.Database do
             created_by,
             user_id,
             title,
-            tenant_id,
             is_assignable,
             is_active,
             is_external,
-            is_default
+            is_default,
+            tenant_id
           ]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthCreateUserGroupParser.parse_auth_create_user_group_result()
