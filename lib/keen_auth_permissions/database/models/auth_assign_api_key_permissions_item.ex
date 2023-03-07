@@ -4,6 +4,7 @@
 defmodule KeenAuthPermissions.Database.Models.AuthAssignApiKeyPermissionsItem do
   @fields [
     :assignment_id,
+    :tenant_id,
     :perm_set_id,
     :perm_set_code,
     :perm_set_title,

@@ -119,6 +119,8 @@ defmodule KeenAuthPermissions.Database do
               any(),
               binary(),
               binary(),
+              DateTime.t(),
+              binary(),
               integer()
             ) ::
               {:error, any()}
@@ -132,12 +134,14 @@ defmodule KeenAuthPermissions.Database do
             permission_codes,
             api_key,
             api_secret,
+            expire_at,
+            notification_email,
             tenant_id
           ) do
         Logger.debug("Calling stored procedure", procedure: "create_api_key")
 
         query(
-          "select * from auth.create_api_key($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+          "select * from auth.create_api_key($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
           [
             created_by,
             user_id,
@@ -147,6 +151,8 @@ defmodule KeenAuthPermissions.Database do
             permission_codes,
             api_key,
             api_secret,
+            expire_at,
+            notification_email,
             tenant_id
           ]
         )
@@ -503,14 +509,14 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthCreateUserGroupMemberParser.parse_auth_create_user_group_member_result()
       end
 
-      @spec auth_delete_api_key(binary(), integer(), integer()) ::
+      @spec auth_delete_api_key(binary(), integer(), integer(), integer()) ::
               {:error, any()} | {:ok, [integer()]}
-      def auth_delete_api_key(deleted_by, user_id, api_key_id) do
+      def auth_delete_api_key(deleted_by, user_id, api_key_id, tenant_id) do
         Logger.debug("Calling stored procedure", procedure: "delete_api_key")
 
         query(
-          "select * from auth.delete_api_key($1, $2, $3)",
-          [deleted_by, user_id, api_key_id]
+          "select * from auth.delete_api_key($1, $2, $3, $4)",
+          [deleted_by, user_id, api_key_id, tenant_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthDeleteApiKeyParser.parse_auth_delete_api_key_result()
       end
@@ -867,6 +873,19 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthGetAllPermissionsParser.parse_auth_get_all_permissions_result()
       end
 
+      @spec auth_get_api_key_permissions(integer(), integer(), integer()) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetApiKeyPermissionsItem.t()]}
+      def auth_get_api_key_permissions(user_id, api_key_id, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "get_api_key_permissions")
+
+        query(
+          "select * from auth.get_api_key_permissions($1, $2, $3)",
+          [user_id, api_key_id, tenant_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthGetApiKeyPermissionsParser.parse_auth_get_api_key_permissions_result()
+      end
+
       @spec auth_get_assigned_group_permissions(binary(), integer(), integer(), integer()) ::
               {:error, any()}
               | {:ok,
@@ -1105,6 +1124,19 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthGetUserIdentityByEmailParser.parse_auth_get_user_identity_by_email_result()
       end
 
+      @spec auth_get_user_permissions(integer(), integer()) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthGetUserPermissionsItem.t()]}
+      def auth_get_user_permissions(user_id, target_user_id) do
+        Logger.debug("Calling stored procedure", procedure: "get_user_permissions")
+
+        query(
+          "select * from auth.get_user_permissions($1, $2)",
+          [user_id, target_user_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthGetUserPermissionsParser.parse_auth_get_user_permissions_result()
+      end
+
       @spec auth_get_user_random_code() :: {:error, any()} | {:ok, [binary()]}
       def auth_get_user_random_code() do
         Logger.debug("Calling stored procedure", procedure: "get_user_random_code")
@@ -1210,6 +1242,19 @@ defmodule KeenAuthPermissions.Database do
           [created_by, user_id, email, password_hash, display_name, user_data]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthRegisterUserParser.parse_auth_register_user_result()
+      end
+
+      @spec auth_search_api_keys(integer(), binary(), integer(), integer(), integer()) ::
+              {:error, any()}
+              | {:ok, [KeenAuthPermissions.Database.Models.AuthSearchApiKeysItem.t()]}
+      def auth_search_api_keys(user_id, search_text, page, page_size, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "search_api_keys")
+
+        query(
+          "select * from auth.search_api_keys($1, $2, $3, $4, $5)",
+          [user_id, search_text, page, page_size, tenant_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthSearchApiKeysParser.parse_auth_search_api_keys_result()
       end
 
       @spec auth_set_permission_as_assignable(binary(), integer(), integer(), binary(), boolean()) ::
@@ -1347,25 +1392,25 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermissionParser.parse_auth_throw_no_permission_result()
       end
 
-      @spec auth_throw_no_permission_1(integer(), binary()) :: {:error, any()} | {:ok, [any()]}
-      def auth_throw_no_permission_1(user_id, perm_code) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        query(
-          "select * from auth.throw_no_permission($1, $2)",
-          [user_id, perm_code]
-        )
-        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission1Parser.parse_auth_throw_no_permission_1_result()
-      end
-
-      @spec auth_throw_no_permission_2(integer(), binary(), integer()) ::
+      @spec auth_throw_no_permission_1(integer(), binary(), integer()) ::
               {:error, any()} | {:ok, [any()]}
-      def auth_throw_no_permission_2(user_id, perm_code, tenant_id) do
+      def auth_throw_no_permission_1(user_id, perm_code, tenant_id) do
         Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
 
         query(
           "select * from auth.throw_no_permission($1, $2, $3)",
           [user_id, perm_code, tenant_id]
+        )
+        |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission1Parser.parse_auth_throw_no_permission_1_result()
+      end
+
+      @spec auth_throw_no_permission_2(integer(), binary()) :: {:error, any()} | {:ok, [any()]}
+      def auth_throw_no_permission_2(user_id, perm_code) do
+        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
+
+        query(
+          "select * from auth.throw_no_permission($1, $2)",
+          [user_id, perm_code]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthThrowNoPermission2Parser.parse_auth_throw_no_permission_2_result()
       end
@@ -1392,7 +1437,7 @@ defmodule KeenAuthPermissions.Database do
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthUnassignApiKeyPermissionsItem.t()]}
       def auth_unassign_api_key_permissions(
-            created_by,
+            deleted_by,
             user_id,
             api_key_id,
             perm_set_code,
@@ -1403,7 +1448,7 @@ defmodule KeenAuthPermissions.Database do
 
         query(
           "select * from auth.unassign_api_key_permissions($1, $2, $3, $4, $5, $6)",
-          [created_by, user_id, api_key_id, perm_set_code, permission_codes, tenant_id]
+          [deleted_by, user_id, api_key_id, perm_set_code, permission_codes, tenant_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthUnassignApiKeyPermissionsParser.parse_auth_unassign_api_key_permissions_result()
       end
@@ -1447,15 +1492,31 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthUnlockUserGroupParser.parse_auth_unlock_user_group_result()
       end
 
-      @spec auth_update_api_key(binary(), integer(), integer(), binary(), binary()) ::
+      @spec auth_update_api_key(
+              binary(),
+              integer(),
+              integer(),
+              binary(),
+              binary(),
+              DateTime.t(),
+              binary()
+            ) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthUpdateApiKeyItem.t()]}
-      def auth_update_api_key(updated_by, user_id, api_key_id, title, description) do
+      def auth_update_api_key(
+            updated_by,
+            user_id,
+            api_key_id,
+            title,
+            description,
+            expire_at,
+            notification_email
+          ) do
         Logger.debug("Calling stored procedure", procedure: "update_api_key")
 
         query(
-          "select * from auth.update_api_key($1, $2, $3, $4, $5)",
-          [updated_by, user_id, api_key_id, title, description]
+          "select * from auth.update_api_key($1, $2, $3, $4, $5, $6, $7)",
+          [updated_by, user_id, api_key_id, title, description, expire_at, notification_email]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthUpdateApiKeyParser.parse_auth_update_api_key_result()
       end
@@ -1610,15 +1671,33 @@ defmodule KeenAuthPermissions.Database do
         |> KeenAuthPermissions.Database.Parsers.AuthUpdateUserPasswordParser.parse_auth_update_user_password_result()
       end
 
-      @spec auth_validate_api_key(binary(), integer(), binary(), binary(), integer()) ::
+      @spec auth_validate_api_key(
+              binary(),
+              integer(),
+              binary(),
+              binary(),
+              binary(),
+              binary(),
+              binary(),
+              integer()
+            ) ::
               {:error, any()}
               | {:ok, [KeenAuthPermissions.Database.Models.AuthValidateApiKeyItem.t()]}
-      def auth_validate_api_key(requested_by, user_id, api_key, api_secret, tenant_id) do
+      def auth_validate_api_key(
+            requested_by,
+            user_id,
+            api_key,
+            api_secret,
+            ip_address,
+            user_agent,
+            origin,
+            tenant_id
+          ) do
         Logger.debug("Calling stored procedure", procedure: "validate_api_key")
 
         query(
-          "select * from auth.validate_api_key($1, $2, $3, $4, $5)",
-          [requested_by, user_id, api_key, api_secret, tenant_id]
+          "select * from auth.validate_api_key($1, $2, $3, $4, $5, $6, $7, $8)",
+          [requested_by, user_id, api_key, api_secret, ip_address, user_agent, origin, tenant_id]
         )
         |> KeenAuthPermissions.Database.Parsers.AuthValidateApiKeyParser.parse_auth_validate_api_key_result()
       end

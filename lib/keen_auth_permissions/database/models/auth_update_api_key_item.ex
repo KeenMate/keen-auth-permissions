@@ -5,7 +5,9 @@ defmodule KeenAuthPermissions.Database.Models.AuthUpdateApiKeyItem do
   @fields [
     :api_key_id,
     :title,
-    :description
+    :description,
+    :expire_at,
+    :notification_email
   ]
 
   @enforce_keys @fields
