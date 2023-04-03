@@ -42,4 +42,15 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
 
     {:ok, conn, %{permissions_user | groups: groups, permissions: permissions}, response}
   end
+
+  @impl true
+  def sign_out(conn, _provider, _params) do
+    storage = KeenAuth.Storage.current_storage(conn)
+
+    conn
+    |> storage.delete()
+    |> KeenAuth.Helpers.RequestHelpers.redirect_back(%{
+      "redirect_to" => Application.get_env(:keen_auth, :redirect_after_sign_out)
+    })
+  end
 end

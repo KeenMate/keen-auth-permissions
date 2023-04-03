@@ -35,4 +35,15 @@ defmodule KeenAuthPermissions.Processor.Email do
   def fetch_roles(%KeenAuth.User{roles: roles}), do: roles || []
 
   def fetch_roles(_), do: []
+
+  @impl true
+  def sign_out(conn, _provider, _params) do
+    storage = KeenAuth.Storage.current_storage(conn)
+
+    conn
+    |> storage.delete()
+    |> KeenAuth.Helpers.RequestHelpers.redirect_back(%{
+      "redirect_to" => Application.get_env(:keen_auth, :redirect_after_sign_out)
+    })
+  end
 end
