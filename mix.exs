@@ -21,6 +21,9 @@ defmodule KeenAuthPermissions.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:keen_auth, github: "keenmate/keen_auth", branch: "new-vision"},
+      {:jason, "~> 1.3"},
+      {:postgrex, "~> 0.16.4"}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
     ]
