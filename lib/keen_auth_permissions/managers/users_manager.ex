@@ -2,7 +2,6 @@ defmodule KeenAuthPermissions.Managers.UsersManager do
   import KeenAuthPermissions.Managers.ManagerHelpers
 
   alias KeenAuthPermissions.Providers.UsersProvider
-  alias KeenAuthPermissions.Database.Models.AuthGetTenantUsersItem, as: TenantUser
   alias KeenAuthPermissions.User
 
   def get_tenant_users(%User{} = user, tenant_id) do
@@ -18,7 +17,7 @@ defmodule KeenAuthPermissions.Managers.UsersManager do
     end
   end
 
-  defp parse_user_group_json!(%TenantUser{user_groups: groups} = user) do
+  defp parse_user_group_json!(%{user_groups: groups} = user) do
     decoded_groups = Enum.map(groups, &Jason.decode!/1)
     IO.inspect(decoded_groups, label: "decoded")
     %{user | user_groups: decoded_groups}
