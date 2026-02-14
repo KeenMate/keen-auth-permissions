@@ -1,4 +1,19 @@
 defmodule KeenAuthPermissions.Managers.ManagerHelpers do
+  @moduledoc """
+  DEPRECATED: Helper utilities for managers.
+
+  The manager layer is deprecated. Use the new facade modules instead:
+  - `KeenAuthPermissions.Users`
+  - `KeenAuthPermissions.UserGroups`
+  - `KeenAuthPermissions.Permissions`
+  - `KeenAuthPermissions.Tenants`
+  - `KeenAuthPermissions.ApiKeys`
+  - `KeenAuthPermissions.Auth`
+  - `KeenAuthPermissions.PermSets`
+  """
+
+  @deprecated "Use the new facade modules instead"
+
   def user(conn) when conn.assigns.current_user != nil, do: conn.assigns.current_user
 
   @doc """

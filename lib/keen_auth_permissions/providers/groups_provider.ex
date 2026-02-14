@@ -1,80 +1,65 @@
 defmodule KeenAuthPermissions.Providers.GroupsProvider do
-  alias KeenAuthPermissions.Error.ErrorParsers
+  @moduledoc """
+  DEPRECATED: Use `KeenAuthPermissions.UserGroups` instead.
 
-  def db_context() do
-    KeenAuthPermissions.DbContext.get_global_db_context()
+  This module is kept for backward compatibility and delegates to the new facade.
+  """
+
+  @deprecated "Use KeenAuthPermissions.UserGroups instead"
+
+  alias KeenAuthPermissions.UserGroups
+  alias KeenAuthPermissions.User
+  alias KeenAuthPermissions.RequestContext
+
+  defp ctx(%User{} = user), do: RequestContext.new(user)
+
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list/2 instead"
+  def get_groups(%User{} = user, tenant_id) do
+    UserGroups.list(ctx(user), tenant_id)
   end
 
-  def get_groups(%KeenAuthPermissions.User{username: requested_by, user_id: id}, tenant_id) do
-    db_context().auth_get_tenant_groups(requested_by, id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.enable/3 instead"
+  def enable_group(%User{} = user, group_id, tenant_id) do
+    UserGroups.enable(ctx(user), group_id, tenant_id)
   end
 
-  def enable_group(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_enable_user_group(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.disable/3 instead"
+  def disable_group(%User{} = user, group_id, tenant_id) do
+    UserGroups.disable(ctx(user), group_id, tenant_id)
   end
 
-  def disable_group(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_disable_user_group(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.lock/3 instead"
+  def lock_group(%User{} = user, group_id, tenant_id) do
+    UserGroups.lock(ctx(user), group_id, tenant_id)
   end
 
-  def lock_group(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_lock_user_group(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.unlock/3 instead"
+  def unlock_group(%User{} = user, group_id, tenant_id) do
+    UserGroups.unlock(ctx(user), group_id, tenant_id)
   end
 
-  def unlock_group(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_unlock_user_group(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.delete/3 instead"
+  def delete_group(%User{} = user, group_id, tenant_id) do
+    UserGroups.delete(ctx(user), group_id, tenant_id)
   end
 
-  def delete_group(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_delete_user_group(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.get_by_id/3 instead"
+  def group_info(%User{} = user, group_id, tenant_id) do
+    # Returns list for backward compatibility
+    case UserGroups.get_by_id(ctx(user), group_id, tenant_id) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def group_info(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_get_user_group_by_id(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list_members/3 instead"
+  def get_group_members(%User{} = user, group_id, tenant_id) do
+    UserGroups.list_members(ctx(user), group_id, tenant_id)
   end
 
-  def get_group_members(
-        %KeenAuthPermissions.User{username: username, user_id: id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_get_user_group_members(username, id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
-  end
-
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.create/7 instead"
   def create_group(
-        %KeenAuthPermissions.User{username: username, user_id: id},
+        %User{} = user,
         title,
         is_assignable,
         is_active,
@@ -82,79 +67,47 @@ defmodule KeenAuthPermissions.Providers.GroupsProvider do
         is_default,
         tenant_id
       ) do
-    IO.inspect(
-      [
-        username,
-        id,
-        title,
-        is_assignable,
-        is_active,
-        is_external,
-        is_default,
-        tenant_id
-      ],
-      label: "params"
-    )
-
-    db_context().auth_create_user_group(
-      username,
-      id,
-      title,
-      is_assignable,
-      is_active,
-      is_external,
-      is_default,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+    # Returns list for backward compatibility
+    case UserGroups.create(
+           ctx(user),
+           title,
+           is_assignable,
+           is_active,
+           is_external,
+           is_default,
+           tenant_id
+         ) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def add_group_member(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        group_id,
-        target_user_id,
-        tenant_id
-      ) do
-    db_context().auth_create_user_group_member(
-      username,
-      user_id,
-      group_id,
-      target_user_id,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.add_member/4 instead"
+  def add_group_member(%User{} = user, group_id, target_user_id, tenant_id) do
+    # Returns list for backward compatibility
+    case UserGroups.add_member(ctx(user), group_id, target_user_id, tenant_id) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def remove_group_member(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        group_id,
-        target_user_id,
-        tenant_id
-      ) do
-    IO.puts(user_id)
-    IO.puts(target_user_id)
-
-    db_context().auth_delete_user_group_member(
-      username,
-      user_id,
-      group_id,
-      target_user_id,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.remove_member/4 instead"
+  def remove_group_member(%User{} = user, group_id, target_user_id, tenant_id) do
+    # Returns list for backward compatibility
+    case UserGroups.remove_member(ctx(user), group_id, target_user_id, tenant_id) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def get_user_group_mapping(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_get_user_group_mappings(username, user_id, group_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list_mappings/3 instead"
+  def get_user_group_mapping(%User{} = user, group_id, tenant_id) do
+    UserGroups.list_mappings(ctx(user), group_id, tenant_id)
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.create_mapping/7 instead"
   def create_user_group_mapping(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
+        %User{} = user,
         user_group_id,
         provider_code,
         mapped_object_id,
@@ -162,43 +115,28 @@ defmodule KeenAuthPermissions.Providers.GroupsProvider do
         mapped_role,
         tenant_id
       ) do
-    db_context().auth_create_user_group_mapping(
-      username,
-      user_id,
-      user_group_id,
-      provider_code,
-      mapped_object_id,
-      mapped_object_name,
-      mapped_role,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+    # Returns list for backward compatibility
+    case UserGroups.create_mapping(
+           ctx(user),
+           user_group_id,
+           provider_code,
+           mapped_object_id,
+           mapped_object_name,
+           mapped_role,
+           tenant_id
+         ) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def delete_user_group_mapping(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        user_group_mapping_id,
-        tenant_id
-      ) do
-    db_context().auth_delete_user_group_mapping(
-      username,
-      user_id,
-      user_group_mapping_id,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.delete_mapping/3 instead"
+  def delete_user_group_mapping(%User{} = user, user_group_mapping_id, tenant_id) do
+    UserGroups.delete_mapping(ctx(user), user_group_mapping_id, tenant_id)
   end
 
-  def get_assigned_permissions(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        group_id,
-        tenant_id
-      ) do
-    db_context().auth_get_assigned_group_permissions(
-      username,
-      user_id,
-      group_id,
-      tenant_id
-    )
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list_assigned_permissions/3 instead"
+  def get_assigned_permissions(%User{} = user, group_id, tenant_id) do
+    UserGroups.list_assigned_permissions(ctx(user), group_id, tenant_id)
   end
 end

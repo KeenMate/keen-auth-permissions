@@ -1,6 +1,6 @@
 {
   "version": "v0.6.0-beta3",
-  "time": "2026-02-14T12:38:42.3658252+01:00",
+  "time": "2026-02-14T21:28:41.1355772+01:00",
   "routines": [
     {
       "RowNumber": 1,
@@ -343,38 +343,6 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "public",
-      "RoutineNameWithParams": "check_version(text,text)",
-      "HasOverload": true,
-      "RoutineName": "check_version",
-      "SpecificName": "",
-      "DataType": "boolean",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "bool",
-      "ParamCount": 2,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_version",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_component",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 2,
-      "RoutineSchema": "public",
       "RoutineNameWithParams": "check_version(text,text,bool)",
       "HasOverload": true,
       "RoutineName": "check_version",
@@ -406,6 +374,38 @@
           "Name": "_throw_err",
           "Mode": "IN",
           "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 2,
+      "RoutineSchema": "public",
+      "RoutineNameWithParams": "check_version(text,text)",
+      "HasOverload": true,
+      "RoutineName": "check_version",
+      "SpecificName": "",
+      "DataType": "boolean",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "bool",
+      "ParamCount": 2,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_version",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_component",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         }
@@ -931,459 +931,8 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "public",
-      "RoutineNameWithParams": "create_journal_message(text,int8,text,int4,text,int8,jsonb,int4)",
-      "HasOverload": true,
-      "RoutineName": "create_journal_message",
-      "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "public",
-      "UdtTypeName": "journal",
-      "ParamCount": 8,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_created_by",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_correlation_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_event_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_entity_type",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_entity_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_payload",
-          "Mode": "IN",
-          "UDTName": "jsonb",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "created_at",
-          "Mode": "OUT",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "created_by",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "correlation_id",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "journal_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "tenant_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "event_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "user_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "keys",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "data_payload",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        }
-      ]
-    },
-    {
-      "RowNumber": 2,
-      "RoutineSchema": "public",
-      "RoutineNameWithParams": "create_journal_message(text,int8,text,text,jsonb,jsonb,int4)",
-      "HasOverload": true,
-      "RoutineName": "create_journal_message",
-      "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "public",
-      "UdtTypeName": "journal",
-      "ParamCount": 7,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_created_by",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_correlation_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_event_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_keys",
-          "Mode": "IN",
-          "UDTName": "jsonb",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_payload",
-          "Mode": "IN",
-          "UDTName": "jsonb",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "created_at",
-          "Mode": "OUT",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "created_by",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "correlation_id",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "journal_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "tenant_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "event_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "user_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "keys",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "data_payload",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        }
-      ]
-    },
-    {
-      "RowNumber": 3,
-      "RoutineSchema": "public",
-      "RoutineNameWithParams": "create_journal_message(text,int8,text,text,text,int8,jsonb,int4)",
-      "HasOverload": true,
-      "RoutineName": "create_journal_message",
-      "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "public",
-      "UdtTypeName": "journal",
-      "ParamCount": 8,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_created_by",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_correlation_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_event_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_entity_type",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_entity_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_payload",
-          "Mode": "IN",
-          "UDTName": "jsonb",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "created_at",
-          "Mode": "OUT",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "created_by",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "correlation_id",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "journal_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "tenant_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "event_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "user_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "keys",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "data_payload",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        }
-      ]
-    },
-    {
-      "RowNumber": 4,
-      "RoutineSchema": "public",
       "RoutineNameWithParams": "create_journal_message(text,int8,text,int4,jsonb,jsonb,int4)",
-      "HasOverload": true,
+      "HasOverload": false,
       "RoutineName": "create_journal_message",
       "SpecificName": "",
       "DataType": "USER-DEFINED",
@@ -1442,6 +991,457 @@
         },
         {
           "OrdinalPosition": 7,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "created_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "created_by",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "correlation_id",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "journal_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "event_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "user_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "keys",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "data_payload",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": true,
+          "IsOptional": true
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "public",
+      "RoutineNameWithParams": "create_journal_message_by_code(text,int8,text,text,jsonb,jsonb,int4)",
+      "HasOverload": false,
+      "RoutineName": "create_journal_message_by_code",
+      "SpecificName": "",
+      "DataType": "USER-DEFINED",
+      "UdtTypeScheme": "public",
+      "UdtTypeName": "journal",
+      "ParamCount": 7,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_event_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_keys",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_payload",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "created_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "created_by",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "correlation_id",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "journal_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "event_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "user_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "keys",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "data_payload",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": true,
+          "IsOptional": true
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "public",
+      "RoutineNameWithParams": "create_journal_message_for_entity(text,int8,text,int4,text,int8,jsonb,int4)",
+      "HasOverload": false,
+      "RoutineName": "create_journal_message_for_entity",
+      "SpecificName": "",
+      "DataType": "USER-DEFINED",
+      "UdtTypeScheme": "public",
+      "UdtTypeName": "journal",
+      "ParamCount": 8,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_event_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_entity_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_entity_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_payload",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "created_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "created_by",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "correlation_id",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "journal_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "event_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "user_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "keys",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "data_payload",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": true,
+          "IsOptional": true
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "public",
+      "RoutineNameWithParams": "create_journal_message_for_entity_by_code(text,int8,text,text,text,int8,jsonb,int4)",
+      "HasOverload": false,
+      "RoutineName": "create_journal_message_for_entity_by_code",
+      "SpecificName": "",
+      "DataType": "USER-DEFINED",
+      "UdtTypeScheme": "public",
+      "UdtTypeName": "journal",
+      "ParamCount": 8,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_event_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_entity_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_entity_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_payload",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -15348,150 +15348,6 @@
         },
         {
           "OrdinalPosition": 2,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 1,
-      "RoutineSchema": "auth",
-      "RoutineNameWithParams": "throw_no_permission(int8,_text)",
-      "HasOverload": true,
-      "RoutineName": "throw_no_permission",
-      "SpecificName": "",
-      "DataType": "void",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "void",
-      "ParamCount": 2,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_perm_codes",
-          "Mode": "IN",
-          "UDTName": "_text",
-          "IsNullable": false,
-          "IsOptional": false
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 2,
-      "RoutineSchema": "auth",
-      "RoutineNameWithParams": "throw_no_permission(int8,_text,int4)",
-      "HasOverload": true,
-      "RoutineName": "throw_no_permission",
-      "SpecificName": "",
-      "DataType": "void",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "void",
-      "ParamCount": 3,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_perm_codes",
-          "Mode": "IN",
-          "UDTName": "_text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 3,
-      "RoutineSchema": "auth",
-      "RoutineNameWithParams": "throw_no_permission(int8,text)",
-      "HasOverload": true,
-      "RoutineName": "throw_no_permission",
-      "SpecificName": "",
-      "DataType": "void",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "void",
-      "ParamCount": 2,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_perm_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 4,
-      "RoutineSchema": "auth",
-      "RoutineNameWithParams": "throw_no_permission(int8,text,int4)",
-      "HasOverload": true,
-      "RoutineName": "throw_no_permission",
-      "SpecificName": "",
-      "DataType": "void",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "void",
-      "ParamCount": 3,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_perm_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",

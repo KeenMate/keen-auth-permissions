@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Git/KM/keen_auth/**)",
+      "Read(//c/Git/KM/dhl-rdm-organiogram/backend/**)",
+      "Read(//c/Git/KM/dhl-rdm-organiogram/backend/db-gen/**)",
+      "Bash(mkdir:*)",
+      "Read(//c/Git/KM/db-gen/**)",
+      "Bash(mix compile:*)",
+      "Bash(./db-gen-win.exe:*)",
+      "Bash(echo:*)",
+      "Bash(ls:*)",
+      "Bash(mix format:*)",
+      "Bash(mix test)",
+      "Bash(mix test:*)",
+      "Bash(grep:*)",
+      "Bash(MIX_ENV=test mix test:*)",
+      "Bash(mix run:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(mix phx.new:*)",
+      "Bash(mix deps.get:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

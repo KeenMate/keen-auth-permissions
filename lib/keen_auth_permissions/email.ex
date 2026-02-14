@@ -8,7 +8,7 @@ defmodule KeenAuthPermissions.Email do
           password :: binary(),
           validation :: (password :: binary(), password_hash :: binary() -> boolean())
         ) ::
-          {:ok,any()}
+          {:ok, any()}
           | {:error, :unauthenticated}
           | {:error, KeenAuthPermissions.Error.ErrorStruct.t()}
   def authenticate(conn, email, password, validation) do

@@ -1,0 +1,3 @@
+{
+	"ConnectionString": "postgresql://ovalenta:Nocnijezdec!@db-01.km8.local:5432/postgresql_permissionmodel"
+}

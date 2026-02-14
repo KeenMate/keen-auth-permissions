@@ -1,47 +1,40 @@
 defmodule KeenAuthPermissions.Providers.UsersProvider do
-  alias KeenAuthPermissions.Error.ErrorParsers
+  @moduledoc """
+  DEPRECATED: Use `KeenAuthPermissions.Users` instead.
 
-  def db_context() do
-    KeenAuthPermissions.DbContext.get_global_db_context()
+  This module is kept for backward compatibility and delegates to the new facade.
+  """
+
+  @deprecated "Use KeenAuthPermissions.Users instead"
+
+  alias KeenAuthPermissions.Users
+  alias KeenAuthPermissions.User
+  alias KeenAuthPermissions.RequestContext
+
+  defp ctx(%User{} = user), do: RequestContext.new(user)
+
+  @doc deprecated: "Use KeenAuthPermissions.Users.list/2 instead"
+  def get_all_users(%User{} = user, tenant_id \\ 1) do
+    Users.list(ctx(user), tenant_id)
   end
 
-  def get_all_users(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        tenant_id \\ 1
-      ) do
-    db_context().auth_get_tenant_users(username, user_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.Users.enable/2 instead"
+  def enable_user(%User{} = user, target_user_id) do
+    Users.enable(ctx(user), target_user_id)
   end
 
-  def enable_user(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        target_user_id
-      ) do
-    db_context().auth_enable_user(username, user_id, target_user_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.Users.disable/2 instead"
+  def disable_user(%User{} = user, target_user_id) do
+    Users.disable(ctx(user), target_user_id)
   end
 
-  def disable_user(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        target_user_id
-      ) do
-    db_context().auth_disable_user(username, user_id, target_user_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.Users.lock/2 instead"
+  def lock_user(%User{} = user, target_user_id) do
+    Users.lock(ctx(user), target_user_id)
   end
 
-  def lock_user(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        target_user_id
-      ) do
-    db_context().auth_lock_user(username, user_id, target_user_id)
-    |> ErrorParsers.parse_if_error()
-  end
-
-  def unlock_user(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        target_user_id
-      ) do
-    db_context().auth_unlock_user(username, user_id, target_user_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.Users.unlock/2 instead"
+  def unlock_user(%User{} = user, target_user_id) do
+    Users.unlock(ctx(user), target_user_id)
   end
 end

@@ -1,59 +1,58 @@
 defmodule KeenAuthPermissions.Providers.PermissionsProvider do
-  alias KeenAuthPermissions.Error.ErrorParsers
+  @moduledoc """
+  DEPRECATED: Use `KeenAuthPermissions.Permissions` and `KeenAuthPermissions.PermSets` instead.
 
-  def db_context() do
-    KeenAuthPermissions.DbContext.get_global_db_context()
-  end
+  This module is kept for backward compatibility and delegates to the new facades.
+  """
 
+  @deprecated "Use KeenAuthPermissions.Permissions or KeenAuthPermissions.PermSets instead"
+
+  alias KeenAuthPermissions.Permissions
+  alias KeenAuthPermissions.PermSets
+  alias KeenAuthPermissions.User
+  alias KeenAuthPermissions.RequestContext
+
+  defp ctx(%User{} = user), do: RequestContext.new(user)
+
+  @doc deprecated: "Use KeenAuthPermissions.Permissions.assign/6 instead"
   def assign_permission(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
+        %User{} = user,
         user_group_id,
         target_user_id,
         perm_set_code,
         perm_code,
         tenant_id \\ 1
       ) do
-    db_context().auth_assign_permission(
-      username,
-      user_id,
-      user_group_id,
-      target_user_id,
-      perm_set_code,
-      perm_code,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+    # Returns list for backward compatibility
+    case Permissions.assign(
+           ctx(user),
+           user_group_id,
+           target_user_id,
+           perm_set_code,
+           perm_code,
+           tenant_id
+         ) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def unassign_permission(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        assignment_id,
-        tenant_id \\ 1
-      ) do
-    db_context().auth_unassign_permission(
-      username,
-      user_id,
-      assignment_id,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.Permissions.unassign/3 instead"
+  def unassign_permission(%User{} = user, assignment_id, tenant_id \\ 1) do
+    # Returns list for backward compatibility
+    case Permissions.unassign(ctx(user), assignment_id, tenant_id) do
+      {:ok, result} -> {:ok, [result]}
+      error -> error
+    end
   end
 
-  def get_permissions(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        tenant_id \\ 1
-      ) do
-    db_context().auth_get_all_permissions(username, user_id, tenant_id)
-    |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.Permissions.list/2 instead"
+  def get_permissions(%User{} = user, tenant_id \\ 1) do
+    Permissions.list(ctx(user), tenant_id)
   end
 
-  def get_perm_sets(
-        %KeenAuthPermissions.User{username: username, user_id: user_id},
-        tenant_id \\ 1
-      ) do
-    db_context().auth_get_perm_sets(username, user_id, tenant_id) |> ErrorParsers.parse_if_error()
+  @doc deprecated: "Use KeenAuthPermissions.PermSets.list/2 instead"
+  def get_perm_sets(%User{} = user, tenant_id \\ 1) do
+    PermSets.list(ctx(user), tenant_id)
   end
-
-  # get all permissions
-  # get all perm sets
 end

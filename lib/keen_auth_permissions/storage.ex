@@ -10,7 +10,6 @@ defmodule KeenAuthPermissions.Storage do
     put_in(conn, @groups_path, items)
   end
 
-
   def get_groups(conn) do
     get_in(conn, @groups_path)
   end

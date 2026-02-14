@@ -1,110 +1,101 @@
 defmodule KeenAuthPermissions.Managers.GroupsManager do
+  @moduledoc """
+  DEPRECATED: Use `KeenAuthPermissions.UserGroups` and `KeenAuthPermissions.Permissions` instead.
+
+  This module is kept for backward compatibility and delegates to the new facades.
+  """
+
+  @deprecated "Use KeenAuthPermissions.UserGroups or KeenAuthPermissions.Permissions instead"
+
   require Logger
 
-  alias KeenAuthPermissions.Providers.GroupsProvider
-  alias KeenAuthPermissions.Providers.PermissionsProvider
+  alias KeenAuthPermissions.UserGroups
+  alias KeenAuthPermissions.Permissions
   alias KeenAuthPermissions.User
+  alias KeenAuthPermissions.RequestContext
 
   import KeenAuthPermissions.Managers.ManagerHelpers
 
+  defp ctx(%User{} = user), do: RequestContext.new(user)
+
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list/2 instead"
   def get_groups(%User{} = user, tenant \\ 1) do
-    GroupsProvider.get_groups(user, num(tenant))
+    UserGroups.list(ctx(user), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.enable/3 instead"
   def enable_group(%User{} = user, group_id, tenant \\ 1) do
-    GroupsProvider.enable_group(user, num(group_id), num(tenant))
+    UserGroups.enable(ctx(user), num(group_id), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.disable/3 instead"
   def disable_group(%User{} = user, group_id, tenant \\ 1) do
-    GroupsProvider.disable_group(user, num(group_id), num(tenant))
+    UserGroups.disable(ctx(user), num(group_id), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.lock/3 instead"
   def lock_group(%User{} = user, group_id, tenant \\ 1) do
-    GroupsProvider.lock_group(user, num(group_id), num(tenant))
+    UserGroups.lock(ctx(user), num(group_id), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.unlock/3 instead"
   def unlock_group(%User{} = user, group_id, tenant \\ 1) do
-    GroupsProvider.unlock_group(user, num(group_id), num(tenant))
+    UserGroups.unlock(ctx(user), num(group_id), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.delete/3 instead"
   def delete_group(%User{} = user, group_id, tenant \\ 1) do
-    GroupsProvider.delete_group(user, num(group_id), num(tenant))
+    UserGroups.delete(ctx(user), num(group_id), num(tenant))
   end
 
+  @doc deprecated:
+         "Use KeenAuthPermissions.UserGroups.get_by_id/3, list_members/3, and list_mappings/3 instead"
   def group_info(%User{} = user, group_id, tenant \\ 1) do
-    with {:ok, [group_info]} <- GroupsProvider.group_info(user, num(group_id), num(tenant)),
-         {:ok, members} <-
-           GroupsProvider.get_group_members(user, num(group_id), num(tenant)),
-         {:ok, mappings} <-
-           get_user_group_mappings(%User{} = user, num(group_id), num(tenant)) do
+    with {:ok, group_info} <- UserGroups.get_by_id(ctx(user), num(group_id), num(tenant)),
+         {:ok, members} <- UserGroups.list_members(ctx(user), num(group_id), num(tenant)),
+         {:ok, mappings} <- get_user_group_mappings(user, num(group_id), num(tenant)) do
       group_info = Map.put(group_info, :members, members)
       group_info = Map.put(group_info, :mappings, mappings)
       {:ok, group_info}
     end
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list_members/3 instead"
   def get_group_members(%User{} = user, group, tenant \\ 1) do
-    GroupsProvider.get_group_members(user, num(group), num(tenant))
+    UserGroups.list_members(ctx(user), num(group), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.create/7 instead"
   def create_group(%User{} = user, group, tenant \\ 1) do
     is_assignable = Map.get(group, :is_assignable, true)
     is_active = Map.get(group, :is_active, true)
     is_external = Map.get(group, :is_external, false)
     is_default = Map.get(group, :is_default, false)
 
-    with {:ok, [new_group_id]} <-
-           GroupsProvider.create_group(
-             user,
-             group.title,
-             is_assignable,
-             is_active,
-             is_external,
-             is_default,
-             num(tenant)
-           ) do
-      {:ok, new_group_id}
-    end
+    UserGroups.create(
+      ctx(user),
+      group.title,
+      is_assignable,
+      is_active,
+      is_external,
+      is_default,
+      num(tenant)
+    )
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.add_member/4 instead"
   def add_member_to_group(%User{} = user, group_id, target_user_id, tenant \\ 1) do
-    user = user
-    tenant = num(tenant)
-    group_id = num(group_id)
-    target_user_id = num(target_user_id)
-
-    with {:ok, [member_id]} <-
-           GroupsProvider.add_group_member(user, group_id, target_user_id, tenant) do
-      {:ok, member_id}
-    end
+    UserGroups.add_member(ctx(user), num(group_id), num(target_user_id), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.remove_member/4 instead"
   def remove_member_from_group(%User{} = user, group_id, target_user_id, tenant \\ 1) do
-    user = user
-    tenant = num(tenant)
-    group_id = num(group_id)
-    target_user_id = num(target_user_id)
-
-    with {:ok, [member_id]} <-
-           GroupsProvider.remove_group_member(user, group_id, target_user_id, tenant) do
-      {:ok, member_id}
-    end
+    UserGroups.remove_member(ctx(user), num(group_id), num(target_user_id), num(tenant))
   end
 
-  def get_user_group_mappings(
-        %User{} = user,
-        group_id,
-        tenant
-      ) do
-    user = user
-    tenant = num(tenant)
-    group_id = num(group_id)
-
-    case GroupsProvider.get_user_group_mapping(
-           user,
-           group_id,
-           tenant
-         ) do
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list_mappings/3 instead"
+  def get_user_group_mappings(%User{} = user, group_id, tenant) do
+    case UserGroups.list_mappings(ctx(user), num(group_id), num(tenant)) do
       {:ok, data} ->
         data = Enum.map(data, &transform_group_maping(&1))
         {:ok, data}
@@ -121,7 +112,6 @@ defmodule KeenAuthPermissions.Managers.GroupsManager do
 
   defp transform_group_maping(mapping) do
     # add value and type fields matching values you send when creating new mapping
-
     type = if mapping.mapped_role != nil, do: :role, else: :group
 
     value =
@@ -136,6 +126,7 @@ defmodule KeenAuthPermissions.Managers.GroupsManager do
     |> Map.put(:name, mapping.mapped_object_name)
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.create_mapping/7 instead"
   def create_user_group_mapping(
         %User{} = user,
         group_id,
@@ -145,53 +136,35 @@ defmodule KeenAuthPermissions.Managers.GroupsManager do
         mapping_type,
         tenant \\ 1
       ) do
-    user = user
-    tenant = num(tenant)
-    group_id = num(group_id)
-
     {mapped_object_id, mapped_role} =
       case mapping_type do
-        "role" ->
-          {nil, mapped_target}
-
-        "group" ->
-          {mapped_target, nil}
+        "role" -> {nil, mapped_target}
+        "group" -> {mapped_target, nil}
       end
 
-    with {:ok, [result]} <-
-           GroupsProvider.create_user_group_mapping(
-             user,
-             group_id,
-             provider_code,
-             mapped_object_id,
-             mapped_object_name,
-             mapped_role,
-             tenant
-           ) do
-      {:ok, result}
-    end
+    UserGroups.create_mapping(
+      ctx(user),
+      num(group_id),
+      provider_code,
+      mapped_object_id,
+      mapped_object_name,
+      mapped_role,
+      num(tenant)
+    )
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.delete_mapping/3 instead"
   def delete_user_group_mapping(%User{} = user, group_mapping_id, tenant \\ 1) do
-    user = user
-    tenant = num(tenant)
-    group_mapping_id = num(group_mapping_id)
-
-    GroupsProvider.delete_user_group_mapping(user, group_mapping_id, tenant)
+    UserGroups.delete_mapping(ctx(user), num(group_mapping_id), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.UserGroups.list_assigned_permissions/3 instead"
   def get_assigned_permissions(%User{} = user, group, tenant \\ 1) do
-    user = user
-    tenant = num(tenant)
-    group = num(group)
-
-    GroupsProvider.get_assigned_permissions(user, group, tenant)
+    UserGroups.list_assigned_permissions(ctx(user), num(group), num(tenant))
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.Permissions.assign/6 instead"
   def assign_permission(%User{} = user, group_id, perm_code, perm_set_code, tenant \\ 1) do
-    user = user
-    group_id = num(group_id)
-
     cond do
       perm_code == nil and perm_set_code == nil ->
         {:error, :both_cant_be_null}
@@ -200,21 +173,12 @@ defmodule KeenAuthPermissions.Managers.GroupsManager do
         {:error, :cannot_use_both}
 
       true ->
-        PermissionsProvider.assign_permission(
-          user,
-          group_id,
-          nil,
-          perm_set_code,
-          perm_code,
-          tenant
-        )
+        Permissions.assign(ctx(user), num(group_id), nil, perm_set_code, perm_code, tenant)
     end
   end
 
+  @doc deprecated: "Use KeenAuthPermissions.Permissions.unassign/3 instead"
   def unassign_permission(%User{} = user, assignment_id, tenant \\ 1) do
-    user = user
-    assignment_id = num(assignment_id)
-
-    PermissionsProvider.unassign_permission(user, assignment_id, tenant)
+    Permissions.unassign(ctx(user), num(assignment_id), tenant)
   end
 end

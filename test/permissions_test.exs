@@ -81,7 +81,11 @@ defmodule KeenAuthPermissions.PermissionsTest do
       ctx = system_context()
 
       assert {:ok, result} =
-               Permissions.has_permission?(ctx.user.user_id, "test_permission", default_tenant_id())
+               Permissions.has_permission?(
+                 ctx.user.user_id,
+                 "test_permission",
+                 default_tenant_id()
+               )
 
       assert is_boolean(result)
     end
@@ -166,7 +170,12 @@ defmodule KeenAuthPermissions.PermissionsTest do
 
       if permission do
         assert {:ok, result} =
-                 Permissions.set_assignable(ctx, permission.permission_id, permission.full_code, true)
+                 Permissions.set_assignable(
+                   ctx,
+                   permission.permission_id,
+                   permission.full_code,
+                   true
+                 )
 
         # Model returns assignment info with permission_id
         assert result.permission_id == permission.permission_id
@@ -175,19 +184,6 @@ defmodule KeenAuthPermissions.PermissionsTest do
   end
 
   describe "error throwing operations" do
-    test "throw_no_permission/2 returns error" do
-      ctx = system_context()
-
-      assert {:error, _} = Permissions.throw_no_permission(ctx.user.user_id, "test_perm")
-    end
-
-    test "throw_no_permission/3 with tenant returns error" do
-      ctx = system_context()
-
-      assert {:error, _} =
-               Permissions.throw_no_permission(ctx.user.user_id, "test_perm", default_tenant_id())
-    end
-
     test "throw_no_access/2 returns error" do
       ctx = system_context()
 

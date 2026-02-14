@@ -58,22 +58,6 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.check_version
       """
-      @spec check_version(String.t(), String.t()) ::
-              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
-      def check_version(version, component) do
-        Logger.debug("Calling stored procedure", procedure: "check_version")
-
-        query(
-          "select * from public.check_version($1, $2)",
-          [version, component]
-        )
-        |> Parsers.CheckVersionParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.check_version
-      """
       @spec check_version(String.t(), String.t(), boolean()) ::
               {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
       def check_version(version, component, throw_err) do
@@ -82,6 +66,22 @@ defmodule KeenAuthPermissions.Database do
         query(
           "select * from public.check_version($1, $2, $3)",
           [version, component, throw_err]
+        )
+        |> Parsers.CheckVersionParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function public.check_version
+      """
+      @spec check_version(String.t(), String.t()) ::
+              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
+      def check_version(version, component) do
+        Logger.debug("Calling stored procedure", procedure: "check_version")
+
+        query(
+          "select * from public.check_version($1, $2)",
+          [version, component]
         )
         |> Parsers.CheckVersionParser.parse_result()
       end
@@ -154,54 +154,6 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.create_journal_message
       """
-      @spec create_journal_message(String.t(), integer(), String.t(), integer(), String.t(), integer(), map() | list(), integer()) ::
-              {:ok, [Models.CreateJournalMessageModel.t()]} | {:error, any()}
-      def create_journal_message(created_by, user_id, correlation_id, event_id, entity_type, entity_id, payload, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "create_journal_message")
-
-        query(
-          "select * from public.create_journal_message($1, $2, $3, $4, $5, $6, $7, $8)",
-          [created_by, user_id, correlation_id, event_id, entity_type, entity_id, payload, tenant_id]
-        )
-        |> Parsers.CreateJournalMessageParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.create_journal_message
-      """
-      @spec create_journal_message(String.t(), integer(), String.t(), String.t(), map() | list(), map() | list(), integer()) ::
-              {:ok, [Models.CreateJournalMessageModel.t()]} | {:error, any()}
-      def create_journal_message(created_by, user_id, correlation_id, event_code, keys, payload, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "create_journal_message")
-
-        query(
-          "select * from public.create_journal_message($1, $2, $3, $4, $5, $6, $7)",
-          [created_by, user_id, correlation_id, event_code, keys, payload, tenant_id]
-        )
-        |> Parsers.CreateJournalMessageParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.create_journal_message
-      """
-      @spec create_journal_message(String.t(), integer(), String.t(), String.t(), String.t(), integer(), map() | list(), integer()) ::
-              {:ok, [Models.CreateJournalMessageModel.t()]} | {:error, any()}
-      def create_journal_message(created_by, user_id, correlation_id, event_code, entity_type, entity_id, payload, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "create_journal_message")
-
-        query(
-          "select * from public.create_journal_message($1, $2, $3, $4, $5, $6, $7, $8)",
-          [created_by, user_id, correlation_id, event_code, entity_type, entity_id, payload, tenant_id]
-        )
-        |> Parsers.CreateJournalMessageParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.create_journal_message
-      """
       @spec create_journal_message(String.t(), integer(), String.t(), integer(), map() | list(), map() | list(), integer()) ::
               {:ok, [Models.CreateJournalMessageModel.t()]} | {:error, any()}
       def create_journal_message(created_by, user_id, correlation_id, event_id, keys, payload, tenant_id) do
@@ -212,6 +164,54 @@ defmodule KeenAuthPermissions.Database do
           [created_by, user_id, correlation_id, event_id, keys, payload, tenant_id]
         )
         |> Parsers.CreateJournalMessageParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function public.create_journal_message_by_code
+      """
+      @spec create_journal_message_by_code(String.t(), integer(), String.t(), String.t(), map() | list(), map() | list(), integer()) ::
+              {:ok, [Models.CreateJournalMessageByCodeModel.t()]} | {:error, any()}
+      def create_journal_message_by_code(created_by, user_id, correlation_id, event_code, keys, payload, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "create_journal_message_by_code")
+
+        query(
+          "select * from public.create_journal_message_by_code($1, $2, $3, $4, $5, $6, $7)",
+          [created_by, user_id, correlation_id, event_code, keys, payload, tenant_id]
+        )
+        |> Parsers.CreateJournalMessageByCodeParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function public.create_journal_message_for_entity
+      """
+      @spec create_journal_message_for_entity(String.t(), integer(), String.t(), integer(), String.t(), integer(), map() | list(), integer()) ::
+              {:ok, [Models.CreateJournalMessageForEntityModel.t()]} | {:error, any()}
+      def create_journal_message_for_entity(created_by, user_id, correlation_id, event_id, entity_type, entity_id, payload, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "create_journal_message_for_entity")
+
+        query(
+          "select * from public.create_journal_message_for_entity($1, $2, $3, $4, $5, $6, $7, $8)",
+          [created_by, user_id, correlation_id, event_id, entity_type, entity_id, payload, tenant_id]
+        )
+        |> Parsers.CreateJournalMessageForEntityParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function public.create_journal_message_for_entity_by_code
+      """
+      @spec create_journal_message_for_entity_by_code(String.t(), integer(), String.t(), String.t(), String.t(), integer(), map() | list(), integer()) ::
+              {:ok, [Models.CreateJournalMessageForEntityByCodeModel.t()]} | {:error, any()}
+      def create_journal_message_for_entity_by_code(created_by, user_id, correlation_id, event_code, entity_type, entity_id, payload, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "create_journal_message_for_entity_by_code")
+
+        query(
+          "select * from public.create_journal_message_for_entity_by_code($1, $2, $3, $4, $5, $6, $7, $8)",
+          [created_by, user_id, correlation_id, event_code, entity_type, entity_id, payload, tenant_id]
+        )
+        |> Parsers.CreateJournalMessageForEntityByCodeParser.parse_result()
       end
 
 
@@ -2492,78 +2492,6 @@ defmodule KeenAuthPermissions.Database do
         case query(
           "select * from auth.throw_no_access($1, $2)",
           [username, tenant_id]
-        ) do
-          {:ok, _} -> :ok
-          {:error, _} = err -> err
-        end
-      end
-
-
-      @doc """
-      Calls database function auth.throw_no_permission
-      """
-      @spec auth_throw_no_permission(integer(), list(String.t())) ::
-              :ok | {:error, any()}
-      def auth_throw_no_permission(user_id, perm_codes) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        case query(
-          "select * from auth.throw_no_permission($1, $2)",
-          [user_id, perm_codes]
-        ) do
-          {:ok, _} -> :ok
-          {:error, _} = err -> err
-        end
-      end
-
-
-      @doc """
-      Calls database function auth.throw_no_permission
-      """
-      @spec auth_throw_no_permission(integer(), list(String.t()), integer()) ::
-              :ok | {:error, any()}
-      def auth_throw_no_permission(user_id, perm_codes, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        case query(
-          "select * from auth.throw_no_permission($1, $2, $3)",
-          [user_id, perm_codes, tenant_id]
-        ) do
-          {:ok, _} -> :ok
-          {:error, _} = err -> err
-        end
-      end
-
-
-      @doc """
-      Calls database function auth.throw_no_permission
-      """
-      @spec auth_throw_no_permission(integer(), String.t()) ::
-              :ok | {:error, any()}
-      def auth_throw_no_permission(user_id, perm_code) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        case query(
-          "select * from auth.throw_no_permission($1, $2)",
-          [user_id, perm_code]
-        ) do
-          {:ok, _} -> :ok
-          {:error, _} = err -> err
-        end
-      end
-
-
-      @doc """
-      Calls database function auth.throw_no_permission
-      """
-      @spec auth_throw_no_permission(integer(), String.t(), integer()) ::
-              :ok | {:error, any()}
-      def auth_throw_no_permission(user_id, perm_code, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "throw_no_permission")
-
-        case query(
-          "select * from auth.throw_no_permission($1, $2, $3)",
-          [user_id, perm_code, tenant_id]
         ) do
           {:ok, _} -> :ok
           {:error, _} = err -> err
