@@ -38,8 +38,14 @@ defmodule KeenAuthPermissions.Permissions do
   Returns permissions with fields: `permission_id`, `is_assignable`, `title`, `code`, `full_code`, `has_children`, `short_code`.
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
-  def list(%RequestContext{user: %User{username: username, user_id: user_id}, correlation_id: correlation_id}, tenant_id) do
-    db_context().auth_get_all_permissions(username, user_id, correlation_id, tenant_id)
+  def list(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        tenant_id
+      ) do
+    db_context().auth_get_all_permissions(username, user_id, request_id, tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -72,7 +78,7 @@ defmodule KeenAuthPermissions.Permissions do
           integer()
         ) :: {:ok, list()} | {:error, any()}
   def search(
-        %RequestContext{user: %User{user_id: user_id}, correlation_id: correlation_id},
+        %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         search_text,
         is_assignable,
         parent_code,
@@ -82,7 +88,7 @@ defmodule KeenAuthPermissions.Permissions do
       ) do
     db_context().auth_search_permissions(
       user_id,
-      correlation_id,
+      request_id,
       search_text,
       is_assignable,
       parent_code,
@@ -112,7 +118,10 @@ defmodule KeenAuthPermissions.Permissions do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def assign(
-        %RequestContext{user: %User{username: username, user_id: user_id}, correlation_id: correlation_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         user_group_id,
         target_user_id,
         perm_set_code,
@@ -122,7 +131,7 @@ defmodule KeenAuthPermissions.Permissions do
     case db_context().auth_assign_permission(
            username,
            user_id,
-           correlation_id,
+           request_id,
            user_group_id,
            target_user_id,
            perm_set_code,
@@ -142,8 +151,21 @@ defmodule KeenAuthPermissions.Permissions do
   Calls `auth.unassign_permission`.
   """
   @spec unassign(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
-  def unassign(%RequestContext{user: %User{username: username, user_id: user_id}, correlation_id: correlation_id}, assignment_id, tenant_id) do
-    case db_context().auth_unassign_permission(username, user_id, correlation_id, assignment_id, tenant_id)
+  def unassign(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        assignment_id,
+        tenant_id
+      ) do
+    case db_context().auth_unassign_permission(
+           username,
+           user_id,
+           request_id,
+           assignment_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, :unassign_failed}
@@ -170,7 +192,10 @@ defmodule KeenAuthPermissions.Permissions do
   @spec create(RequestContext.t(), String.t(), String.t(), boolean(), String.t() | nil) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{user: %User{username: username, user_id: user_id}, correlation_id: correlation_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         title,
         parent_full_code,
         is_assignable,
@@ -179,7 +204,7 @@ defmodule KeenAuthPermissions.Permissions do
     case db_context().auth_create_permission(
            username,
            user_id,
-           correlation_id,
+           request_id,
            title,
            parent_full_code,
            is_assignable,
@@ -205,7 +230,10 @@ defmodule KeenAuthPermissions.Permissions do
           boolean()
         ) :: {:ok, map()} | {:error, any()}
   def set_assignable(
-        %RequestContext{user: %User{username: username, user_id: user_id}, correlation_id: correlation_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         permission_id,
         permission_full_code,
         is_assignable
@@ -213,7 +241,7 @@ defmodule KeenAuthPermissions.Permissions do
     case db_context().auth_set_permission_as_assignable(
            username,
            user_id,
-           correlation_id,
+           request_id,
            permission_id,
            permission_full_code,
            is_assignable
