@@ -26,7 +26,8 @@ defmodule KeenAuthPermissions.MixProject do
       {:ex_doc, "~> 0.34", only: :dev, runtime: false},
       {:keen_auth, "~> 1.0"},
       {:jason, "~> 1.4"},
-      {:postgrex, "~> 0.19"}
+      {:postgrex, "~> 0.19"},
+      {:pbkdf2_elixir, "~> 2.0"}
     ]
   end
 

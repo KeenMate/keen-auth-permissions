@@ -26,6 +26,79 @@ defmodule KeenAuthPermissions.Auth do
   defp db_context(), do: KeenAuthPermissions.DbContext.get_global_db_context()
 
   # ============================================================================
+  # Email Authentication Helpers (no RequestContext required)
+  # ============================================================================
+
+  @doc """
+  Authenticates a user by email and password.
+
+  This is a convenience function for email-based login that doesn't require
+  a RequestContext. It verifies the credentials and returns the user if valid.
+
+  ## Examples
+
+      Auth.authenticate_by_email("user@example.com", "password123")
+      # => {:ok, %{user_id: 1, email: "user@example.com", ...}}
+      # => {:error, :invalid_credentials}
+  """
+  @spec authenticate_by_email(String.t(), String.t(), keyword()) :: {:ok, map()} | {:error, any()}
+  def authenticate_by_email(email, password, opts \\ []) do
+    # Use system user_id (1) and a correlation ID for unauthenticated requests
+    correlation_id = "auth-#{:erlang.unique_integer([:positive])}"
+    ip = Keyword.get(opts, :ip)
+    user_agent = Keyword.get(opts, :user_agent)
+    origin = Keyword.get(opts, :origin)
+
+    case db_context().auth_get_user_by_email_for_authentication(1, correlation_id, email, ip, user_agent, origin) do
+      {:ok, [user]} ->
+        if verify_password(password, user.password_hash) do
+          {:ok, user}
+        else
+          {:error, :invalid_credentials}
+        end
+
+      {:ok, []} ->
+        # Timing attack mitigation - still do password check
+        Pbkdf2.no_user_verify()
+        {:error, :invalid_credentials}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Registers a new user with email and password.
+
+  This is a convenience function that doesn't require a RequestContext.
+  It creates a new user with the given email, password, and display name.
+
+  ## Examples
+
+      Auth.register_user("user@example.com", "password123", "John Doe")
+      # => {:ok, %{user_id: 1, email: "user@example.com", ...}}
+      # => {:error, %ErrorStruct{reason: :email_taken, ...}}
+  """
+  @spec register_user(String.t(), String.t(), String.t(), map() | nil) ::
+          {:ok, map()} | {:error, any()}
+  def register_user(email, password, display_name, user_data \\ nil) do
+    password_hash = hash_password(password)
+    ctx = RequestContext.system_ctx()
+
+    register(ctx, email, password_hash, display_name, user_data)
+  end
+
+  defp hash_password(password) do
+    Pbkdf2.hash_pwd_salt(password)
+  end
+
+  defp verify_password(_password, nil), do: false
+  defp verify_password(_password, ""), do: false
+  defp verify_password(password, hash) do
+    Pbkdf2.verify_pass(password, hash)
+  end
+
+  # ============================================================================
   # Registration Operations
   # ============================================================================
 
@@ -39,7 +112,10 @@ defmodule KeenAuthPermissions.Auth do
   def register(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
-          request_id: request_id
+          request_id: request_id,
+          ip: ip,
+          user_agent: user_agent,
+          origin: origin
         },
         email,
         password_hash,
@@ -53,7 +129,10 @@ defmodule KeenAuthPermissions.Auth do
            email,
            password_hash,
            display_name,
-           user_data
+           user_data,
+           ip,
+           user_agent,
+           origin
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}

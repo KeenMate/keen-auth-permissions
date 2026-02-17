@@ -19,7 +19,8 @@
       "Bash(find:*)",
       "Bash(git add:*)",
       "Bash(mix phx.new:*)",
-      "Bash(mix deps.get:*)"
+      "Bash(mix deps.get:*)",
+      "Bash(mix deps.clean:*)"
     ],
     "deny": [],
     "ask": []

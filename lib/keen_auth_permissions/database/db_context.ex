@@ -1404,14 +1404,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function auth.ensure_user_from_provider
       """
-      @spec auth_ensure_user_from_provider(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), String.t(), String.t(), String.t(), map()) ::
+      @spec auth_ensure_user_from_provider(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), String.t(), String.t(), String.t(), map(), String.t(), String.t(), String.t()) ::
               {:ok, [Models.AuthEnsureUserFromProviderModel.t()]} | {:error, any()}
-      def auth_ensure_user_from_provider(created_by, user_id, correlation_id, provider_code, provider_uid, provider_oid, username, display_name, email, user_data) do
+      def auth_ensure_user_from_provider(created_by, user_id, correlation_id, provider_code, provider_uid, provider_oid, username, display_name, email, user_data, ip_address, user_agent, origin) do
         Logger.debug("Calling stored procedure", procedure: "ensure_user_from_provider")
 
         query(
-          "select * from auth.ensure_user_from_provider($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-          [created_by, user_id, correlation_id, provider_code, provider_uid, provider_oid, username, display_name, email, user_data]
+          "select * from auth.ensure_user_from_provider($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+          [created_by, user_id, correlation_id, provider_code, provider_uid, provider_oid, username, display_name, email, user_data, ip_address, user_agent, origin]
         )
         |> Parsers.AuthEnsureUserFromProviderParser.parse_result()
       end
@@ -1804,14 +1804,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function auth.get_user_by_email_for_authentication
       """
-      @spec auth_get_user_by_email_for_authentication(integer(), String.t(), String.t()) ::
+      @spec auth_get_user_by_email_for_authentication(integer(), String.t(), String.t(), String.t(), String.t(), String.t()) ::
               {:ok, [Models.AuthGetUserByEmailForAuthenticationModel.t()]} | {:error, any()}
-      def auth_get_user_by_email_for_authentication(user_id, correlation_id, email) do
+      def auth_get_user_by_email_for_authentication(user_id, correlation_id, email, ip_address, user_agent, origin) do
         Logger.debug("Calling stored procedure", procedure: "get_user_by_email_for_authentication")
 
         query(
-          "select * from auth.get_user_by_email_for_authentication($1, $2, $3)",
-          [user_id, correlation_id, email]
+          "select * from auth.get_user_by_email_for_authentication($1, $2, $3, $4, $5, $6)",
+          [user_id, correlation_id, email, ip_address, user_agent, origin]
         )
         |> Parsers.AuthGetUserByEmailForAuthenticationParser.parse_result()
       end
@@ -2188,14 +2188,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function auth.register_user
       """
-      @spec auth_register_user(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), map() | list()) ::
+      @spec auth_register_user(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), map() | list(), String.t(), String.t(), String.t()) ::
               {:ok, [Models.AuthRegisterUserModel.t()]} | {:error, any()}
-      def auth_register_user(created_by, user_id, correlation_id, email, password_hash, display_name, user_data) do
+      def auth_register_user(created_by, user_id, correlation_id, email, password_hash, display_name, user_data, ip_address, user_agent, origin) do
         Logger.debug("Calling stored procedure", procedure: "register_user")
 
         query(
-          "select * from auth.register_user($1, $2, $3, $4, $5, $6, $7)",
-          [created_by, user_id, correlation_id, email, password_hash, display_name, user_data]
+          "select * from auth.register_user($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+          [created_by, user_id, correlation_id, email, password_hash, display_name, user_data, ip_address, user_agent, origin]
         )
         |> Parsers.AuthRegisterUserParser.parse_result()
       end

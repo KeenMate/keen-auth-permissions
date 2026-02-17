@@ -263,4 +263,141 @@ defmodule KeenAuthPermissions.Tenants do
     db_context().auth_get_tenant_groups(username, user_id, request_id, tenant_id)
     |> ErrorParsers.parse_if_error()
   end
+
+  # ============================================================================
+  # User Tenant Operations
+  # ============================================================================
+
+  @doc """
+  Gets tenants available to a user.
+
+  Calls `auth.get_user_available_tenants`.
+  """
+  @spec get_user_available_tenants(RequestContext.t(), integer()) ::
+          {:ok, list()} | {:error, any()}
+  def get_user_available_tenants(
+        %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
+        target_user_id
+      ) do
+    db_context().auth_get_user_available_tenants(user_id, request_id, target_user_id)
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
+  Gets the last selected tenant for a user.
+
+  Calls `auth.get_user_last_selected_tenant`.
+  Returns a single tenant or error.
+  """
+  @spec get_user_last_selected_tenant(RequestContext.t(), integer()) ::
+          {:ok, map()} | {:error, any()}
+  def get_user_last_selected_tenant(
+        %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
+        target_user_id
+      ) do
+    case db_context().auth_get_user_last_selected_tenant(user_id, request_id, target_user_id)
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result | _]} -> {:ok, result}
+      {:ok, []} -> {:error, ErrorStruct.create(:not_found, "No last selected tenant found")}
+      error -> error
+    end
+  end
+
+  @doc """
+  Updates the last selected tenant for a user.
+
+  Calls `auth.update_user_last_selected_tenant`.
+  """
+  @spec update_user_last_selected_tenant(RequestContext.t(), integer(), String.t()) ::
+          {:ok, map()} | {:error, any()}
+  def update_user_last_selected_tenant(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        target_user_id,
+        tenant_uuid
+      ) do
+    case db_context().auth_update_user_last_selected_tenant(
+           username,
+           user_id,
+           request_id,
+           target_user_id,
+           tenant_uuid
+         )
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result | _]} -> {:ok, result}
+      {:ok, []} -> {:error, :update_failed}
+      error -> error
+    end
+  end
+
+  @doc """
+  Creates user tenant preferences.
+
+  Calls `auth.create_user_tenant_preferences`.
+  """
+  @spec create_user_tenant_preferences(RequestContext.t(), integer(), String.t(), integer()) ::
+          {:ok, map()} | {:error, any()}
+  def create_user_tenant_preferences(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        target_user_id,
+        update_data,
+        tenant_id
+      ) do
+    case db_context().auth_create_user_tenant_preferences(
+           username,
+           user_id,
+           request_id,
+           target_user_id,
+           update_data,
+           tenant_id
+         )
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result | _]} -> {:ok, result}
+      {:ok, []} -> {:error, :creation_failed}
+      error -> error
+    end
+  end
+
+  @doc """
+  Updates user tenant preferences.
+
+  Calls `auth.update_user_tenant_preferences`.
+  """
+  @spec update_user_tenant_preferences(
+          RequestContext.t(),
+          integer(),
+          String.t(),
+          boolean(),
+          integer()
+        ) :: {:ok, map()} | {:error, any()}
+  def update_user_tenant_preferences(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        target_user_id,
+        update_data,
+        should_overwrite,
+        tenant_id
+      ) do
+    case db_context().auth_update_user_tenant_preferences(
+           username,
+           user_id,
+           request_id,
+           target_user_id,
+           update_data,
+           should_overwrite,
+           tenant_id
+         )
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result | _]} -> {:ok, result}
+      {:ok, []} -> {:error, :update_failed}
+      error -> error
+    end
+  end
 end

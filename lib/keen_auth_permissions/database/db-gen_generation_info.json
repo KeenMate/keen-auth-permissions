@@ -1,6 +1,6 @@
 {
   "version": "v0.6.0-beta3",
-  "time": "2026-02-14T21:28:41.1355772+01:00",
+  "time": "2026-02-15T16:54:48.1460034+01:00",
   "routines": [
     {
       "RowNumber": 1,
@@ -8800,14 +8800,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "ensure_user_from_provider(text,int8,text,text,text,text,text,text,text,jsonb)",
+      "RoutineNameWithParams": "ensure_user_from_provider(text,int8,text,text,text,text,text,text,text,jsonb,text,text,text)",
       "HasOverload": false,
       "RoutineName": "ensure_user_from_provider",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 16,
+      "ParamCount": 19,
       "FuncType": "function",
       "InParameters": [
         {
@@ -8889,11 +8889,35 @@
           "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "_ip_address",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "_user_agent",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "_origin",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 14,
           "Name": "__user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -8901,7 +8925,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 15,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -8909,7 +8933,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 16,
           "Name": "__uuid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -8917,7 +8941,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 17,
           "Name": "__username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -8925,7 +8949,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 18,
           "Name": "__email",
           "Mode": "OUT",
           "UDTName": "text",
@@ -8933,7 +8957,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 19,
           "Name": "__display_name",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11034,14 +11058,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "get_user_by_email_for_authentication(int8,text,text)",
+      "RoutineNameWithParams": "get_user_by_email_for_authentication(int8,text,text,text,text,text)",
       "HasOverload": false,
       "RoutineName": "get_user_by_email_for_authentication",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 12,
+      "ParamCount": 15,
       "FuncType": "function",
       "InParameters": [
         {
@@ -11067,11 +11091,35 @@
           "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_ip_address",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_user_agent",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_origin",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 4,
+          "OrdinalPosition": 7,
           "Name": "__user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -11079,7 +11127,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 5,
+          "OrdinalPosition": 8,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11087,7 +11135,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 6,
+          "OrdinalPosition": 9,
           "Name": "__uuid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11095,7 +11143,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 10,
           "Name": "__username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11103,7 +11151,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 11,
           "Name": "__email",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11111,7 +11159,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 12,
           "Name": "__display_name",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11119,7 +11167,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 13,
           "Name": "__provider",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11127,7 +11175,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 14,
           "Name": "__password_hash",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11135,7 +11183,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 15,
           "Name": "__password_salt",
           "Mode": "OUT",
           "UDTName": "text",
@@ -13067,14 +13115,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "register_user(text,int8,text,text,text,text,jsonb)",
+      "RoutineNameWithParams": "register_user(text,int8,text,text,text,text,jsonb,text,text,text)",
       "HasOverload": false,
       "RoutineName": "register_user",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 13,
+      "ParamCount": 16,
       "FuncType": "function",
       "InParameters": [
         {
@@ -13132,11 +13180,35 @@
           "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_ip_address",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "_user_agent",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "_origin",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 11,
           "Name": "__user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -13144,7 +13216,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 12,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -13152,7 +13224,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 13,
           "Name": "__uuid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -13160,7 +13232,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 14,
           "Name": "__username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -13168,7 +13240,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 15,
           "Name": "__email",
           "Mode": "OUT",
           "UDTName": "text",
@@ -13176,7 +13248,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 16,
           "Name": "__display_name",
           "Mode": "OUT",
           "UDTName": "text",

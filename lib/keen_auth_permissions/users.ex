@@ -83,9 +83,25 @@ defmodule KeenAuthPermissions.Users do
   Calls `auth.get_user_by_email_for_authentication`.
   Returns a single user or error.
   """
-  @spec get_by_email_for_auth(integer(), String.t()) :: {:ok, map()} | {:error, any()}
-  def get_by_email_for_auth(user_id, email) do
-    case db_context().auth_get_user_by_email_for_authentication(user_id, email) do
+  @spec get_by_email_for_auth(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
+  def get_by_email_for_auth(
+        %RequestContext{
+          user: %User{user_id: user_id},
+          request_id: request_id,
+          ip: ip,
+          user_agent: user_agent,
+          origin: origin
+        },
+        email
+      ) do
+    case db_context().auth_get_user_by_email_for_authentication(
+           user_id,
+           request_id,
+           email,
+           ip,
+           user_agent,
+           origin
+         ) do
       {:ok, [user | _]} -> {:ok, user}
       {:ok, []} -> {:error, ErrorStruct.create(:user_not_found, "User not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -736,7 +752,10 @@ defmodule KeenAuthPermissions.Users do
   def register(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
-          request_id: request_id
+          request_id: request_id,
+          ip: ip,
+          user_agent: user_agent,
+          origin: origin
         },
         email,
         password_hash,
@@ -750,7 +769,10 @@ defmodule KeenAuthPermissions.Users do
            email,
            password_hash,
            display_name,
-           user_data
+           user_data,
+           ip,
+           user_agent,
+           origin
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -819,7 +841,10 @@ defmodule KeenAuthPermissions.Users do
   def ensure_from_provider(
         %RequestContext{
           user: %User{username: created_by, user_id: user_id},
-          request_id: request_id
+          request_id: request_id,
+          ip: ip,
+          user_agent: user_agent,
+          origin: origin
         },
         provider_code,
         provider_uid,
@@ -839,7 +864,10 @@ defmodule KeenAuthPermissions.Users do
            username,
            display_name,
            email,
-           user_data
+           user_data,
+           ip,
+           user_agent,
+           origin
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
