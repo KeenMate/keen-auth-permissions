@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchPermissionsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthSearchPermissionsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "search_permissions",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure search_permissions: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchPermissionsParser do
     {:ok, results}
   end
 
-  defp parse_row([permission_id, title, code, full_code, short_code, is_assignable, has_children, total_items]) do
+  defp parse_row([permission_id, title, code, full_code, short_code, is_assignable, has_children, source, total_items]) do
     {:ok, %AuthSearchPermissionsModel{
       permission_id: permission_id,
       title: title,
@@ -40,6 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchPermissionsParser do
       short_code: short_code,
       is_assignable: is_assignable,
       has_children: has_children,
+      source: source,
       total_items: total_items,
     }}
   end

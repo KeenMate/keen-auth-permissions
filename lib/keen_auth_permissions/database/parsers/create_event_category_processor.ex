@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCategoryParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [CreateEventCategoryModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "create_event_category",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure create_event_category: #{inspect(reason)}")
 
     err
   end
@@ -31,13 +28,14 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCategoryParser do
     {:ok, results}
   end
 
-  defp parse_row([category_code, title, range_start, range_end, is_error]) do
+  defp parse_row([category_code, title, range_start, range_end, is_error, source]) do
     {:ok, %CreateEventCategoryModel{
       category_code: category_code,
       title: title,
       range_start: range_start,
       range_end: range_end,
       is_error: is_error,
+      source: source,
     }}
   end
 

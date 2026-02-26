@@ -13,7 +13,7 @@ else
 	endif
 endif
 
-.PHONY: help setup deps compile test format docs clean generate db-setup db-gen
+.PHONY: help setup deps compile build test format docs clean generate db-setup db-gen
 
 # Default target
 help:
@@ -23,6 +23,7 @@ help:
 	@echo "  make setup      - Initial project setup (deps + compile)"
 	@echo "  make deps       - Fetch dependencies"
 	@echo "  make compile    - Compile the project"
+	@echo "  make build      - Full build (db-gen + deps + compile + format)"
 	@echo ""
 	@echo "Development:"
 	@echo "  make test       - Run tests"
@@ -50,6 +51,9 @@ compile:
 	@echo "Compiling project..."
 	mix compile
 
+build: db-gen deps compile format
+	@echo "Build completed!"
+
 # Development targets
 test:
 	@echo "Running tests..."
@@ -69,33 +73,24 @@ clean:
 
 # Database targets
 db-setup:
-ifeq ($(DETECTED_OS),Windows)
-	@echo "Setting up database..."
-	powershell.exe -ExecutionPolicy Bypass -File create-db.ps1
-else
-	@echo "Database setup script is only available for Windows"
-	@echo "Please set up your PostgreSQL database manually"
-endif
+	@if [ "$(DETECTED_OS)" = "Windows" ]; then \
+		echo "Setting up database..."; \
+		powershell.exe -ExecutionPolicy Bypass -File create-db.ps1; \
+	else \
+		echo "Database setup script is only available for Windows"; \
+		echo "Please set up your PostgreSQL database manually"; \
+	fi
 
 db-gen:
 	@echo "Generating Elixir code from PostgreSQL stored procedures..."
 	@echo "Using: $(DB_GEN_CMD)"
-ifeq ($(DETECTED_OS),Windows)
-	@if exist $(DB_GEN_CMD) ( \
-		$(DB_GEN_CMD) generate \
-	) else ( \
-		echo "Error: $(DB_GEN_CMD) not found. Please ensure the database code generator is available." && exit 1 \
-	)
-else
-	@if [ -f "$(DB_GEN_CMD)" ] && [ -x "$(DB_GEN_CMD)" ]; then \
-		$(DB_GEN_CMD) generate; \
+	@if [ -f "$(DB_GEN_CMD)" ]; then \
+		./$(DB_GEN_CMD) generate; \
 	else \
-		echo "Error: $(DB_GEN_CMD) not found or not executable. Please ensure the database code generator is available."; \
+		echo "Error: $(DB_GEN_CMD) not found. Please ensure the database code generator is available."; \
 		exit 1; \
 	fi
-endif
-	@echo "Code generation completed. Don't forget to compile the project:"
-	@echo "  make compile"
+	@echo "Code generation completed."
 
 generate: db-gen
 	@echo "Warning: 'make generate' is deprecated. Use 'make db-gen' instead."

@@ -26,6 +26,8 @@ keen_auth_permissions-*.tar
 /tmp/
 
 .idea
+.local.db-gen.json
+NUL
 
 # Generated DB files
 

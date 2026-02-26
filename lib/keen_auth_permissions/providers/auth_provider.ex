@@ -65,7 +65,7 @@ defmodule KeenAuthPermissions.Providers.AuthProvider do
     end
   end
 
-  @doc deprecated: "Use KeenAuthPermissions.Auth.validate_token/9 instead"
+  @doc deprecated: "Use KeenAuthPermissions.Auth.validate_token/6 instead"
   def validate_user_token(user_id, token, token_type, invalidate \\ false) do
     case Auth.validate_token(
            system_ctx(),
@@ -73,9 +73,6 @@ defmodule KeenAuthPermissions.Providers.AuthProvider do
            nil,
            token,
            token_type,
-           nil,
-           nil,
-           nil,
            invalidate
          ) do
       {:ok, token_result} -> {:ok, token_result}
@@ -84,9 +81,9 @@ defmodule KeenAuthPermissions.Providers.AuthProvider do
     end
   end
 
-  @doc deprecated: "Use KeenAuthPermissions.Users.update_password/7 instead"
+  @doc deprecated: "Use KeenAuthPermissions.Users.update_password/4 instead"
   def update_password(user_id, hashed_password) do
-    Users.update_password(system_ctx(), user_id, hashed_password, nil, nil, nil, nil)
+    Users.update_password(system_ctx(), user_id, hashed_password)
   end
 
   @doc deprecated: "Use KeenAuthPermissions.Users.register/5 instead"

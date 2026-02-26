@@ -28,9 +28,21 @@ defmodule KeenAuthPermissions.UserGroups do
 
   alias KeenAuthPermissions.RequestContext
   alias KeenAuthPermissions.User
+  alias KeenAuthPermissions.Notifier
   alias KeenAuthPermissions.Error.ErrorParsers
 
   defp db_context(), do: KeenAuthPermissions.DbContext.get_global_db_context()
+
+  defp notify_group_members(ctx, group_id, tenant_id, notify_fn) do
+    case list_members(ctx, group_id, tenant_id) do
+      {:ok, members} ->
+        user_ids = Enum.map(members, & &1.user_id)
+        notify_fn.(user_ids)
+
+      _ ->
+        :ok
+    end
+  end
 
   # ============================================================================
   # Group CRUD Operations
@@ -43,13 +55,15 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id
       ) do
-    db_context().auth_get_tenant_groups(username, user_id, request_id, tenant_id)
+    db_context().auth_get_tenant_groups(
+      username,
+      user_id,
+      request_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -61,10 +75,7 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec get_by_id(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def get_by_id(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
@@ -99,8 +110,7 @@ defmodule KeenAuthPermissions.UserGroups do
         ) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
-          ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         title,
         is_assignable,
         is_active,
@@ -150,10 +160,7 @@ defmodule KeenAuthPermissions.UserGroups do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def create_external(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         title,
         provider,
         is_assignable,
@@ -199,8 +206,7 @@ defmodule KeenAuthPermissions.UserGroups do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
-          ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         group_id,
         title,
         is_assignable,
@@ -241,14 +247,17 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec delete(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def delete(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
-    case db_context().auth_delete_user_group(username, user_id, request_id, group_id, tenant_id)
+    case db_context().auth_delete_user_group(
+           username,
+           user_id,
+           request_id,
+           group_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, :delete_failed}
@@ -306,18 +315,30 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec enable(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def enable(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         group_id,
         tenant_id
       ) do
-    case db_context().auth_enable_user_group(username, user_id, request_id, group_id, tenant_id)
+    case db_context().auth_enable_user_group(
+           username,
+           user_id,
+           request_id,
+           group_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
-      {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :enable_failed}
-      error -> error
+      {:ok, [result]} ->
+        notify_group_members(ctx, group_id, tenant_id, fn user_ids ->
+          Notifier.group_enabled(user_ids, tenant_id, group_id)
+        end)
+
+        {:ok, result}
+
+      {:ok, []} ->
+        {:error, :enable_failed}
+
+      error ->
+        error
     end
   end
 
@@ -328,18 +349,30 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec disable(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def disable(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         group_id,
         tenant_id
       ) do
-    case db_context().auth_disable_user_group(username, user_id, request_id, group_id, tenant_id)
+    case db_context().auth_disable_user_group(
+           username,
+           user_id,
+           request_id,
+           group_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
-      {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :disable_failed}
-      error -> error
+      {:ok, [result]} ->
+        notify_group_members(ctx, group_id, tenant_id, fn user_ids ->
+          Notifier.group_disabled(user_ids, tenant_id, group_id)
+        end)
+
+        {:ok, result}
+
+      {:ok, []} ->
+        {:error, :disable_failed}
+
+      error ->
+        error
     end
   end
 
@@ -350,14 +383,23 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec lock(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def lock(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
-          ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         group_id,
         tenant_id
       ) do
-    case db_context().auth_lock_user_group(username, user_id, request_id, group_id, tenant_id)
+    case db_context().auth_lock_user_group(
+           username,
+           user_id,
+           request_id,
+           group_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [%{user_group_id: _}]} ->
+        notify_group_members(ctx, group_id, tenant_id, fn user_ids ->
+          Notifier.group_disabled(user_ids, tenant_id, group_id)
+        end)
+
         # Fetch the full group record to get all fields including is_locked
         get_by_id(ctx, group_id, tenant_id)
 
@@ -376,14 +418,23 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec unlock(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def unlock(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
-          ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         group_id,
         tenant_id
       ) do
-    case db_context().auth_unlock_user_group(username, user_id, request_id, group_id, tenant_id)
+    case db_context().auth_unlock_user_group(
+           username,
+           user_id,
+           request_id,
+           group_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [%{user_group_id: _}]} ->
+        notify_group_members(ctx, group_id, tenant_id, fn user_ids ->
+          Notifier.group_enabled(user_ids, tenant_id, group_id)
+        end)
+
         # Fetch the full group record to get all fields including is_locked
         get_by_id(ctx, group_id, tenant_id)
 
@@ -402,10 +453,7 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec set_as_external(RequestContext.t(), integer(), integer()) :: :ok | {:error, any()}
   def set_as_external(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
@@ -426,14 +474,17 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec set_as_hybrid(RequestContext.t(), integer(), integer()) :: :ok | {:error, any()}
   def set_as_hybrid(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
-    db_context().auth_set_user_group_as_hybrid(username, user_id, request_id, group_id, tenant_id)
+    db_context().auth_set_user_group_as_hybrid(
+      username,
+      user_id,
+      request_id,
+      group_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -444,10 +495,7 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec set_as_internal(RequestContext.t(), integer(), integer()) :: :ok | {:error, any()}
   def set_as_internal(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
@@ -472,14 +520,17 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec list_members(RequestContext.t(), integer(), integer()) :: {:ok, list()} | {:error, any()}
   def list_members(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
-    db_context().auth_get_user_group_members(username, user_id, request_id, group_id, tenant_id)
+    db_context().auth_get_user_group_members(
+      username,
+      user_id,
+      request_id,
+      group_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -491,10 +542,7 @@ defmodule KeenAuthPermissions.UserGroups do
   @spec add_member(RequestContext.t(), integer(), integer(), integer()) ::
           {:ok, map()} | {:error, any()}
   def add_member(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         target_user_id,
         tenant_id
@@ -509,7 +557,8 @@ defmodule KeenAuthPermissions.UserGroups do
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [%{create_user_group_member: member_id}]} ->
-        # Return a map with the expected fields
+        Notifier.group_member_added(target_user_id, tenant_id, group_id)
+
         {:ok,
          %{user_group_member_id: member_id, user_group_id: group_id, user_id: target_user_id}}
 
@@ -529,23 +578,30 @@ defmodule KeenAuthPermissions.UserGroups do
   @spec remove_member(RequestContext.t(), integer(), integer(), integer()) ::
           :ok | {:error, any()}
   def remove_member(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         target_user_id,
         tenant_id
       ) do
-    db_context().auth_delete_user_group_member(
-      username,
-      user_id,
-      request_id,
-      group_id,
-      target_user_id,
-      tenant_id
-    )
-    |> ErrorParsers.parse_if_error()
+    result =
+      db_context().auth_delete_user_group_member(
+        username,
+        user_id,
+        request_id,
+        group_id,
+        target_user_id,
+        tenant_id
+      )
+      |> ErrorParsers.parse_if_error()
+
+    case result do
+      {:ok, _} ->
+        Notifier.group_member_removed(target_user_id, tenant_id, group_id)
+        result
+
+      _ ->
+        result
+    end
   end
 
   @doc """
@@ -588,14 +644,17 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec list_mappings(RequestContext.t(), integer(), integer()) :: {:ok, list()} | {:error, any()}
   def list_mappings(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
-    db_context().auth_get_user_group_mappings(username, user_id, request_id, group_id, tenant_id)
+    db_context().auth_get_user_group_mappings(
+      username,
+      user_id,
+      request_id,
+      group_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -614,10 +673,7 @@ defmodule KeenAuthPermissions.UserGroups do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def create_mapping(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         provider_code,
         mapped_object_id,
@@ -650,10 +706,7 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec delete_mapping(RequestContext.t(), integer(), integer()) :: :ok | {:error, any()}
   def delete_mapping(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         mapping_id,
         tenant_id
       ) do
@@ -679,10 +732,7 @@ defmodule KeenAuthPermissions.UserGroups do
   @spec create_owner(RequestContext.t(), integer(), integer(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create_owner(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         target_user_id,
         group_id,
         tenant_id
@@ -709,10 +759,7 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec delete_owner(RequestContext.t(), integer(), integer(), integer()) :: :ok | {:error, any()}
   def delete_owner(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         target_user_id,
         group_id,
         tenant_id
@@ -768,10 +815,7 @@ defmodule KeenAuthPermissions.UserGroups do
   @spec list_assigned_permissions(RequestContext.t(), integer(), integer()) ::
           {:ok, list()} | {:error, any()}
   def list_assigned_permissions(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
@@ -793,10 +837,7 @@ defmodule KeenAuthPermissions.UserGroups do
   @spec list_effective_permissions(RequestContext.t(), integer(), integer()) ::
           {:ok, list()} | {:error, any()}
   def list_effective_permissions(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id,
         tenant_id
       ) do
@@ -821,7 +862,7 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec list_groups_to_sync(integer()) :: {:ok, list()} | {:error, any()}
   def list_groups_to_sync(user_id) do
-    db_context().auth_get_user_groups_to_sync(user_id)
+    db_context().auth_get_user_groups_to_sync(user_id, nil)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -832,13 +873,15 @@ defmodule KeenAuthPermissions.UserGroups do
   """
   @spec process_external_sync(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def process_external_sync(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         group_id
       ) do
-    db_context().auth_process_external_group_member_sync(username, user_id, request_id, group_id)
+    db_context().auth_process_external_group_member_sync(
+      username,
+      user_id,
+      request_id,
+      group_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -850,10 +893,7 @@ defmodule KeenAuthPermissions.UserGroups do
   @spec process_external_sync_by_mapping(RequestContext.t(), integer()) ::
           {:ok, list()} | {:error, any()}
   def process_external_sync_by_mapping(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         mapping_id
       ) do
     db_context().auth_process_external_group_member_sync_by_mapping(

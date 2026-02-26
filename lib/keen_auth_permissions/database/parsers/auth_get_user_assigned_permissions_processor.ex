@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserAssignedPermissionsPar
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserAssignedPermissionsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_user_assigned_permissions",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_user_assigned_permissions: #{inspect(reason)}")
 
     err
   end

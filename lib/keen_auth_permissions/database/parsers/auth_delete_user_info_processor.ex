@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeleteUserInfoParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDeleteUserInfoModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "delete_user_info",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure delete_user_info: #{inspect(reason)}")
 
     err
   end

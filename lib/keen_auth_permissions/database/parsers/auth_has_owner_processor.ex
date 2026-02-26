@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthHasOwnerParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthHasOwnerModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "has_owner",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure has_owner: #{inspect(reason)}")
 
     err
   end

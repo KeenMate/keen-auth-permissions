@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthIsGroupMemberParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthIsGroupMemberModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "is_group_member",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure is_group_member: #{inspect(reason)}")
 
     err
   end

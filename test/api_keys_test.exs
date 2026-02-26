@@ -143,9 +143,10 @@ defmodule KeenAuthPermissions.ApiKeysTest do
     end
   end
 
-  describe "validate/7" do
+  describe "validate/4" do
     test "validates an API key with correct credentials" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       {:ok, created} = create_test_api_key(ctx)
 
@@ -154,9 +155,6 @@ defmodule KeenAuthPermissions.ApiKeysTest do
                  ctx,
                  created.api_key,
                  created.plain_secret,
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test",
                  default_tenant_id()
                )
 
@@ -165,15 +163,13 @@ defmodule KeenAuthPermissions.ApiKeysTest do
 
     test "returns error for invalid API key" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       assert {:error, _} =
                ApiKeys.validate(
                  ctx,
                  "invalid_key",
                  "invalid_secret",
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test",
                  default_tenant_id()
                )
     end

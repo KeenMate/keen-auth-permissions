@@ -10,10 +10,11 @@ defmodule KeenAuthPermissions.Database.Models.GetPermissionsMapModel do
     permission_id: integer(),
     full_code: String.t(),
     short_code: String.t(),
-    title: String.t()
+    title: String.t(),
+    source: String.t()
   }
 
-  @fields [:permission_id, :full_code, :short_code, :title]
+  @fields [:permission_id, :full_code, :short_code, :title, :source]
 
   @enforce_keys @fields
   defstruct @fields

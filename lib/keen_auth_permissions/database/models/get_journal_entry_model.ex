@@ -14,12 +14,13 @@ defmodule KeenAuthPermissions.Database.Models.GetJournalEntryModel do
     message: String.t(),
     keys: map() | list(),
     payload: map() | list(),
+    request_context: map() | list(),
     created_at: DateTime.t(),
     created_by: String.t(),
     correlation_id: String.t()
   }
 
-  @fields [:journal_id, :event_id, :event_code, :event_category, :message, :keys, :payload, :created_at, :created_by, :correlation_id]
+  @fields [:journal_id, :event_id, :event_code, :event_category, :message, :keys, :payload, :request_context, :created_at, :created_by, :correlation_id]
 
   @enforce_keys @fields
   defstruct @fields

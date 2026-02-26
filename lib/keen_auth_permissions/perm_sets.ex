@@ -37,13 +37,15 @@ defmodule KeenAuthPermissions.PermSets do
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id
       ) do
-    db_context().auth_get_perm_sets(username, user_id, request_id, tenant_id)
+    db_context().auth_get_perm_sets(
+      username,
+      user_id,
+      request_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -59,7 +61,8 @@ defmodule KeenAuthPermissions.PermSets do
           boolean() | nil,
           integer(),
           integer(),
-          integer()
+          integer(),
+          String.t() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
@@ -68,7 +71,8 @@ defmodule KeenAuthPermissions.PermSets do
         is_system,
         page,
         page_size,
-        tenant_id
+        tenant_id,
+        source \\ nil
       ) do
     db_context().auth_search_perm_sets(
       user_id,
@@ -78,7 +82,8 @@ defmodule KeenAuthPermissions.PermSets do
       is_system,
       page,
       page_size,
-      tenant_id
+      tenant_id,
+      source
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -92,18 +97,16 @@ defmodule KeenAuthPermissions.PermSets do
 
   Calls `auth.create_perm_set`.
   """
-  @spec create(RequestContext.t(), String.t(), boolean(), boolean(), list(String.t()), integer()) ::
+  @spec create(RequestContext.t(), String.t(), boolean(), boolean(), list(String.t()), integer(), String.t() | nil) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         title,
         is_system,
         is_assignable,
         permissions,
-        tenant_id
+        tenant_id,
+        source \\ nil
       ) do
     case db_context().auth_create_perm_set(
            username,
@@ -113,7 +116,8 @@ defmodule KeenAuthPermissions.PermSets do
            is_system,
            is_assignable,
            permissions,
-           tenant_id
+           tenant_id,
+           source
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -130,10 +134,7 @@ defmodule KeenAuthPermissions.PermSets do
   @spec update(RequestContext.t(), integer(), String.t(), boolean(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         perm_set_id,
         title,
         is_assignable,
@@ -167,10 +168,7 @@ defmodule KeenAuthPermissions.PermSets do
   @spec add_permissions(RequestContext.t(), integer(), list(String.t()), integer()) ::
           {:ok, list()} | {:error, any()}
   def add_permissions(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         perm_set_id,
         permissions,
         tenant_id
@@ -194,10 +192,7 @@ defmodule KeenAuthPermissions.PermSets do
   @spec delete_permissions(RequestContext.t(), integer(), list(String.t()), integer()) ::
           {:ok, list()} | {:error, any()}
   def delete_permissions(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         perm_set_id,
         permissions,
         tenant_id

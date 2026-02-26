@@ -17,7 +17,7 @@ defmodule KeenAuthPermissions.ApiKeys do
       KeenAuthPermissions.ApiKeys.create(context, "My Key", "Description", ...)
 
       # Validate an API key
-      KeenAuthPermissions.ApiKeys.validate(context, api_key, api_secret, ...)
+      KeenAuthPermissions.ApiKeys.validate(context, api_key, api_secret, tenant_id)
   """
 
   alias KeenAuthPermissions.User
@@ -133,10 +133,7 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         title,
         description,
         perm_set_code,
@@ -183,10 +180,7 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         title,
         description,
@@ -220,10 +214,7 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec update_secret(RequestContext.t(), integer(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update_secret(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         api_secret,
         tenant_id
@@ -250,14 +241,17 @@ defmodule KeenAuthPermissions.ApiKeys do
   """
   @spec delete(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def delete(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         tenant_id
       ) do
-    case db_context().auth_delete_api_key(username, user_id, request_id, api_key_id, tenant_id)
+    case db_context().auth_delete_api_key(
+           username,
+           user_id,
+           request_id,
+           api_key_id,
+           tenant_id
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, :delete_failed}
@@ -281,7 +275,12 @@ defmodule KeenAuthPermissions.ApiKeys do
         api_key_id,
         tenant_id
       ) do
-    db_context().auth_get_api_key_permissions(user_id, request_id, api_key_id, tenant_id)
+    db_context().auth_get_api_key_permissions(
+      user_id,
+      request_id,
+      api_key_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -298,10 +297,7 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, list()} | {:error, any()}
   def assign_permissions(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         perm_set_code,
         permission_codes,
@@ -332,10 +328,7 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, list()} | {:error, any()}
   def unassign_permissions(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         perm_set_code,
         permission_codes,
@@ -358,45 +351,17 @@ defmodule KeenAuthPermissions.ApiKeys do
   # ============================================================================
 
   @doc """
-  Validates an API key using ip/user_agent/origin from context.
+  Validates an API key.
 
-  Calls `auth.validate_api_key`.
+  Calls `auth.validate_api_key`. The context map (including ip, user_agent, origin)
+  is passed as a single JSONB parameter.
   """
   @spec validate(RequestContext.t(), String.t(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def validate(
-        %RequestContext{ip: ip, user_agent: user_agent, origin: origin} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         api_key,
         api_secret,
-        tenant_id
-      ) do
-    validate(ctx, api_key, api_secret, ip, user_agent, origin, tenant_id)
-  end
-
-  @doc """
-  Validates an API key with explicit ip/user_agent/origin.
-
-  Calls `auth.validate_api_key`.
-  """
-  @spec validate(
-          RequestContext.t(),
-          String.t(),
-          String.t(),
-          String.t() | nil,
-          String.t() | nil,
-          String.t() | nil,
-          integer()
-        ) :: {:ok, map()} | {:error, any()}
-  def validate(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
-        api_key,
-        api_secret,
-        ip_address,
-        user_agent,
-        origin,
         tenant_id
       ) do
     case db_context().auth_validate_api_key(
@@ -405,9 +370,7 @@ defmodule KeenAuthPermissions.ApiKeys do
            request_id,
            api_key,
            api_secret,
-           ip_address,
-           user_agent,
-           origin,
+           RequestContext.to_context_map(ctx),
            tenant_id
          )
          |> ErrorParsers.parse_if_error() do
@@ -466,7 +429,12 @@ defmodule KeenAuthPermissions.ApiKeys do
         service_code,
         tenant_id
       ) do
-    case db_context().auth_get_outbound_api_key(user_id, request_id, service_code, tenant_id) do
+    case db_context().auth_get_outbound_api_key(
+           user_id,
+           request_id,
+           service_code,
+           tenant_id
+         ) do
       {:ok, [key | _]} -> {:ok, key}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Outbound API key not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -486,7 +454,12 @@ defmodule KeenAuthPermissions.ApiKeys do
         api_key_id,
         tenant_id
       ) do
-    case db_context().auth_get_outbound_api_key_by_id(user_id, request_id, api_key_id, tenant_id) do
+    case db_context().auth_get_outbound_api_key_by_id(
+           user_id,
+           request_id,
+           api_key_id,
+           tenant_id
+         ) do
       {:ok, [key | _]} -> {:ok, key}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Outbound API key not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -502,10 +475,7 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec get_outbound_secret(RequestContext.t(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def get_outbound_secret(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         service_code,
         tenant_id
       ) do
@@ -531,10 +501,7 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec get_outbound_secret_by_id(RequestContext.t(), integer(), integer()) ::
           {:ok, map()} | {:error, any()}
   def get_outbound_secret_by_id(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         tenant_id
       ) do
@@ -569,10 +536,7 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def create_outbound(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         title,
         description,
         service_code,
@@ -621,10 +585,7 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update_outbound(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         title,
         description,
@@ -662,10 +623,7 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec update_outbound_secret(RequestContext.t(), integer(), binary(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update_outbound_secret(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         encrypted_secret,
         tenant_id
@@ -693,10 +651,7 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec delete_outbound(RequestContext.t(), integer(), integer()) ::
           {:ok, map()} | {:error, any()}
   def delete_outbound(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
         tenant_id
       ) do

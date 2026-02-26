@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthLockUserGroupParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthLockUserGroupModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "lock_user_group",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure lock_user_group: #{inspect(reason)}")
 
     err
   end

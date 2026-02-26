@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetJournalEntryParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetJournalEntryModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_journal_entry",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_journal_entry: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetJournalEntryParser do
     {:ok, results}
   end
 
-  defp parse_row([journal_id, event_id, event_code, event_category, message, keys, payload, created_at, created_by, correlation_id]) do
+  defp parse_row([journal_id, event_id, event_code, event_category, message, keys, payload, request_context, created_at, created_by, correlation_id]) do
     {:ok, %GetJournalEntryModel{
       journal_id: journal_id,
       event_id: event_id,
@@ -40,6 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetJournalEntryParser do
       message: message,
       keys: keys,
       payload: payload,
+      request_context: request_context,
       created_at: created_at,
       created_by: created_by,
       correlation_id: correlation_id,

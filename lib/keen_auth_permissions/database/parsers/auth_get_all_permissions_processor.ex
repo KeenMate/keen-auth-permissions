@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetAllPermissionsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetAllPermissionsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_all_permissions",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_all_permissions: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetAllPermissionsParser do
     {:ok, results}
   end
 
-  defp parse_row([permission_id, is_assignable, title, code, full_code, has_children, short_code]) do
+  defp parse_row([permission_id, is_assignable, title, code, full_code, has_children, short_code, source]) do
     {:ok, %AuthGetAllPermissionsModel{
       permission_id: permission_id,
       is_assignable: is_assignable,
@@ -40,6 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetAllPermissionsParser do
       full_code: full_code,
       has_children: has_children,
       short_code: short_code,
+      source: source,
     }}
   end
 

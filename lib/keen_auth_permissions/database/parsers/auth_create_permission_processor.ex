@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreatePermissionParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreatePermissionModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "create_permission",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure create_permission: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreatePermissionParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, permission_id, is_assignable, title, code, full_code, node_path, has_children, full_title, nrm_search_data, short_code]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, permission_id, is_assignable, title, code, full_code, node_path, has_children, full_title, nrm_search_data, short_code, source]) do
     {:ok, %AuthCreatePermissionModel{
       created_at: created_at,
       created_by: created_by,
@@ -47,6 +44,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreatePermissionParser do
       full_title: full_title,
       nrm_search_data: nrm_search_data,
       short_code: short_code,
+      source: source,
     }}
   end
 

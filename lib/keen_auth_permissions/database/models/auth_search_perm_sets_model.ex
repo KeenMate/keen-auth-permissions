@@ -12,11 +12,12 @@ defmodule KeenAuthPermissions.Database.Models.AuthSearchPermSetsModel do
     code: String.t(),
     is_system: boolean(),
     is_assignable: boolean(),
+    source: String.t(),
     permission_count: integer(),
     total_items: integer()
   }
 
-  @fields [:perm_set_id, :title, :code, :is_system, :is_assignable, :permission_count, :total_items]
+  @fields [:perm_set_id, :title, :code, :is_system, :is_assignable, :source, :permission_count, :total_items]
 
   @enforce_keys @fields
   defstruct @fields

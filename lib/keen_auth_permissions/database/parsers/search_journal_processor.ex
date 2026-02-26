@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.SearchJournalParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [SearchJournalModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "search_journal",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure search_journal: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.SearchJournalParser do
     {:ok, results}
   end
 
-  defp parse_row([journal_id, event_id, event_code, event_category, user_id, message, keys, created_at, created_by, correlation_id, total_items]) do
+  defp parse_row([journal_id, event_id, event_code, event_category, user_id, message, keys, request_context, created_at, created_by, correlation_id, total_items]) do
     {:ok, %SearchJournalModel{
       journal_id: journal_id,
       event_id: event_id,
@@ -40,6 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.SearchJournalParser do
       user_id: user_id,
       message: message,
       keys: keys,
+      request_context: request_context,
       created_at: created_at,
       created_by: created_by,
       correlation_id: correlation_id,

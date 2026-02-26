@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserGroupMappingsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserGroupMappingsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_user_group_mappings",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_user_group_mappings: #{inspect(reason)}")
 
     err
   end

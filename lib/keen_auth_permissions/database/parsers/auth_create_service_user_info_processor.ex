@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateServiceUserInfoParser d
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreateServiceUserInfoModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "create_service_user_info",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure create_service_user_info: #{inspect(reason)}")
 
     err
   end

@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchPermSetsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthSearchPermSetsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "search_perm_sets",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure search_perm_sets: #{inspect(reason)}")
 
     err
   end
@@ -31,13 +28,14 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchPermSetsParser do
     {:ok, results}
   end
 
-  defp parse_row([perm_set_id, title, code, is_system, is_assignable, permission_count, total_items]) do
+  defp parse_row([perm_set_id, title, code, is_system, is_assignable, source, permission_count, total_items]) do
     {:ok, %AuthSearchPermSetsModel{
       perm_set_id: perm_set_id,
       title: title,
       code: code,
       is_system: is_system,
       is_assignable: is_assignable,
+      source: source,
       permission_count: permission_count,
       total_items: total_items,
     }}

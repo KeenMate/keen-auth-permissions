@@ -14,10 +14,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthSearchPermissionsModel do
     short_code: String.t(),
     is_assignable: boolean(),
     has_children: boolean(),
+    source: String.t(),
     total_items: integer()
   }
 
-  @fields [:permission_id, :title, :code, :full_code, :short_code, :is_assignable, :has_children, :total_items]
+  @fields [:permission_id, :title, :code, :full_code, :short_code, :is_assignable, :has_children, :source, :total_items]
 
   @enforce_keys @fields
   defstruct @fields

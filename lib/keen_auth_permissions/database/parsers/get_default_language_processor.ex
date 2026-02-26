@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetDefaultLanguageParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetDefaultLanguageModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_default_language",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_default_language: #{inspect(reason)}")
 
     err
   end

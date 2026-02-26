@@ -17,10 +17,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreatePermSetModel do
     code: String.t(),
     is_system: boolean(),
     is_assignable: boolean(),
-    nrm_search_data: String.t() | nil
+    nrm_search_data: String.t() | nil,
+    source: String.t() | nil
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :perm_set_id, :tenant_id, :title, :code, :is_system, :is_assignable, :nrm_search_data]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :perm_set_id, :tenant_id, :title, :code, :is_system, :is_assignable, :nrm_search_data, :source]
 
   @enforce_keys @fields
   defstruct @fields

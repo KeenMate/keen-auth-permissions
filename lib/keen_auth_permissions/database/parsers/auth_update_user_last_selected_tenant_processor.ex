@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateUserLastSelectedTenantP
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthUpdateUserLastSelectedTenantModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "update_user_last_selected_tenant",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure update_user_last_selected_tenant: #{inspect(reason)}")
 
     err
   end

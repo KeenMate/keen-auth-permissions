@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetGroupTranslationsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetGroupTranslationsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_group_translations",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_group_translations: #{inspect(reason)}")
 
     err
   end

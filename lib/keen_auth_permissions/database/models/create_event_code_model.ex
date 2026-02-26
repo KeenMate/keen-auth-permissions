@@ -13,10 +13,11 @@ defmodule KeenAuthPermissions.Database.Models.CreateEventCodeModel do
     title: String.t(),
     description: String.t() | nil,
     is_read_only: boolean(),
-    is_system: boolean()
+    is_system: boolean(),
+    source: String.t() | nil
   }
 
-  @fields [:event_id, :code, :category_code, :title, :description, :is_read_only, :is_system]
+  @fields [:event_id, :code, :category_code, :title, :description, :is_read_only, :is_system, :source]
 
   @enforce_keys @fields
   defstruct @fields

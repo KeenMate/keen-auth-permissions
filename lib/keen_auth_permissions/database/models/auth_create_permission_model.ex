@@ -20,10 +20,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreatePermissionModel do
     has_children: boolean(),
     full_title: String.t() | nil,
     nrm_search_data: String.t() | nil,
-    short_code: String.t() | nil
+    short_code: String.t() | nil,
+    source: String.t() | nil
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :permission_id, :is_assignable, :title, :code, :full_code, :node_path, :has_children, :full_title, :nrm_search_data, :short_code]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :permission_id, :is_assignable, :title, :code, :full_code, :node_path, :has_children, :full_title, :nrm_search_data, :short_code, :source]
 
   @enforce_keys @fields
   defstruct @fields

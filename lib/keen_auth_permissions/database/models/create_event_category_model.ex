@@ -11,10 +11,11 @@ defmodule KeenAuthPermissions.Database.Models.CreateEventCategoryModel do
     title: String.t(),
     range_start: integer(),
     range_end: integer(),
-    is_error: boolean()
+    is_error: boolean(),
+    source: String.t() | nil
   }
 
-  @fields [:category_code, :title, :range_start, :range_end, :is_error]
+  @fields [:category_code, :title, :range_start, :range_end, :is_error, :source]
 
   @enforce_keys @fields
   defstruct @fields

@@ -80,7 +80,13 @@ defmodule KeenAuthPermissions.Tenants do
         page,
         page_size
       ) do
-    db_context().auth_search_tenants(user_id, request_id, search_text, page, page_size)
+    db_context().auth_search_tenants(
+      user_id,
+      request_id,
+      search_text,
+      page,
+      page_size
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -96,10 +102,7 @@ defmodule KeenAuthPermissions.Tenants do
   @spec create(RequestContext.t(), String.t(), String.t(), boolean(), boolean(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         title,
         code,
         is_removable,
@@ -138,10 +141,7 @@ defmodule KeenAuthPermissions.Tenants do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id,
         title,
         code,
@@ -174,13 +174,15 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec delete(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_uuid
       ) do
-    case db_context().auth_delete_tenant(username, user_id, request_id, tenant_uuid)
+    case db_context().auth_delete_tenant(
+           username,
+           user_id,
+           request_id,
+           tenant_uuid
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, :delete_failed}
@@ -195,13 +197,15 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec delete_by_uuid(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete_by_uuid(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_uuid
       ) do
-    case db_context().auth_delete_tenant_by_uuid(username, user_id, request_id, tenant_uuid)
+    case db_context().auth_delete_tenant_by_uuid(
+           username,
+           user_id,
+           request_id,
+           tenant_uuid
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, :delete_failed}
@@ -220,13 +224,15 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec list_users(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_users(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id
       ) do
-    db_context().auth_get_tenant_users(username, user_id, request_id, tenant_id)
+    db_context().auth_get_tenant_users(
+      username,
+      user_id,
+      request_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -237,13 +243,15 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec list_members(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_members(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id
       ) do
-    db_context().auth_get_tenant_members(username, user_id, request_id, tenant_id)
+    db_context().auth_get_tenant_members(
+      username,
+      user_id,
+      request_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -254,13 +262,15 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec list_groups(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_groups(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id
       ) do
-    db_context().auth_get_tenant_groups(username, user_id, request_id, tenant_id)
+    db_context().auth_get_tenant_groups(
+      username,
+      user_id,
+      request_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -279,7 +289,11 @@ defmodule KeenAuthPermissions.Tenants do
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         target_user_id
       ) do
-    db_context().auth_get_user_available_tenants(user_id, request_id, target_user_id)
+    db_context().auth_get_user_available_tenants(
+      user_id,
+      request_id,
+      target_user_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -295,7 +309,11 @@ defmodule KeenAuthPermissions.Tenants do
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         target_user_id
       ) do
-    case db_context().auth_get_user_last_selected_tenant(user_id, request_id, target_user_id)
+    case db_context().auth_get_user_last_selected_tenant(
+           user_id,
+           request_id,
+           target_user_id
+         )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result | _]} -> {:ok, result}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "No last selected tenant found")}
@@ -311,10 +329,7 @@ defmodule KeenAuthPermissions.Tenants do
   @spec update_user_last_selected_tenant(RequestContext.t(), integer(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def update_user_last_selected_tenant(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         target_user_id,
         tenant_uuid
       ) do
@@ -340,10 +355,7 @@ defmodule KeenAuthPermissions.Tenants do
   @spec create_user_tenant_preferences(RequestContext.t(), integer(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create_user_tenant_preferences(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         target_user_id,
         update_data,
         tenant_id
@@ -376,10 +388,7 @@ defmodule KeenAuthPermissions.Tenants do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update_user_tenant_preferences(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         target_user_id,
         update_data,
         should_overwrite,

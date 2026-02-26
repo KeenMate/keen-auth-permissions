@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserIdentityByEmailParser 
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserIdentityByEmailModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_user_identity_by_email",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_user_identity_by_email: #{inspect(reason)}")
 
     err
   end

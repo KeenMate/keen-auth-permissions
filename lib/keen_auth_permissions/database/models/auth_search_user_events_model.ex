@@ -14,9 +14,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthSearchUserEventsModel do
     target_user_id: integer(),
     target_username: String.t(),
     target_user_oid: String.t(),
-    ip_address: String.t(),
-    user_agent: String.t(),
-    origin: String.t(),
+    request_context: map() | list(),
     event_data: map() | list(),
     correlation_id: String.t(),
     created_at: DateTime.t(),
@@ -24,7 +22,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthSearchUserEventsModel do
     total_items: integer()
   }
 
-  @fields [:user_event_id, :event_type_code, :requester_user_id, :requester_username, :target_user_id, :target_username, :target_user_oid, :ip_address, :user_agent, :origin, :event_data, :correlation_id, :created_at, :created_by, :total_items]
+  @fields [:user_event_id, :event_type_code, :requester_user_id, :requester_username, :target_user_id, :target_username, :target_user_oid, :request_context, :event_data, :correlation_id, :created_at, :created_by, :total_items]
 
   @enforce_keys @fields
   defstruct @fields

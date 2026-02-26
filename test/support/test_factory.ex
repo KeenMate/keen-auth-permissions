@@ -166,13 +166,11 @@ defmodule KeenAuthPermissions.TestFactory do
   """
   def create_user_logged_in(user, attrs \\ %{}) do
     ctx = to_context(user)
+    ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
     defaults = %{
       event_type_code: "user_logged_in",
       target_user_id: ctx.user.user_id,
-      ip_address: "127.0.0.1",
-      user_agent: "TestAgent/1.0",
-      origin: "test",
       event_data: nil,
       target_user_oid: nil,
       target_username: nil
@@ -184,9 +182,6 @@ defmodule KeenAuthPermissions.TestFactory do
       ctx,
       params.event_type_code,
       params.target_user_id,
-      params.ip_address,
-      params.user_agent,
-      params.origin,
       params.event_data,
       params.target_user_oid,
       params.target_username

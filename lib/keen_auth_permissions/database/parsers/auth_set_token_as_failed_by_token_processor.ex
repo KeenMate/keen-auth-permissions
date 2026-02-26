@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSetTokenAsFailedByTokenParser
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthSetTokenAsFailedByTokenModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "set_token_as_failed_by_token",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure set_token_as_failed_by_token: #{inspect(reason)}")
 
     err
   end

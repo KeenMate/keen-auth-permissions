@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchTenantsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthSearchTenantsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "search_tenants",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure search_tenants: #{inspect(reason)}")
 
     err
   end

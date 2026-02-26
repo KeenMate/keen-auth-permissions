@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeleteTenantByUuidParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDeleteTenantByUuidModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "delete_tenant_by_uuid",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure delete_tenant_by_uuid: #{inspect(reason)}")
 
     err
   end

@@ -14,13 +14,14 @@ defmodule KeenAuthPermissions.Database.Models.SearchJournalModel do
     user_id: integer(),
     message: String.t(),
     keys: map() | list(),
+    request_context: map() | list(),
     created_at: DateTime.t(),
     created_by: String.t(),
     correlation_id: String.t(),
     total_items: integer()
   }
 
-  @fields [:journal_id, :event_id, :event_code, :event_category, :user_id, :message, :keys, :created_at, :created_by, :correlation_id, :total_items]
+  @fields [:journal_id, :event_id, :event_code, :event_category, :user_id, :message, :keys, :request_context, :created_at, :created_by, :correlation_id, :total_items]
 
   @enforce_keys @fields
   defstruct @fields

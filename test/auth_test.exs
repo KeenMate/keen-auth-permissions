@@ -23,18 +23,16 @@ defmodule KeenAuthPermissions.AuthTest do
     end
   end
 
-  describe "create_event/9" do
+  describe "create_event/6" do
     test "creates a user event" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       assert {:ok, event} =
                Auth.create_event(
                  ctx,
                  "user_logged_in",
                  ctx.user.user_id,
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test",
                  "{}",
                  nil,
                  nil
@@ -63,6 +61,7 @@ defmodule KeenAuthPermissions.AuthTest do
   describe "token operations" do
     test "create_token/9 creates a token" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       # First create an event
       {:ok, event} =
@@ -70,9 +69,6 @@ defmodule KeenAuthPermissions.AuthTest do
           ctx,
           "user_logged_in",
           ctx.user.user_id,
-          "127.0.0.1",
-          "TestAgent/1.0",
-          "test",
           nil,
           nil,
           nil
@@ -98,8 +94,9 @@ defmodule KeenAuthPermissions.AuthTest do
       assert is_map(token)
     end
 
-    test "validate_token/9 validates a token" do
+    test "validate_token/6 validates a token" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       # Create an event first
       {:ok, event} =
@@ -107,9 +104,6 @@ defmodule KeenAuthPermissions.AuthTest do
           ctx,
           "user_logged_in",
           ctx.user.user_id,
-          "127.0.0.1",
-          "TestAgent/1.0",
-          "test",
           nil,
           nil,
           nil
@@ -141,17 +135,15 @@ defmodule KeenAuthPermissions.AuthTest do
                  created_token.token_uid,
                  token_value,
                  "password_reset",
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test",
                  false
                )
 
       assert is_map(validated)
     end
 
-    test "validate_token/9 fails for invalid token" do
+    test "validate_token/6 fails for invalid token" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       assert {:error, _} =
                Auth.validate_token(
@@ -160,15 +152,13 @@ defmodule KeenAuthPermissions.AuthTest do
                  nil,
                  "invalid_token_value",
                  "password_reset",
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test",
                  false
                )
     end
 
-    test "set_token_as_used/7 marks a token as used" do
+    test "set_token_as_used/4 marks a token as used" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       # Create an event and token
       {:ok, event} =
@@ -176,9 +166,6 @@ defmodule KeenAuthPermissions.AuthTest do
           ctx,
           "user_logged_in",
           ctx.user.user_id,
-          nil,
-          nil,
-          nil,
           nil,
           nil,
           nil
@@ -207,15 +194,13 @@ defmodule KeenAuthPermissions.AuthTest do
                  ctx,
                  created_token.token_uid,
                  token_value,
-                 "password_reset",
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test"
+                 "password_reset"
                )
     end
 
-    test "set_token_as_failed/7 marks a token as failed" do
+    test "set_token_as_failed/4 marks a token as failed" do
       ctx = system_context()
+      ctx = %{ctx | ip: "127.0.0.1", user_agent: "TestAgent/1.0", origin: "test"}
 
       # Create an event and token
       {:ok, event} =
@@ -223,9 +208,6 @@ defmodule KeenAuthPermissions.AuthTest do
           ctx,
           "user_logged_in",
           ctx.user.user_id,
-          nil,
-          nil,
-          nil,
           nil,
           nil,
           nil
@@ -254,10 +236,7 @@ defmodule KeenAuthPermissions.AuthTest do
                  ctx,
                  created_token.token_uid,
                  token_value,
-                 "password_reset",
-                 "127.0.0.1",
-                 "TestAgent/1.0",
-                 "test"
+                 "password_reset"
                )
     end
   end

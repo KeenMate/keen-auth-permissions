@@ -22,6 +22,7 @@ defmodule KeenAuthPermissions.Permissions do
 
   alias KeenAuthPermissions.User
   alias KeenAuthPermissions.RequestContext
+  alias KeenAuthPermissions.Notifier
   alias KeenAuthPermissions.Error.ErrorParsers
 
   defp db_context(), do: KeenAuthPermissions.DbContext.get_global_db_context()
@@ -35,17 +36,19 @@ defmodule KeenAuthPermissions.Permissions do
 
   Calls `auth.get_all_permissions`.
 
-  Returns permissions with fields: `permission_id`, `is_assignable`, `title`, `code`, `full_code`, `has_children`, `short_code`.
+  Returns permissions with fields: `permission_id`, `is_assignable`, `title`, `code`, `full_code`, `has_children`, `short_code`, `source`.
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         tenant_id
       ) do
-    db_context().auth_get_all_permissions(username, user_id, request_id, tenant_id)
+    db_context().auth_get_all_permissions(
+      username,
+      user_id,
+      request_id,
+      tenant_id
+    )
     |> ErrorParsers.parse_if_error()
   end
 
@@ -75,7 +78,8 @@ defmodule KeenAuthPermissions.Permissions do
           String.t() | nil,
           integer(),
           integer(),
-          integer()
+          integer(),
+          String.t() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
@@ -84,7 +88,8 @@ defmodule KeenAuthPermissions.Permissions do
         parent_code,
         page,
         page_size,
-        tenant_id
+        tenant_id,
+        source \\ nil
       ) do
     db_context().auth_search_permissions(
       user_id,
@@ -94,7 +99,8 @@ defmodule KeenAuthPermissions.Permissions do
       parent_code,
       page,
       page_size,
-      tenant_id
+      tenant_id,
+      source
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -118,10 +124,7 @@ defmodule KeenAuthPermissions.Permissions do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def assign(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         user_group_id,
         target_user_id,
         perm_set_code,
@@ -139,9 +142,15 @@ defmodule KeenAuthPermissions.Permissions do
            tenant_id
          )
          |> ErrorParsers.parse_if_error() do
-      {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :assign_failed}
-      error -> error
+      {:ok, [result]} ->
+        notify_permission_change(target_user_id, user_group_id, tenant_id)
+        {:ok, result}
+
+      {:ok, []} ->
+        {:error, :assign_failed}
+
+      error ->
+        error
     end
   end
 
@@ -152,10 +161,7 @@ defmodule KeenAuthPermissions.Permissions do
   """
   @spec unassign(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def unassign(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         assignment_id,
         tenant_id
       ) do
@@ -167,9 +173,16 @@ defmodule KeenAuthPermissions.Permissions do
            tenant_id
          )
          |> ErrorParsers.parse_if_error() do
-      {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :unassign_failed}
-      error -> error
+      {:ok, [result]} ->
+        # Notify affected user if the result contains user/group info
+        notify_unassign_change(result)
+        {:ok, result}
+
+      {:ok, []} ->
+        {:error, :unassign_failed}
+
+      error ->
+        error
     end
   end
 
@@ -188,18 +201,17 @@ defmodule KeenAuthPermissions.Permissions do
     - `parent_full_code` - Full code of the parent permission (for hierarchical permissions)
     - `is_assignable` - Whether this permission can be assigned to users/groups
     - `short_code` - Optional short code for easier reference (alternative to full_code)
+    - `source` - Optional source identifier (e.g., "core", "csv_import")
   """
-  @spec create(RequestContext.t(), String.t(), String.t(), boolean(), String.t() | nil) ::
+  @spec create(RequestContext.t(), String.t(), String.t(), boolean(), String.t() | nil, String.t() | nil) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         title,
         parent_full_code,
         is_assignable,
-        short_code \\ nil
+        short_code \\ nil,
+        source \\ nil
       ) do
     case db_context().auth_create_permission(
            username,
@@ -208,7 +220,8 @@ defmodule KeenAuthPermissions.Permissions do
            title,
            parent_full_code,
            is_assignable,
-           short_code
+           short_code,
+           source
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -230,10 +243,7 @@ defmodule KeenAuthPermissions.Permissions do
           boolean()
         ) :: {:ok, map()} | {:error, any()}
   def set_assignable(
-        %RequestContext{
-          user: %User{username: username, user_id: user_id},
-          request_id: request_id
-        },
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         permission_id,
         permission_full_code,
         is_assignable
@@ -302,4 +312,19 @@ defmodule KeenAuthPermissions.Permissions do
     |> ErrorParsers.parse_if_error()
   end
 
+  # Private helpers for notifications
+
+  defp notify_permission_change(target_user_id, _user_group_id, tenant_id)
+       when not is_nil(target_user_id) do
+    Notifier.permission_assigned(target_user_id, tenant_id)
+  end
+
+  defp notify_permission_change(_target_user_id, _user_group_id, _tenant_id), do: :ok
+
+  defp notify_unassign_change(%{user_id: user_id} = result) when not is_nil(user_id) do
+    tenant_id = Map.get(result, :tenant_id)
+    Notifier.permission_unassigned(user_id, tenant_id)
+  end
+
+  defp notify_unassign_change(_result), do: :ok
 end

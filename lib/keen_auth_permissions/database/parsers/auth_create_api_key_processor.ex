@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateApiKeyParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreateApiKeyModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "create_api_key",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure create_api_key: #{inspect(reason)}")
 
     err
   end

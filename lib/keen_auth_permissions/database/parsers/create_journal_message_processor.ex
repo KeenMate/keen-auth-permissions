@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateJournalMessageParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [CreateJournalMessageModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "create_journal_message",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure create_journal_message: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateJournalMessageParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, correlation_id, journal_id, tenant_id, event_id, user_id, keys, data_payload]) do
+  defp parse_row([created_at, created_by, correlation_id, journal_id, tenant_id, event_id, user_id, keys, data_payload, request_context]) do
     {:ok, %CreateJournalMessageModel{
       created_at: created_at,
       created_by: created_by,
@@ -42,6 +39,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateJournalMessageParser do
       user_id: user_id,
       keys: keys,
       data_payload: data_payload,
+      request_context: request_context,
     }}
   end
 

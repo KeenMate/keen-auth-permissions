@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchUserEventsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthSearchUserEventsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "search_user_events",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure search_user_events: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchUserEventsParser do
     {:ok, results}
   end
 
-  defp parse_row([user_event_id, event_type_code, requester_user_id, requester_username, target_user_id, target_username, target_user_oid, ip_address, user_agent, origin, event_data, correlation_id, created_at, created_by, total_items]) do
+  defp parse_row([user_event_id, event_type_code, requester_user_id, requester_username, target_user_id, target_username, target_user_oid, request_context, event_data, correlation_id, created_at, created_by, total_items]) do
     {:ok, %AuthSearchUserEventsModel{
       user_event_id: user_event_id,
       event_type_code: event_type_code,
@@ -40,9 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchUserEventsParser do
       target_user_id: target_user_id,
       target_username: target_username,
       target_user_oid: target_user_oid,
-      ip_address: ip_address,
-      user_agent: user_agent,
-      origin: origin,
+      request_context: request_context,
       event_data: event_data,
       correlation_id: correlation_id,
       created_at: created_at,

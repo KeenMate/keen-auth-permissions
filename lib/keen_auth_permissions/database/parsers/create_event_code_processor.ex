@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCodeParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [CreateEventCodeModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "create_event_code",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure create_event_code: #{inspect(reason)}")
 
     err
   end
@@ -31,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCodeParser do
     {:ok, results}
   end
 
-  defp parse_row([event_id, code, category_code, title, description, is_read_only, is_system]) do
+  defp parse_row([event_id, code, category_code, title, description, is_read_only, is_system, source]) do
     {:ok, %CreateEventCodeModel{
       event_id: event_id,
       code: code,
@@ -40,6 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCodeParser do
       description: description,
       is_read_only: is_read_only,
       is_system: is_system,
+      source: source,
     }}
   end
 

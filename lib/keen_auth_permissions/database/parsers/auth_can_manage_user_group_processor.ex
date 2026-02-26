@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCanManageUserGroupParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCanManageUserGroupModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "can_manage_user_group",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure can_manage_user_group: #{inspect(reason)}")
 
     err
   end

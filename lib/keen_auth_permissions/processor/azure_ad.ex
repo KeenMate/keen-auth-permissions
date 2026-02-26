@@ -1,7 +1,6 @@
 defmodule KeenAuthPermissions.Processor.AzureAD do
   @behaviour KeenAuth.Processor
 
-  alias KeenAuthPermissions.TenantResolver
   alias KeenAuthPermissions.DbContext
   alias KeenAuthPermissions.User
 
@@ -12,43 +11,50 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
           user :: KeenAuth.User.t() | map(),
           response :: map()
         ) :: {:ok, Plug.Conn.t(), KeenAuth.User.t() | map(), map() | nil} | Plug.Conn.t()
-  def process(conn, :aad, mapped_user, response) do
-    db_context = DbContext.current_db_context!(conn)
+  @azure_ad_providers [:aad, :entra, :azure_ad]
 
-    # Extract request info from conn for event logging
-    ip = get_client_ip(conn)
-    user_agent = get_user_agent(conn)
-    origin = get_origin(conn)
+  def process(conn, provider, mapped_user, response) when provider in @azure_ad_providers do
+    db_context = DbContext.current_db_context!(conn)
+    provider_code = to_string(provider)
+
+    correlation_id = "#{provider_code}-login"
+
+    # Build context map for the JSONB parameter (ip, user_agent, origin)
+    context = build_context_map(conn, correlation_id)
 
     {:ok, [user]} =
       db_context.auth_ensure_user_from_provider(
         "system",
         1,
-        "aad-login",
-        "aad",
+        correlation_id,
+        provider_code,
         mapped_user.user_id,
         mapped_user.user_id,
         mapped_user.username,
         mapped_user.display_name,
         mapped_user.email,
         nil,
-        ip,
-        user_agent,
-        origin
+        context
       )
 
     permissions_user = struct(User, Map.from_struct(user))
 
-    {:ok, [%{groups: groups, permissions: permissions}]} =
-      db_context.auth_ensure_groups_and_permissions(
-        "system",
-        1,
-        permissions_user.user_id,
-        "aad",
-        [],
-        mapped_user.roles,
-        TenantResolver.resolve_tenant(conn)
-      )
+    {groups, permissions} =
+      case db_context.auth_ensure_groups_and_permissions(
+             "system",
+             1,
+             correlation_id,
+             permissions_user.user_id,
+             provider_code,
+             [],
+             mapped_user.roles
+           ) do
+        {:ok, [%{groups: groups, short_code_permissions: short_code_permissions}]} ->
+          {groups, short_code_permissions}
+
+        {:ok, []} ->
+          {[], []}
+      end
 
     {:ok, conn, %{permissions_user | groups: groups, permissions: permissions}, response}
   end
@@ -64,7 +70,17 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
     })
   end
 
-  # Helper functions to extract request info from conn
+  # Builds a context map from conn for the JSONB parameter
+  defp build_context_map(conn, correlation_id) do
+    %{
+      "request_id" => correlation_id,
+      "ip" => get_client_ip(conn),
+      "user_agent" => get_user_agent(conn),
+      "origin" => get_origin(conn)
+    }
+    |> Enum.reject(fn {_k, v} -> is_nil(v) end)
+    |> Map.new()
+  end
 
   defp get_client_ip(conn) do
     # Check x-forwarded-for header first (for proxied requests)

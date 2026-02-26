@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthAddUserToDefaultGroupsParser 
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthAddUserToDefaultGroupsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "add_user_to_default_groups",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure add_user_to_default_groups: #{inspect(reason)}")
 
     err
   end

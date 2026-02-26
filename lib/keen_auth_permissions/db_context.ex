@@ -3,8 +3,11 @@ defmodule KeenAuthPermissions.DbContext do
   alias KeenAuth.Plug
 
   def current_db_context!(conn) do
-    Plug.fetch_config(conn)
-    |> get_db_context!()
+    config = Plug.fetch_config(conn)
+
+    Config.get(config, :db_context) ||
+      Application.get_env(:keen_auth_permissions, :db_context) ||
+      Config.raise_error("DbContext not configured")
   end
 
   def get_db_context!(config) do

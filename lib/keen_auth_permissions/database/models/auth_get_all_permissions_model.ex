@@ -13,10 +13,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetAllPermissionsModel do
     code: String.t(),
     full_code: String.t(),
     has_children: boolean(),
-    short_code: String.t()
+    short_code: String.t(),
+    source: String.t()
   }
 
-  @fields [:permission_id, :is_assignable, :title, :code, :full_code, :has_children, :short_code]
+  @fields [:permission_id, :is_assignable, :title, :code, :full_code, :has_children, :short_code, :source]
 
   @enforce_keys @fields
   defstruct @fields

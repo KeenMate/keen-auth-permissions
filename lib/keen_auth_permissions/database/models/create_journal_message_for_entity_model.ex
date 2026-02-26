@@ -15,10 +15,11 @@ defmodule KeenAuthPermissions.Database.Models.CreateJournalMessageForEntityModel
     event_id: integer(),
     user_id: integer() | nil,
     keys: map() | list() | nil,
-    data_payload: map() | list() | nil
+    data_payload: map() | list() | nil,
+    request_context: map() | list() | nil
   }
 
-  @fields [:created_at, :created_by, :correlation_id, :journal_id, :tenant_id, :event_id, :user_id, :keys, :data_payload]
+  @fields [:created_at, :created_by, :correlation_id, :journal_id, :tenant_id, :event_id, :user_id, :keys, :data_payload, :request_context]
 
   @enforce_keys @fields
   defstruct @fields

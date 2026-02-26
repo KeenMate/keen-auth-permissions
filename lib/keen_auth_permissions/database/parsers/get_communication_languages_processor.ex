@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetCommunicationLanguagesParser d
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetCommunicationLanguagesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_communication_languages",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_communication_languages: #{inspect(reason)}")
 
     err
   end

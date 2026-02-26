@@ -13,10 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetPermissionsMapParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetPermissionsMapModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure",
-      procedure: "get_permissions_map",
-      reason: inspect(reason)
-    )
+    Logger.error("Error calling stored procedure get_permissions_map: #{inspect(reason)}")
 
     err
   end
@@ -31,12 +28,13 @@ defmodule KeenAuthPermissions.Database.Parsers.GetPermissionsMapParser do
     {:ok, results}
   end
 
-  defp parse_row([permission_id, full_code, short_code, title]) do
+  defp parse_row([permission_id, full_code, short_code, title, source]) do
     {:ok, %GetPermissionsMapModel{
       permission_id: permission_id,
       full_code: full_code,
       short_code: short_code,
       title: title,
+      source: source,
     }}
   end
 

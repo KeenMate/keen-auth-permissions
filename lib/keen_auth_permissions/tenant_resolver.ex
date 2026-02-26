@@ -19,6 +19,7 @@ defmodule KeenAuthPermissions.TenantResolver do
 
   def get_tenant_resolver!(config) do
     Config.get(config, :tenant) ||
+      Application.get_env(:keen_auth_permissions, :tenant) ||
       Config.raise_error("Tenant resolver not configured, please configure :tenant key")
   end
 end
