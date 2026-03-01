@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.2] - 2026-03-01
+
+### Added
+- **Provider Capability Flags** — `create_provider` and `update_provider` now accept `allows_group_mapping` and `allows_group_sync` boolean parameters (default `false`, backward compatible)
+- **`Auth.list_providers/2`** — new facade function wrapping `auth.get_providers` with keyword opts for filtering (`:is_active`, `:allows_group_mapping`, `:allows_group_sync`, `:search`)
+- **`Auth.validate_provider_allows_group_mapping/1`** — validates that a provider supports group mapping
+- **`Auth.validate_provider_allows_group_sync/1`** — validates that a provider supports group sync
+- **Resource Access (ACL) Facade** (`KeenAuthPermissions.ResourceAccess`)
+  - `has_access?/6` — check if user has a flag on a resource
+  - `filter_accessible/5` — bulk filter resource IDs to only accessible ones
+  - `grant/7` — grant access flags to a user or group
+  - `deny/6` — explicit deny on a user (overrides group grants)
+  - `revoke/7` — revoke specific flags from a user or group
+  - `revoke_all/4` — remove all ACL entries for a resource (cleanup on delete)
+  - `get_flags/4` — get effective flags for a user on a resource
+  - `get_matrix/4` — get flags across resource hierarchy
+  - `get_grants/4` — list all grants/denies on a resource with user/group details
+  - `get_user_resources/5` — list resources a user can access
+  - `create_resource_type/7` — register a new resource type (auto-creates partition)
+- 12 new auto-generated database functions for the resource access system
+
+### Changed
+- Regenerated all database modules with db-gen (194 stored procedure wrappers, up from ~170)
+- `Auth.create_provider` arity changed from `/4` to `/6` (backward compatible via defaults)
+- `Auth.update_provider` arity changed from `/5` to `/7` (backward compatible via defaults)
+- `AuthDeleteProviderModel` return type simplified: was `{user_id, username, display_name}`, now `{delete_provider}` (integer provider_id)
+- Translation models: `ua_search_data` field renamed to `nrm_search_data`
+
+### Fixed
+- Unskipped `delete_provider` test — the DB-side return type mismatch has been fixed in postgresql-permissions-model v2.15.0
+
+### Database Compatibility
+- Requires postgresql-permissions-model **v2.14.0+** (resource access ACL system, provider capability flags)
+
 ## [1.0.0-rc.1] - 2026-02-26
 
 ### Added

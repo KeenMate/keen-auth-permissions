@@ -440,13 +440,15 @@ defmodule KeenAuthPermissions.Auth do
 
   Calls `auth.create_provider`.
   """
-  @spec create_provider(RequestContext.t(), String.t(), String.t(), boolean()) ::
+  @spec create_provider(RequestContext.t(), String.t(), String.t(), boolean(), boolean(), boolean()) ::
           {:ok, map()} | {:error, any()}
   def create_provider(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         provider_code,
         provider_name,
-        is_active
+        is_active,
+        allows_group_mapping \\ false,
+        allows_group_sync \\ false
       ) do
     case db_context().auth_create_provider(
            username,
@@ -454,7 +456,9 @@ defmodule KeenAuthPermissions.Auth do
            request_id,
            provider_code,
            provider_name,
-           is_active
+           is_active,
+           allows_group_mapping,
+           allows_group_sync
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -468,14 +472,16 @@ defmodule KeenAuthPermissions.Auth do
 
   Calls `auth.update_provider`.
   """
-  @spec update_provider(RequestContext.t(), integer(), String.t(), String.t(), boolean()) ::
+  @spec update_provider(RequestContext.t(), integer(), String.t(), String.t(), boolean(), boolean(), boolean()) ::
           {:ok, map()} | {:error, any()}
   def update_provider(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         provider_id,
         provider_code,
         provider_name,
-        is_active
+        is_active,
+        allows_group_mapping \\ false,
+        allows_group_sync \\ false
       ) do
     case db_context().auth_update_provider(
            username,
@@ -484,7 +490,9 @@ defmodule KeenAuthPermissions.Auth do
            provider_id,
            provider_code,
            provider_name,
-           is_active
+           is_active,
+           allows_group_mapping,
+           allows_group_sync
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -563,6 +571,27 @@ defmodule KeenAuthPermissions.Auth do
   end
 
   @doc """
+  Lists providers with optional filters.
+
+  Calls `auth.get_providers`.
+  """
+  @spec list_providers(RequestContext.t(), keyword()) :: {:ok, list()} | {:error, any()}
+  def list_providers(
+        %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
+        opts \\ []
+      ) do
+    db_context().auth_get_providers(
+      user_id,
+      request_id,
+      Keyword.get(opts, :is_active),
+      Keyword.get(opts, :allows_group_mapping),
+      Keyword.get(opts, :allows_group_sync),
+      Keyword.get(opts, :search)
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
   Validates that a provider is active.
 
   Calls `auth.validate_provider_is_active`.
@@ -571,6 +600,32 @@ defmodule KeenAuthPermissions.Auth do
   @spec validate_provider_is_active(String.t()) :: {:ok, boolean()} | {:error, any()}
   def validate_provider_is_active(provider_code) do
     case db_context().auth_validate_provider_is_active(provider_code) do
+      :ok -> {:ok, true}
+      {:error, _} = error -> error
+    end
+  end
+
+  @doc """
+  Validates that a provider allows group mapping.
+
+  Calls `auth.validate_provider_allows_group_mapping`.
+  """
+  @spec validate_provider_allows_group_mapping(String.t()) :: {:ok, boolean()} | {:error, any()}
+  def validate_provider_allows_group_mapping(provider_code) do
+    case db_context().auth_validate_provider_allows_group_mapping(provider_code) do
+      :ok -> {:ok, true}
+      {:error, _} = error -> error
+    end
+  end
+
+  @doc """
+  Validates that a provider allows group sync.
+
+  Calls `auth.validate_provider_allows_group_sync`.
+  """
+  @spec validate_provider_allows_group_sync(String.t()) :: {:ok, boolean()} | {:error, any()}
+  def validate_provider_allows_group_sync(provider_code) do
+    case db_context().auth_validate_provider_allows_group_sync(provider_code) do
       :ok -> {:ok, true}
       {:error, _} = error -> error
     end

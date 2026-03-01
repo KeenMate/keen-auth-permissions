@@ -259,7 +259,7 @@ defmodule KeenAuthPermissions.AuthTest do
       end
     end
 
-    test "create_provider/4 creates a new provider" do
+    test "create_provider creates a new provider" do
       ctx = system_context()
       code = "test_provider_#{unique_string()}"
 
@@ -270,7 +270,17 @@ defmodule KeenAuthPermissions.AuthTest do
       assert is_integer(created.create_provider)
     end
 
-    test "update_provider/5 updates a provider" do
+    test "create_provider with group mapping flags" do
+      ctx = system_context()
+      code = "test_provider_gm_#{unique_string()}"
+
+      assert {:ok, created} =
+               Auth.create_provider(ctx, code, "Test Provider", true, true, true)
+
+      assert is_integer(created.create_provider)
+    end
+
+    test "update_provider updates a provider" do
       ctx = system_context()
       code = "update_provider_#{unique_string()}"
 
@@ -282,7 +292,9 @@ defmodule KeenAuthPermissions.AuthTest do
                  created.create_provider,
                  code,
                  "Updated Provider",
-                 true
+                 true,
+                 true,
+                 false
                )
 
       # Model returns provider_id
@@ -304,16 +316,14 @@ defmodule KeenAuthPermissions.AuthTest do
       assert is_integer(enabled.enable_provider)
     end
 
-    @tag :skip
-    # Skip: delete_provider returns "structure of query does not match function result type"
-    # This is a DB-side issue with the stored procedure return type
     test "delete_provider/2 deletes a provider" do
       ctx = system_context()
       code = "delete_provider_#{unique_string()}"
 
       {:ok, _created} = Auth.create_provider(ctx, code, "Test Provider", true)
 
-      assert {:ok, _deleted} = Auth.delete_provider(ctx, code)
+      assert {:ok, deleted} = Auth.delete_provider(ctx, code)
+      assert is_integer(deleted.delete_provider)
     end
   end
 end

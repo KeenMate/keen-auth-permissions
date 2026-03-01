@@ -28,11 +28,9 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeleteProviderParser do
     {:ok, results}
   end
 
-  defp parse_row([user_id, username, display_name]) do
+  defp parse_row([delete_provider]) do
     {:ok, %AuthDeleteProviderModel{
-      user_id: user_id,
-      username: username,
-      display_name: display_name,
+      delete_provider: delete_provider,
     }}
   end
 

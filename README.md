@@ -11,6 +11,7 @@ A comprehensive Elixir library for authentication and authorization, extending [
 - **Permission System**: Hierarchical permissions with short codes, permission sets, and source tracking
 - **Permissions Map**: In-memory GenServer cache for fast full_code/short_code translation and permission checks
 - **API Key Management**: Create and manage API keys with granular permissions
+- **Resource Access (ACL)**: Resource-level authorization layered on top of RBAC — grant/deny/revoke per-resource flags to users or groups
 - **Audit Trail**: Unified audit trail and security event queries with data purge support
 - **Token Management**: Secure token creation, validation, and lifecycle management
 - **Event Logging**: User events with IP, user agent, and origin tracking
@@ -165,8 +166,14 @@ defmodule MyApp.Application do
   defp ensure_providers do
     db = KeenAuthPermissions.DbContext.get_global_db_context()
 
-    for {code, name} <- [{"email", "Email"}, {"entra", "Microsoft Entra ID"}] do
-      case db.auth_ensure_provider("system", 1, "app-startup", code, name, true) do
+    # {code, name, allows_group_mapping, allows_group_sync}
+    providers = [
+      {"email", "Email", false, false},
+      {"entra", "Microsoft Entra ID", true, true}
+    ]
+
+    for {code, name, mapping, sync} <- providers do
+      case db.auth_ensure_provider("system", 1, "app-startup", code, name, true, mapping, sync) do
         {:ok, [%{is_new: true}]} -> Logger.info("Created provider: #{code}")
         {:ok, [%{is_new: false}]} -> :ok
         {:error, reason} -> Logger.warning("Failed to ensure provider '#{code}': #{inspect(reason)}")
@@ -283,7 +290,7 @@ Each OAuth provider must be registered in the database before users can authenti
 db = KeenAuthPermissions.DbContext.get_global_db_context()
 
 for {code, name} <- [{"email", "Email"}, {"entra", "Microsoft Entra ID"}] do
-  case db.auth_ensure_provider("system", 1, "app-startup", code, name, true) do
+  case db.auth_ensure_provider("system", 1, "app-startup", code, name, true, false, false) do
     {:ok, [%{is_new: true}]} -> Logger.info("Created provider: #{code}")
     {:ok, [%{is_new: false}]} -> :ok
     {:error, reason} -> Logger.error("Failed to ensure provider #{code}: #{inspect(reason)}")
@@ -301,9 +308,20 @@ ctx = KeenAuthPermissions.RequestContext.system_ctx()
 # Create a provider (fails if already exists)
 Auth.create_provider(ctx, "entra", "Microsoft Entra ID", true)
 
+# Create with group mapping/sync support
+Auth.create_provider(ctx, "entra", "Microsoft Entra ID", true, true, true)
+
+# List providers with optional filters
+Auth.list_providers(ctx)
+Auth.list_providers(ctx, is_active: true, allows_group_mapping: true)
+
 # Manage providers
 Auth.enable_provider(ctx, "entra")
 Auth.disable_provider(ctx, "entra")
+
+# Validate provider capabilities
+Auth.validate_provider_allows_group_mapping("entra")
+Auth.validate_provider_allows_group_sync("entra")
 ```
 
 ### Processor
@@ -325,11 +343,14 @@ For custom OAuth providers, implement the `KeenAuth.Processor` behaviour and use
 
 ### Provider management functions
 
-- `Auth.create_provider/4` — register a new provider
-- `Auth.update_provider/5` — update provider name/status
+- `Auth.create_provider/4..6` — register a new provider (optional `allows_group_mapping`, `allows_group_sync`)
+- `Auth.update_provider/5..7` — update provider name/status/capabilities
+- `Auth.list_providers/1..2` — list providers with optional filters
 - `Auth.enable_provider/2` / `Auth.disable_provider/2` — toggle provider
 - `Auth.delete_provider/2` — remove a provider
 - `Auth.validate_provider_is_active/1` — check if provider is active
+- `Auth.validate_provider_allows_group_mapping/1` — check if provider supports group mapping
+- `Auth.validate_provider_allows_group_sync/1` — check if provider supports group sync
 - `Auth.list_provider_users/2` — list users from a provider
 
 ## Email Authentication
@@ -532,6 +553,7 @@ The library provides high-level facade modules for common operations:
 - `KeenAuthPermissions.Tenants` - Multi-tenant operations
 - `KeenAuthPermissions.PermSets` - Permission set management
 - `KeenAuthPermissions.ApiKeys` - API key management
+- `KeenAuthPermissions.ResourceAccess` - Resource-level ACL (grant, deny, revoke, check)
 - `KeenAuthPermissions.Audit` - Audit trail, security events, journal search
 - `KeenAuthPermissions.SysParams` - Database-level system parameters (setup only)
 - `KeenAuthPermissions.PermissionsMap` - In-memory permission code translation (GenServer)

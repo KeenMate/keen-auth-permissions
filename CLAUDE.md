@@ -31,7 +31,7 @@ This library follows a database-first approach where business logic is implement
 ### Key Components
 
 #### 1. Database Layer (`lib/keen_auth_permissions/database/`)
-- **Auto-generated Database Context** (`db_context.ex`): Contains ~170 auto-generated functions that call PostgreSQL stored procedures. Each function corresponds to a stored procedure in the `auth` schema.
+- **Auto-generated Database Context** (`db_context.ex`): Contains ~194 auto-generated functions that call PostgreSQL stored procedures. Each function corresponds to a stored procedure in the `auth` schema.
 - **Models** (`models/`): Data structures representing return types from stored procedures (e.g., `AuthCreateUserItem`, `AuthGetUserPermissionsItem`)
 - **Parsers** (`parsers/`): Convert raw database results into structured Elixir data
 
