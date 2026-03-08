@@ -4,7 +4,7 @@ defmodule KeenAuthPermissions.MixProject do
   def project do
     [
       app: :keen_auth_permissions,
-      version: "1.0.0-rc.1",
+      version: "1.0.0-rc.3",
       elixir: "~> 1.14",
       start_permanent: Mix.env() == :prod,
       description: description(),
@@ -54,6 +54,10 @@ defmodule KeenAuthPermissions.MixProject do
           KeenAuthPermissions.Tenants,
           KeenAuthPermissions.PermSets,
           KeenAuthPermissions.ApiKeys,
+          KeenAuthPermissions.ResourceAccess,
+          KeenAuthPermissions.Blacklist,
+          KeenAuthPermissions.Mfa,
+          KeenAuthPermissions.Invitations,
           KeenAuthPermissions.Audit
         ],
         Core: [

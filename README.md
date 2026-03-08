@@ -12,6 +12,10 @@ A comprehensive Elixir library for authentication and authorization, extending [
 - **Permissions Map**: In-memory GenServer cache for fast full_code/short_code translation and permission checks
 - **API Key Management**: Create and manage API keys with granular permissions
 - **Resource Access (ACL)**: Resource-level authorization layered on top of RBAC — grant/deny/revoke per-resource flags to users or groups
+- **Blacklist Management**: Add/remove/search blacklisted users and identities with reason tracking
+- **Multi-Factor Authentication (MFA)**: TOTP enrollment, challenge/verify flow, policy management (tenant/group/user-level), recovery codes, login verification
+- **Bulk Ensure Operations**: Idempotent upsert for permissions, permission sets, user groups, group mappings, and resource types from JSON with source tracking and final-state semantics
+- **Invitations**: Phase-based invitation system with templates, conditions, and action orchestration — invite users to tenants, groups, permission sets, and resources
 - **Audit Trail**: Unified audit trail and security event queries with data purge support
 - **Token Management**: Secure token creation, validation, and lifecycle management
 - **Event Logging**: User events with IP, user agent, and origin tracking
@@ -27,7 +31,7 @@ Add `keen_auth_permissions` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:keen_auth_permissions, "~> 1.0.0-rc.1"}
+    {:keen_auth_permissions, "~> 1.0.0-rc.3"}
   ]
 end
 ```
@@ -542,18 +546,282 @@ PermissionHelpers.with_permission(ctx, ["admin.delete"], fn ->
 end)
 ```
 
+## Resource Access (ACL)
+
+Resource-level authorization layered on top of RBAC. While permissions control **what actions** a user can perform, resource access controls **which specific resources** they can act on.
+
+### Resource types
+
+Register resource types to define what kinds of resources exist. Types support hierarchy (e.g., `project` -> `project.documents`):
+
+```elixir
+alias KeenAuthPermissions.ResourceAccess
+
+ctx = RequestContext.new(user)
+
+# Create a resource type
+ResourceAccess.create_resource_type(ctx, "project", "Project")
+ResourceAccess.create_resource_type(ctx, "project.documents", "Documents", "project")
+
+# List resource types (optionally filter by source, parent_code, active_only)
+{:ok, types} = ResourceAccess.list_resource_types()
+{:ok, types} = ResourceAccess.list_resource_types("my_app", nil, true)
+```
+
+Each resource type has a `full_title` field that is automatically generated from the hierarchy (e.g., "Project > Documents").
+
+### Granting and revoking access
+
+```elixir
+# Grant "read" and "write" flags to a user on project 42
+ResourceAccess.grant(ctx, "project", 42, user_id, nil, ["read", "write"], tenant_id)
+
+# Grant "read" to a group
+ResourceAccess.grant(ctx, "project", 42, nil, group_id, ["read"], tenant_id)
+
+# Deny "delete" for a specific user (overrides all group grants)
+ResourceAccess.deny(ctx, "project", 42, user_id, ["delete"], tenant_id)
+
+# Revoke specific flags
+ResourceAccess.revoke(ctx, "project", 42, user_id, nil, ["write"], tenant_id)
+
+# Revoke all access on a resource (cleanup on resource delete)
+ResourceAccess.revoke_all(ctx, "project", 42, tenant_id)
+```
+
+### Checking access
+
+```elixir
+# Single check
+{:ok, true} = ResourceAccess.has_access?(ctx, "project", 42, "read", tenant_id)
+
+# Bulk filter — returns only the IDs the user can access
+{:ok, accessible_ids} = ResourceAccess.filter_accessible(ctx, "project", [1, 2, 3, 4, 5], "read", tenant_id)
+```
+
+### Querying
+
+```elixir
+# Get current user's effective flags on a resource
+{:ok, flags} = ResourceAccess.get_flags(ctx, "project", 42, tenant_id)
+
+# Get all grants/denies on a resource (admin view)
+{:ok, grants} = ResourceAccess.get_grants(ctx, "project", 42, tenant_id)
+
+# Hierarchical access matrix
+{:ok, matrix} = ResourceAccess.get_matrix(ctx, "project", 42, tenant_id)
+
+# List resources a user can access
+{:ok, resources} = ResourceAccess.get_user_resources(ctx, target_user_id, "project", "read", tenant_id)
+```
+
+### Access check algorithm (priority order)
+
+1. System user (id=1) — always allowed
+2. Tenant owner — always allowed
+3. User-level deny — blocked, overrides everything
+4. User-level grant — allowed
+5. Group-level grant (via active group membership) — allowed
+6. No matching row — denied
+
+## Blacklist
+
+Manage blacklisted users and identities:
+
+```elixir
+alias KeenAuthPermissions.Blacklist
+
+ctx = RequestContext.new(user)
+
+# Add to blacklist
+Blacklist.add(ctx, "bad_user", "entra", "uid-123", "oid-456", "abuse", "Repeated violations", tenant_id)
+
+# Search blacklist (with pagination)
+{:ok, entries} = Blacklist.search(ctx, "bad_user", nil, 1, 20, tenant_id)
+
+# Check if blacklisted (no auth context needed)
+{:ok, true} = Blacklist.is_blacklisted?("bad_user", "entra", "uid-123", "oid-456")
+
+# Remove from blacklist
+Blacklist.remove(ctx, blacklist_id, tenant_id)
+```
+
+## Multi-Factor Authentication (MFA)
+
+Full MFA lifecycle — enrollment, challenge/verify, policy management, and recovery codes:
+
+```elixir
+alias KeenAuthPermissions.Mfa
+
+ctx = RequestContext.new(user)
+
+# Enroll a user in TOTP MFA
+{:ok, enrollment} = Mfa.enroll(ctx, target_user_id, "totp", tenant_id)
+# => %{secret: "...", recovery_codes: ["...", ...]}
+
+# Confirm enrollment after user verifies initial code
+Mfa.confirm_enrollment(ctx, target_user_id, "totp", tenant_id)
+
+# Create a challenge for login verification
+{:ok, challenge} = Mfa.create_challenge(ctx, target_user_id, tenant_id)
+
+# Verify the challenge
+Mfa.verify_challenge(ctx, challenge.token_uid, "123456", false, tenant_id)
+
+# Check MFA status
+{:ok, status} = Mfa.get_status(ctx, target_user_id)
+
+# Reset MFA (generates new recovery codes)
+{:ok, result} = Mfa.reset(ctx, target_user_id, "totp")
+```
+
+### MFA Policies
+
+Policies can be set at tenant, group, or user level:
+
+```elixir
+# Require MFA for all users in a tenant
+Mfa.create_policy(ctx, tenant_id, nil, nil, true)
+
+# Require MFA for a specific group
+Mfa.create_policy(ctx, nil, group_id, nil, true)
+
+# Check if MFA is required for a user
+{:ok, true} = Mfa.is_required?(ctx, target_user_id, tenant_id)
+
+# List policies
+{:ok, policies} = Mfa.get_policies(ctx, tenant_id, nil, nil)
+```
+
+## Bulk Ensure Operations
+
+Idempotent upsert operations for seeding or syncing configuration on app startup. All accept JSON-encoded lists and support source tracking:
+
+```elixir
+alias KeenAuthPermissions.{Permissions, PermSets, UserGroups, ResourceAccess}
+
+ctx = RequestContext.system_ctx()
+
+# Ensure permissions exist (creates missing, updates existing)
+permissions_json = Jason.encode!([
+  %{code: "users.read", title: "Read Users"},
+  %{code: "users.write", title: "Write Users"}
+])
+Permissions.ensure(ctx, permissions_json, true, "my_app")
+
+# Ensure permission sets
+perm_sets_json = Jason.encode!([
+  %{code: "admin_set", title: "Admin Set", permissions: ["users.read", "users.write"]}
+])
+PermSets.ensure(ctx, perm_sets_json, true, "my_app", tenant_id)
+
+# Ensure user groups
+groups_json = Jason.encode!([
+  %{code: "admins", title: "Administrators"}
+])
+UserGroups.ensure(ctx, groups_json, true, "my_app", tenant_id)
+
+# Ensure user group mappings (provider role → internal group)
+mappings_json = Jason.encode!([
+  %{group_code: "admins", provider_code: "entra", mapped_role: "Admins.FullAdmin"}
+])
+UserGroups.ensure_mappings(ctx, mappings_json, true, tenant_id)
+
+# Ensure resource types
+types_json = Jason.encode!([
+  %{code: "project", title: "Project"},
+  %{code: "project.docs", title: "Documents", parent_code: "project"}
+])
+ResourceAccess.ensure_resource_types(ctx, types_json, true, "my_app")
+```
+
+The `is_final_state` parameter (second-to-last arg) controls whether items not in the list should be deactivated — useful for keeping the database in sync with a canonical source.
+
+## Invitations
+
+A generic invitation system for onboarding users to tenants, groups, permission sets, and resource-access-controlled entities. Invitations carry ordered, typed actions that execute across lifecycle phases (`on_create`, `on_accept`, `on_reject`, `on_expired`).
+
+### Creating invitations
+
+```elixir
+alias KeenAuthPermissions.Invitations
+
+ctx = RequestContext.new(user)
+
+# Create with inline actions
+{:ok, invitation} = Invitations.create(ctx, tenant_id, "newuser@example.com", [
+  %{action_type_code: "add_tenant_user", phase_code: "on_accept", executor_code: "database",
+    sequence: 1, is_required: true, payload: %{tenant_id: tenant_id}},
+  %{action_type_code: "send_welcome_email", phase_code: "on_accept", executor_code: "backend",
+    sequence: 2, is_required: false, payload: %{template: "welcome"}}
+], "Welcome to our platform!", ~U[2026-04-01 00:00:00Z])
+# => %{invitation_id: 1, uuid: "...", on_create_actions: [...]}
+
+# Create from a reusable template
+{:ok, invitation} = Invitations.create_from_template(ctx, tenant_id, "onboarding",
+  "newuser@example.com", "Welcome!", ~U[2026-04-01 00:00:00Z])
+```
+
+The `on_create_actions` in the result are backend/external actions your app needs to execute immediately (e.g., sending an email or SMS).
+
+### Accepting and rejecting
+
+```elixir
+# Accept — executes DB actions automatically, returns backend actions for your app
+{:ok, backend_actions} = Invitations.accept(ctx, invitation_id, target_user_id)
+
+# Reject
+{:ok, backend_actions} = Invitations.reject(ctx, invitation_id)
+
+# Revoke (by inviter or admin)
+:ok = Invitations.revoke(ctx, invitation_id)
+```
+
+### Querying
+
+```elixir
+# List invitations (with optional filters)
+{:ok, invitations} = Invitations.list(ctx, tenant_id)
+{:ok, pending} = Invitations.list(ctx, tenant_id, "pending")
+{:ok, for_user} = Invitations.list(ctx, tenant_id, nil, "user@example.com")
+
+# Get actions for an invitation
+{:ok, actions} = Invitations.get_actions(ctx, invitation_id)
+```
+
+### Templates
+
+Templates define reusable invitation configurations:
+
+```elixir
+# Create a template
+{:ok, template_id} = Invitations.create_template(ctx, tenant_id, "onboarding", "Onboarding",
+  "Standard onboarding invitation", "Welcome to our platform!",
+  [%{action_type_code: "add_tenant_user", phase_code: "on_accept", executor_code: "database",
+     sequence: 1, is_required: true, payload: %{tenant_id: tenant_id}}])
+
+# Update template
+:ok = Invitations.update_template(ctx, template_id, "Updated Title", "New description")
+
+# Delete template
+:ok = Invitations.delete_template(ctx, template_id)
+```
+
 ## Facade Modules
 
 The library provides high-level facade modules for common operations:
 
 - `KeenAuthPermissions.Auth` - Authentication, registration, tokens
-- `KeenAuthPermissions.Users` - User management and search
-- `KeenAuthPermissions.UserGroups` - Group management and membership
-- `KeenAuthPermissions.Permissions` - Permission CRUD, search, assignment, and checking
+- `KeenAuthPermissions.Users` - User management, search, provider lookup, ensure user info
+- `KeenAuthPermissions.UserGroups` - Group management, membership, bulk ensure groups & mappings
+- `KeenAuthPermissions.Permissions` - Permission CRUD, search, assignment, bulk ensure
 - `KeenAuthPermissions.Tenants` - Multi-tenant operations
-- `KeenAuthPermissions.PermSets` - Permission set management
+- `KeenAuthPermissions.PermSets` - Permission set management, bulk ensure
 - `KeenAuthPermissions.ApiKeys` - API key management
-- `KeenAuthPermissions.ResourceAccess` - Resource-level ACL (grant, deny, revoke, check)
+- `KeenAuthPermissions.ResourceAccess` - Resource-level ACL (grant, deny, revoke, check, resource types, bulk ensure)
+- `KeenAuthPermissions.Blacklist` - User/identity blacklist management (add, remove, search, check)
+- `KeenAuthPermissions.Mfa` - Multi-factor authentication (enroll, challenge, verify, policies, recovery codes)
+- `KeenAuthPermissions.Invitations` - Phase-based invitations with templates, actions, and lifecycle management
 - `KeenAuthPermissions.Audit` - Audit trail, security events, journal search
 - `KeenAuthPermissions.SysParams` - Database-level system parameters (setup only)
 - `KeenAuthPermissions.PermissionsMap` - In-memory permission code translation (GenServer)

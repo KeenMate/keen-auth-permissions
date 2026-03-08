@@ -13,10 +13,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUserIdentityModel do
     user_id: integer(),
     provider_groups: list(String.t()),
     provider_roles: list(String.t()),
-    user_data: map() | list()
+    user_data: map() | list(),
+    is_verified: boolean()
   }
 
-  @fields [:user_identity_id, :provider_code, :uid, :user_id, :provider_groups, :provider_roles, :user_data]
+  @fields [:user_identity_id, :provider_code, :uid, :user_id, :provider_groups, :provider_roles, :user_data, :is_verified]
 
   @enforce_keys @fields
   defstruct @fields

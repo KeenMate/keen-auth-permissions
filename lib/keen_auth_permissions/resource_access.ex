@@ -103,10 +103,21 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.grant_resource_access`.
   """
-  @spec grant(RequestContext.t(), String.t(), integer(), integer() | nil, integer() | nil, list(String.t()), integer()) ::
+  @spec grant(
+          RequestContext.t(),
+          String.t(),
+          integer(),
+          integer() | nil,
+          integer() | nil,
+          list(String.t()),
+          integer()
+        ) ::
           {:ok, list(map())} | {:error, any()}
   def grant(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         resource_type,
         resource_id,
         target_user_id,
@@ -138,7 +149,10 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @spec deny(RequestContext.t(), String.t(), integer(), integer(), list(String.t()), integer()) ::
           {:ok, list(map())} | {:error, any()}
   def deny(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         resource_type,
         resource_id,
         target_user_id,
@@ -166,10 +180,21 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.revoke_resource_access`.
   """
-  @spec revoke(RequestContext.t(), String.t(), integer(), integer() | nil, integer() | nil, list(String.t()), integer()) ::
+  @spec revoke(
+          RequestContext.t(),
+          String.t(),
+          integer(),
+          integer() | nil,
+          integer() | nil,
+          list(String.t()),
+          integer()
+        ) ::
           {:ok, integer()} | {:error, any()}
   def revoke(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         resource_type,
         resource_id,
         target_user_id,
@@ -205,7 +230,10 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @spec revoke_all(RequestContext.t(), String.t(), integer(), integer()) ::
           {:ok, integer()} | {:error, any()}
   def revoke_all(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         resource_type,
         resource_id,
         tenant_id
@@ -335,6 +363,90 @@ defmodule KeenAuthPermissions.ResourceAccess do
   # ============================================================================
 
   @doc """
+  Lists resource types, optionally filtered by source, parent code, and active status.
+
+  Calls `auth.get_resource_types`.
+  """
+  @spec list_resource_types(String.t() | nil, String.t() | nil, boolean()) ::
+          {:ok, list(map())} | {:error, any()}
+  def list_resource_types(source \\ nil, parent_code \\ nil, active_only \\ true) do
+    db_context().auth_get_resource_types(source, parent_code, active_only)
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
+  Ensures resource types exist (upsert from JSON).
+
+  Calls `auth.ensure_resource_types`.
+  """
+  @spec ensure_resource_types(RequestContext.t(), String.t(), String.t() | nil, integer()) ::
+          {:ok, list()} | {:error, any()}
+  def ensure_resource_types(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        resource_types_json,
+        source,
+        tenant_id
+      ) do
+    db_context().auth_ensure_resource_types(
+      username,
+      user_id,
+      request_id,
+      resource_types_json,
+      source,
+      tenant_id
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
+  Updates an existing resource type.
+
+  Calls `auth.update_resource_type`.
+  """
+  @spec update_resource_type(
+          RequestContext.t(),
+          String.t(),
+          String.t(),
+          String.t() | nil,
+          boolean(),
+          String.t() | nil,
+          integer()
+        ) ::
+          {:ok, map()} | {:error, any()}
+  def update_resource_type(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        code,
+        title,
+        description,
+        is_active,
+        source,
+        tenant_id
+      ) do
+    case db_context().auth_update_resource_type(
+           username,
+           user_id,
+           request_id,
+           code,
+           title,
+           description,
+           is_active,
+           source,
+           tenant_id
+         )
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result]} -> {:ok, result}
+      {:ok, []} -> {:error, :update_failed}
+      error -> error
+    end
+  end
+
+  @doc """
   Registers a new resource type.
 
   Resource types support hierarchy (e.g., `project` -> `project.documents` -> `project.invoices`).
@@ -342,10 +454,21 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.create_resource_type`.
   """
-  @spec create_resource_type(RequestContext.t(), String.t(), String.t(), String.t() | nil, String.t() | nil, integer(), String.t() | nil) ::
+  @spec create_resource_type(
+          RequestContext.t(),
+          String.t(),
+          String.t(),
+          String.t() | nil,
+          String.t() | nil,
+          integer(),
+          String.t() | nil
+        ) ::
           {:ok, map()} | {:error, any()}
   def create_resource_type(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         code,
         title,
         parent_code \\ nil,

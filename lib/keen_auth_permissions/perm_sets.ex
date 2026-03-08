@@ -37,7 +37,10 @@ defmodule KeenAuthPermissions.PermSets do
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id
       ) do
     db_context().auth_get_perm_sets(
@@ -89,6 +92,39 @@ defmodule KeenAuthPermissions.PermSets do
   end
 
   # ============================================================================
+  # Permission Set Ensure Operations
+  # ============================================================================
+
+  @doc """
+  Ensures permission sets exist (upsert from JSON).
+
+  Calls `auth.ensure_perm_sets`.
+  """
+  @spec ensure(RequestContext.t(), String.t(), String.t() | nil, integer(), boolean()) ::
+          {:ok, list()} | {:error, any()}
+  def ensure(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        perm_sets_json,
+        source,
+        tenant_id,
+        is_final_state \\ false
+      ) do
+    db_context().auth_ensure_perm_sets(
+      username,
+      user_id,
+      request_id,
+      perm_sets_json,
+      source,
+      tenant_id,
+      is_final_state
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  # ============================================================================
   # Permission Set CRUD Operations
   # ============================================================================
 
@@ -97,10 +133,21 @@ defmodule KeenAuthPermissions.PermSets do
 
   Calls `auth.create_perm_set`.
   """
-  @spec create(RequestContext.t(), String.t(), boolean(), boolean(), list(String.t()), integer(), String.t() | nil) ::
+  @spec create(
+          RequestContext.t(),
+          String.t(),
+          boolean(),
+          boolean(),
+          list(String.t()),
+          integer(),
+          String.t() | nil
+        ) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         title,
         is_system,
         is_assignable,
@@ -134,7 +181,10 @@ defmodule KeenAuthPermissions.PermSets do
   @spec update(RequestContext.t(), integer(), String.t(), boolean(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         perm_set_id,
         title,
         is_assignable,
@@ -168,7 +218,10 @@ defmodule KeenAuthPermissions.PermSets do
   @spec add_permissions(RequestContext.t(), integer(), list(String.t()), integer()) ::
           {:ok, list()} | {:error, any()}
   def add_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         perm_set_id,
         permissions,
         tenant_id
@@ -192,7 +245,10 @@ defmodule KeenAuthPermissions.PermSets do
   @spec delete_permissions(RequestContext.t(), integer(), list(String.t()), integer()) ::
           {:ok, list()} | {:error, any()}
   def delete_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         perm_set_id,
         permissions,
         tenant_id

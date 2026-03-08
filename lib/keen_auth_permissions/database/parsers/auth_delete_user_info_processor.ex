@@ -28,9 +28,10 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeleteUserInfoParser do
     {:ok, results}
   end
 
-  defp parse_row([delete_user_info]) do
+  defp parse_row([user_id, username]) do
     {:ok, %AuthDeleteUserInfoModel{
-      delete_user_info: delete_user_info,
+      user_id: user_id,
+      username: username,
     }}
   end
 

@@ -28,10 +28,11 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateResourceTypeParser do
     {:ok, results}
   end
 
-  defp parse_row([code, title, description, is_active, source, parent_code, path]) do
+  defp parse_row([code, title, full_title, description, is_active, source, parent_code, path]) do
     {:ok, %AuthCreateResourceTypeModel{
       code: code,
       title: title,
+      full_title: full_title,
       description: description,
       is_active: is_active,
       source: source,

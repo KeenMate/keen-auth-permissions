@@ -7,10 +7,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthDeleteUserInfoModel do
   """
 
   @type t() :: %__MODULE__{
-    delete_user_info: integer()
+    user_id: integer(),
+    username: String.t()
   }
 
-  @fields [:delete_user_info]
+  @fields [:user_id, :username]
 
   @enforce_keys @fields
   defstruct @fields

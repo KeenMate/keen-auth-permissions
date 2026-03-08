@@ -40,7 +40,10 @@ defmodule KeenAuthPermissions.Permissions do
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id
       ) do
     db_context().auth_get_all_permissions(
@@ -106,6 +109,37 @@ defmodule KeenAuthPermissions.Permissions do
   end
 
   # ============================================================================
+  # Permission Ensure Operations
+  # ============================================================================
+
+  @doc """
+  Ensures permissions exist (upsert from JSON).
+
+  Calls `auth.ensure_permissions`.
+  """
+  @spec ensure(RequestContext.t(), String.t(), String.t() | nil, boolean()) ::
+          {:ok, list()} | {:error, any()}
+  def ensure(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        permissions_json,
+        source,
+        is_final_state \\ false
+      ) do
+    db_context().auth_ensure_permissions(
+      username,
+      user_id,
+      request_id,
+      permissions_json,
+      source,
+      is_final_state
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  # ============================================================================
   # Permission Assignment Operations
   # ============================================================================
 
@@ -124,7 +158,10 @@ defmodule KeenAuthPermissions.Permissions do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def assign(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         user_group_id,
         target_user_id,
         perm_set_code,
@@ -161,7 +198,10 @@ defmodule KeenAuthPermissions.Permissions do
   """
   @spec unassign(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def unassign(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         assignment_id,
         tenant_id
       ) do
@@ -203,10 +243,20 @@ defmodule KeenAuthPermissions.Permissions do
     - `short_code` - Optional short code for easier reference (alternative to full_code)
     - `source` - Optional source identifier (e.g., "core", "csv_import")
   """
-  @spec create(RequestContext.t(), String.t(), String.t(), boolean(), String.t() | nil, String.t() | nil) ::
+  @spec create(
+          RequestContext.t(),
+          String.t(),
+          String.t(),
+          boolean(),
+          String.t() | nil,
+          String.t() | nil
+        ) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         title,
         parent_full_code,
         is_assignable,
@@ -243,7 +293,10 @@ defmodule KeenAuthPermissions.Permissions do
           boolean()
         ) :: {:ok, map()} | {:error, any()}
   def set_assignable(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         permission_id,
         permission_full_code,
         is_assignable

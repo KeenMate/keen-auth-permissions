@@ -38,7 +38,10 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec list(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id
       ) do
     db_context().auth_get_tenant_users(
@@ -164,7 +167,10 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec list_by_provider(RequestContext.t(), String.t()) :: {:ok, list()} | {:error, any()}
   def list_by_provider(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_code
       ) do
     db_context().auth_get_provider_users(
@@ -187,7 +193,8 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec enable(RequestContext.t(), integer()) :: {:ok, map()} | {:error, any()}
   def enable(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id
       ) do
     case db_context().auth_enable_user(
@@ -217,7 +224,8 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec disable(RequestContext.t(), integer()) :: {:ok, map()} | {:error, any()}
   def disable(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id
       ) do
     case db_context().auth_disable_user(
@@ -247,7 +255,8 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec lock(RequestContext.t(), integer()) :: {:ok, map()} | {:error, any()}
   def lock(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id
       ) do
     case db_context().auth_lock_user(
@@ -277,7 +286,8 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec unlock(RequestContext.t(), integer()) :: {:ok, map()} | {:error, any()}
   def unlock(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id
       ) do
     case db_context().auth_unlock_user(
@@ -312,7 +322,10 @@ defmodule KeenAuthPermissions.Users do
   @spec update_data(RequestContext.t(), integer(), String.t(), map()) ::
           {:ok, map()} | {:error, any()}
   def update_data(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         provider,
         user_data
@@ -340,7 +353,8 @@ defmodule KeenAuthPermissions.Users do
   @spec update_password(RequestContext.t(), integer(), String.t(), String.t() | nil) ::
           {:ok, map()} | {:error, any()}
   def update_password(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id,
         password_hash,
         password_salt \\ nil
@@ -366,18 +380,24 @@ defmodule KeenAuthPermissions.Users do
 
   Calls `auth.delete_user_info`.
   """
-  @spec delete_info(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
+  @spec delete_info(RequestContext.t(), integer(), integer(), boolean()) ::
+          {:ok, map()} | {:error, any()}
   def delete_info(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
-        tenant_id
+        tenant_id,
+        blacklist \\ false
       ) do
     case db_context().auth_delete_user_info(
            username,
            user_id,
            request_id,
            target_user_id,
-           tenant_id
+           tenant_id,
+           blacklist
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -428,7 +448,8 @@ defmodule KeenAuthPermissions.Users do
   @spec enable_identity(RequestContext.t(), integer(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def enable_identity(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id,
         provider_code
       ) do
@@ -455,7 +476,8 @@ defmodule KeenAuthPermissions.Users do
   @spec disable_identity(RequestContext.t(), integer(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def disable_identity(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id,
         provider_code
       ) do
@@ -472,6 +494,32 @@ defmodule KeenAuthPermissions.Users do
       {:ok, []} -> {:error, :disable_failed}
       error -> error
     end
+  end
+
+  @doc """
+  Verifies a user identity.
+
+  Sets `is_verified = true` on the identity and logs an `identity_verified` event.
+
+  Calls `auth.verify_user_identity`.
+  """
+  @spec verify_identity(RequestContext.t(), integer(), String.t()) :: :ok | {:error, any()}
+  def verify_identity(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        } = ctx,
+        target_user_id,
+        provider_code
+      ) do
+    db_context().auth_verify_user_identity(
+      username,
+      user_id,
+      request_id,
+      target_user_id,
+      provider_code,
+      RequestContext.to_context_map(ctx)
+    )
   end
 
   # ============================================================================
@@ -497,7 +545,10 @@ defmodule KeenAuthPermissions.Users do
   @spec list_assigned_permissions(RequestContext.t(), integer(), integer()) ::
           {:ok, list()} | {:error, any()}
   def list_assigned_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         tenant_id
       ) do
@@ -530,7 +581,10 @@ defmodule KeenAuthPermissions.Users do
   @spec get_groups_and_permissions(RequestContext.t(), integer()) ::
           {:ok, list()} | {:error, any()}
   def get_groups_and_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id
       ) do
     db_context().auth_get_users_groups_and_permissions(
@@ -609,7 +663,10 @@ defmodule KeenAuthPermissions.Users do
   @spec update_last_selected_tenant(RequestContext.t(), integer(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def update_last_selected_tenant(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         tenant_uuid
       ) do
@@ -652,7 +709,10 @@ defmodule KeenAuthPermissions.Users do
   """
   @spec update_preferences(RequestContext.t(), integer(), map()) :: {:ok, map()} | {:error, any()}
   def update_preferences(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         update_data
       ) do
@@ -678,7 +738,10 @@ defmodule KeenAuthPermissions.Users do
   @spec create_tenant_preferences(RequestContext.t(), integer(), map(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create_tenant_preferences(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         update_data,
         tenant_id
@@ -706,7 +769,10 @@ defmodule KeenAuthPermissions.Users do
   @spec update_tenant_preferences(RequestContext.t(), integer(), map(), boolean(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update_tenant_preferences(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         update_data,
         should_overwrite_data,
@@ -740,7 +806,8 @@ defmodule KeenAuthPermissions.Users do
   @spec register(RequestContext.t(), String.t(), String.t(), String.t(), map() | nil) ::
           {:ok, map()} | {:error, any()}
   def register(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         email,
         password_hash,
         display_name,
@@ -778,7 +845,10 @@ defmodule KeenAuthPermissions.Users do
         ) ::
           {:ok, map()} | {:error, any()}
   def ensure_info(
-        %RequestContext{user: %User{username: created_by, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: created_by, user_id: user_id},
+          request_id: request_id
+        },
         username,
         display_name,
         provider_code,
@@ -818,7 +888,10 @@ defmodule KeenAuthPermissions.Users do
           map() | nil
         ) :: {:ok, map()} | {:error, any()}
   def ensure_from_provider(
-        %RequestContext{user: %User{username: created_by, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{
+          user: %User{username: created_by, user_id: user_id},
+          request_id: request_id
+        } = ctx,
         provider_code,
         provider_uid,
         provider_oid,
@@ -855,7 +928,10 @@ defmodule KeenAuthPermissions.Users do
   @spec create_service_user(RequestContext.t(), String.t(), String.t(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create_service_user(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         svc_username,
         email,
         display_name,
@@ -885,7 +961,10 @@ defmodule KeenAuthPermissions.Users do
   @spec add_to_default_groups(RequestContext.t(), integer(), integer()) ::
           {:ok, list()} | {:error, any()}
   def add_to_default_groups(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         tenant_id
       ) do
@@ -912,7 +991,10 @@ defmodule KeenAuthPermissions.Users do
           list(String.t())
         ) :: {:ok, list()} | {:error, any()}
   def ensure_groups_and_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         provider_code,
         provider_groups,

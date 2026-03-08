@@ -9,6 +9,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreateResourceTypeModel do
   @type t() :: %__MODULE__{
     code: String.t(),
     title: String.t(),
+    full_title: String.t() | nil,
     description: String.t() | nil,
     is_active: boolean(),
     source: String.t() | nil,
@@ -16,7 +17,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreateResourceTypeModel do
     path: String.t()
   }
 
-  @fields [:code, :title, :description, :is_active, :source, :parent_code, :path]
+  @fields [:code, :title, :full_title, :description, :is_active, :source, :parent_code, :path]
 
   @enforce_keys @fields
   defstruct @fields

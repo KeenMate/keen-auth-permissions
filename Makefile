@@ -13,7 +13,7 @@ else
 	endif
 endif
 
-.PHONY: help setup deps compile build test format docs clean generate db-setup db-gen
+.PHONY: help setup deps compile build test format docs clean generate db-setup db-gen publish publish-dry
 
 # Default target
 help:
@@ -30,6 +30,10 @@ help:
 	@echo "  make format     - Format code"
 	@echo "  make docs       - Generate documentation"
 	@echo "  make clean      - Clean build artifacts"
+	@echo ""
+	@echo "Publishing:"
+	@echo "  make publish-dry - Dry run of hex publish (validate package)"
+	@echo "  make publish     - Publish package to hex.pm"
 	@echo ""
 	@echo "Database:"
 	@echo "  make db-setup   - Set up database (Windows only)"
@@ -94,6 +98,15 @@ db-gen:
 
 generate: db-gen
 	@echo "Warning: 'make generate' is deprecated. Use 'make db-gen' instead."
+
+# Publishing targets
+publish-dry:
+	@echo "Dry run of hex publish..."
+	mix hex.publish --dry-run
+
+publish:
+	@echo "Publishing to hex.pm..."
+	mix hex.publish
 
 # Convenience targets
 all: setup test docs

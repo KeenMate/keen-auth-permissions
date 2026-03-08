@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserIdentityParser do
     {:ok, results}
   end
 
-  defp parse_row([user_identity_id, provider_code, uid, user_id, provider_groups, provider_roles, user_data]) do
+  defp parse_row([user_identity_id, provider_code, uid, user_id, provider_groups, provider_roles, user_data, is_verified]) do
     {:ok, %AuthGetUserIdentityModel{
       user_identity_id: user_identity_id,
       provider_code: provider_code,
@@ -37,6 +37,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserIdentityParser do
       provider_groups: provider_groups,
       provider_roles: provider_roles,
       user_data: user_data,
+      is_verified: is_verified,
     }}
   end
 

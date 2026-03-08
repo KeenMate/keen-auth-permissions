@@ -5,39 +5,79 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-rc.2] - 2026-03-01
+## [1.0.0-rc.3] - 2026-03-08
 
 ### Added
-- **Provider Capability Flags** — `create_provider` and `update_provider` now accept `allows_group_mapping` and `allows_group_sync` boolean parameters (default `false`, backward compatible)
-- **`Auth.list_providers/2`** — new facade function wrapping `auth.get_providers` with keyword opts for filtering (`:is_active`, `:allows_group_mapping`, `:allows_group_sync`, `:search`)
-- **`Auth.validate_provider_allows_group_mapping/1`** — validates that a provider supports group mapping
-- **`Auth.validate_provider_allows_group_sync/1`** — validates that a provider supports group sync
-- **Resource Access (ACL) Facade** (`KeenAuthPermissions.ResourceAccess`)
-  - `has_access?/6` — check if user has a flag on a resource
-  - `filter_accessible/5` — bulk filter resource IDs to only accessible ones
-  - `grant/7` — grant access flags to a user or group
-  - `deny/6` — explicit deny on a user (overrides group grants)
-  - `revoke/7` — revoke specific flags from a user or group
-  - `revoke_all/4` — remove all ACL entries for a resource (cleanup on delete)
-  - `get_flags/4` — get effective flags for a user on a resource
-  - `get_matrix/4` — get flags across resource hierarchy
-  - `get_grants/4` — list all grants/denies on a resource with user/group details
-  - `get_user_resources/5` — list resources a user can access
-  - `create_resource_type/7` — register a new resource type (auto-creates partition)
-- 12 new auto-generated database functions for the resource access system
+- **Invitations Facade** (`KeenAuthPermissions.Invitations`)
+  - `create/7` — create invitation with inline actions (returns `on_create` backend actions)
+  - `create_from_template/8` — create invitation from a reusable template with payload overrides
+  - `list/5` — list invitations with optional status, target email, and inviter filters
+  - `get_actions/2` — get ordered action list with status, payload, and results
+  - `accept/3` — accept invitation, execute `on_accept` database actions, return backend actions
+  - `reject/2` — reject invitation, execute `on_reject` actions
+  - `revoke/2` — revoke invitation (by inviter or admin)
+  - `create_template/7` — create reusable invitation template with action definitions
+  - `update_template/6` — update template title, description, message, active status
+  - `delete_template/2` — delete invitation template
+- **Identity Verification** — `Users.verify_identity/3` marks a user identity as verified
+- `is_verified` field on `AuthGetUserIdentityModel` and `AuthGetUserIdentityByEmailModel`
+- ~7 new auto-generated database models and parsers for invitation operations
 
 ### Changed
-- Regenerated all database modules with db-gen (194 stored procedure wrappers, up from ~170)
-- `Auth.create_provider` arity changed from `/4` to `/6` (backward compatible via defaults)
-- `Auth.update_provider` arity changed from `/5` to `/7` (backward compatible via defaults)
-- `AuthDeleteProviderModel` return type simplified: was `{user_id, username, display_name}`, now `{delete_provider}` (integer provider_id)
-- Translation models: `ua_search_data` field renamed to `nrm_search_data`
-
-### Fixed
-- Unskipped `delete_provider` test — the DB-side return type mismatch has been fixed in postgresql-permissions-model v2.15.0
+- Regenerated all database modules with db-gen (~229 stored procedure wrappers, up from ~219)
+- `auth_search_user_events` now accepts `request_context_criteria` JSONB parameter for filtering events by context fields (ip, user_agent, origin)
 
 ### Database Compatibility
-- Requires postgresql-permissions-model **v2.14.0+** (resource access ACL system, provider capability flags)
+- Requires postgresql-permissions-model **v2.16.0+** (invitations, identity verification, event context filtering)
+
+## [1.0.0-rc.2] - 2026-03-06
+
+### Added
+- **Blacklist Facade** (`KeenAuthPermissions.Blacklist`)
+  - `add/8` — add user/identity to blacklist with reason and notes
+  - `remove/3` — remove a blacklist entry
+  - `search/6` — search blacklist with text/reason filters and pagination
+  - `is_blacklisted?/4` — check if a username/provider combination is blacklisted (no auth context required)
+- **MFA Facade** (`KeenAuthPermissions.Mfa`)
+  - Enrollment: `enroll/4`, `confirm_enrollment/4`, `disable/3`, `get_status/2`, `reset/3`
+  - Challenge/Verify: `create_challenge/3`, `verify_challenge/5`
+  - Policies: `create_policy/5`, `delete_policy/2`, `get_policies/4`, `is_required?/3`
+  - Login: `verify_user_by_email/3`, `record_login_failure/3`
+- **Bulk Ensure Operations** — idempotent upsert from JSON with source tracking and `is_final_state` semantics
+  - `Permissions.ensure/4` — bulk ensure permissions
+  - `PermSets.ensure/5` — bulk ensure permission sets
+  - `UserGroups.ensure/5` — bulk ensure user groups
+  - `UserGroups.ensure_mappings/4` — bulk ensure user group mappings
+  - `ResourceAccess.ensure_resource_types/4` — bulk ensure resource types
+- **`ResourceAccess.update_resource_type/7`** — update existing resource type (code, title, description, is_active, source)
+- **`ResourceAccess.list_resource_types/3`** — list resource types with optional `source`, `parent_code`, `active_only` filters
+- **`Users.get_by_provider_oid/2`** — get user by provider object ID
+- **`Users.ensure_info/6`** — ensure user info exists (upsert from external provider data)
+- **`Users.delete_info/4`** — enhanced with optional `blacklist` parameter
+- **Provider Capability Flags** — `create_provider` and `update_provider` now accept `allows_group_mapping` and `allows_group_sync` boolean parameters
+- **`Auth.list_providers/2`** — list providers with keyword opts for filtering
+- **`Auth.validate_provider_allows_group_mapping/1`** and **`Auth.validate_provider_allows_group_sync/1`**
+- **Resource Access (ACL) Facade** (`KeenAuthPermissions.ResourceAccess`)
+  - `has_access?/6`, `filter_accessible/5` — access checks
+  - `grant/7`, `deny/6`, `revoke/7`, `revoke_all/4` — access management
+  - `get_flags/4`, `get_matrix/4`, `get_grants/4`, `get_user_resources/5` — querying
+  - `create_resource_type/7` — register resource types with hierarchy
+- `full_title` field on resource type models — hierarchical display (e.g., "Projects > Documents")
+- ~26 new auto-generated database models and parsers for blacklist, MFA, ensure operations, and resource types
+
+### Changed
+- Regenerated all database modules with db-gen (~220 stored procedure wrappers, up from ~170)
+- `Auth.create_provider` arity changed from `/4` to `/6` (backward compatible via defaults)
+- `Auth.update_provider` arity changed from `/5` to `/7` (backward compatible via defaults)
+- `AuthDeleteProviderModel` return type simplified: now returns `{delete_provider}` (integer provider_id)
+- Translation models: `ua_search_data` field renamed to `nrm_search_data`
+- `create_resource_type` model updated: new `full_title` field, parameter reordering
+
+### Fixed
+- Unskipped `delete_provider` test — DB-side return type mismatch fixed in postgresql-permissions-model v2.15.0
+
+### Database Compatibility
+- Requires postgresql-permissions-model **v2.15.0+** (blacklist, MFA, ensure operations, resource types, provider capability flags)
 
 ## [1.0.0-rc.1] - 2026-02-26
 
