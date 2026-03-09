@@ -42,13 +42,15 @@ defmodule KeenAuthPermissions.Users do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_tenant_users(
       username,
       user_id,
       request_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -92,13 +94,15 @@ defmodule KeenAuthPermissions.Users do
   @spec get_by_email_for_auth(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def get_by_email_for_auth(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id} = ctx,
-        email
+        email,
+        tenant_id \\ 1
       ) do
     case db_context().auth_get_user_by_email_for_authentication(
            user_id,
            request_id,
            email,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          ) do
       {:ok, [user | _]} -> {:ok, user}
       {:ok, []} -> {:error, ErrorStruct.create(:user_not_found, "User not found")}
@@ -113,8 +117,8 @@ defmodule KeenAuthPermissions.Users do
   Returns a single user data record or error.
   """
   @spec get_data(integer(), integer()) :: {:ok, map()} | {:error, any()}
-  def get_data(user_id, target_user_id) do
-    case db_context().auth_get_user_data(user_id, nil, target_user_id) do
+  def get_data(user_id, target_user_id, tenant_id \\ 1) do
+    case db_context().auth_get_user_data(user_id, nil, target_user_id, tenant_id) do
       {:ok, [data | _]} -> {:ok, data}
       {:ok, []} -> {:error, ErrorStruct.create(:user_not_found, "User data not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -144,7 +148,8 @@ defmodule KeenAuthPermissions.Users do
         is_locked,
         page,
         page_size,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_users(
       user_id,
@@ -155,7 +160,8 @@ defmodule KeenAuthPermissions.Users do
       is_locked,
       page,
       page_size,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -171,13 +177,15 @@ defmodule KeenAuthPermissions.Users do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     db_context().auth_get_provider_users(
       username,
       user_id,
       request_id,
-      provider_code
+      provider_code,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -195,14 +203,16 @@ defmodule KeenAuthPermissions.Users do
   def enable(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
           ctx,
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_enable_user(
            username,
            user_id,
            request_id,
            target_user_id,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} ->
@@ -226,14 +236,16 @@ defmodule KeenAuthPermissions.Users do
   def disable(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
           ctx,
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_disable_user(
            username,
            user_id,
            request_id,
            target_user_id,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} ->
@@ -257,14 +269,16 @@ defmodule KeenAuthPermissions.Users do
   def lock(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
           ctx,
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_lock_user(
            username,
            user_id,
            request_id,
            target_user_id,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} ->
@@ -288,14 +302,16 @@ defmodule KeenAuthPermissions.Users do
   def unlock(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
           ctx,
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_unlock_user(
            username,
            user_id,
            request_id,
            target_user_id,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} ->
@@ -357,7 +373,8 @@ defmodule KeenAuthPermissions.Users do
           ctx,
         target_user_id,
         password_hash,
-        password_salt \\ nil
+        password_salt \\ nil,
+        tenant_id \\ 1
       ) do
     case db_context().auth_update_user_password(
            username,
@@ -366,7 +383,8 @@ defmodule KeenAuthPermissions.Users do
            target_user_id,
            password_hash,
            RequestContext.to_context_map(ctx),
-           password_salt
+           password_salt,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -417,8 +435,8 @@ defmodule KeenAuthPermissions.Users do
   Returns a single identity or error.
   """
   @spec get_identity(integer(), integer(), String.t()) :: {:ok, map()} | {:error, any()}
-  def get_identity(user_id, target_user_id, provider_code) do
-    case db_context().auth_get_user_identity(user_id, nil, target_user_id, provider_code) do
+  def get_identity(user_id, target_user_id, provider_code, tenant_id \\ 1) do
+    case db_context().auth_get_user_identity(user_id, nil, target_user_id, provider_code, tenant_id) do
       {:ok, [identity | _]} -> {:ok, identity}
       {:ok, []} -> {:error, ErrorStruct.create(:identity_not_found, "Identity not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -432,8 +450,8 @@ defmodule KeenAuthPermissions.Users do
   Returns a single identity or error.
   """
   @spec get_identity_by_email(integer(), String.t(), String.t()) :: {:ok, map()} | {:error, any()}
-  def get_identity_by_email(user_id, email, provider_code) do
-    case db_context().auth_get_user_identity_by_email(user_id, nil, email, provider_code) do
+  def get_identity_by_email(user_id, email, provider_code, tenant_id \\ 1) do
+    case db_context().auth_get_user_identity_by_email(user_id, nil, email, provider_code, tenant_id) do
       {:ok, [identity | _]} -> {:ok, identity}
       {:ok, []} -> {:error, ErrorStruct.create(:identity_not_found, "Identity not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -451,7 +469,8 @@ defmodule KeenAuthPermissions.Users do
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
           ctx,
         target_user_id,
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_enable_user_identity(
            username,
@@ -459,7 +478,8 @@ defmodule KeenAuthPermissions.Users do
            request_id,
            target_user_id,
            provider_code,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -479,7 +499,8 @@ defmodule KeenAuthPermissions.Users do
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
           ctx,
         target_user_id,
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_disable_user_identity(
            username,
@@ -487,7 +508,8 @@ defmodule KeenAuthPermissions.Users do
            request_id,
            target_user_id,
            provider_code,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -510,7 +532,8 @@ defmodule KeenAuthPermissions.Users do
           request_id: request_id
         } = ctx,
         target_user_id,
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     db_context().auth_verify_user_identity(
       username,
@@ -518,7 +541,8 @@ defmodule KeenAuthPermissions.Users do
       request_id,
       target_user_id,
       provider_code,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
   end
 
@@ -568,8 +592,8 @@ defmodule KeenAuthPermissions.Users do
   Calls `auth.get_user_assigned_groups`.
   """
   @spec list_assigned_groups(integer(), integer()) :: {:ok, list()} | {:error, any()}
-  def list_assigned_groups(user_id, target_user_id) do
-    db_context().auth_get_user_assigned_groups(user_id, nil, target_user_id)
+  def list_assigned_groups(user_id, target_user_id, tenant_id \\ 1, target_tenant_id \\ nil) do
+    db_context().auth_get_user_assigned_groups(user_id, nil, target_user_id, tenant_id, target_tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -585,13 +609,15 @@ defmodule KeenAuthPermissions.Users do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_get_users_groups_and_permissions(
       username,
       user_id,
       request_id,
-      target_user_id
+      target_user_id,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -636,8 +662,8 @@ defmodule KeenAuthPermissions.Users do
   Calls `auth.get_user_available_tenants`.
   """
   @spec list_available_tenants(integer(), integer()) :: {:ok, list()} | {:error, any()}
-  def list_available_tenants(user_id, target_user_id) do
-    db_context().auth_get_user_available_tenants(user_id, nil, target_user_id)
+  def list_available_tenants(user_id, target_user_id, tenant_id \\ 1) do
+    db_context().auth_get_user_available_tenants(user_id, nil, target_user_id, tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -647,8 +673,8 @@ defmodule KeenAuthPermissions.Users do
   Calls `auth.get_user_last_selected_tenant`.
   """
   @spec get_last_selected_tenant(integer(), integer()) :: {:ok, map()} | {:error, any()}
-  def get_last_selected_tenant(user_id, target_user_id) do
-    case db_context().auth_get_user_last_selected_tenant(user_id, nil, target_user_id) do
+  def get_last_selected_tenant(user_id, target_user_id, tenant_id \\ 1) do
+    case db_context().auth_get_user_last_selected_tenant(user_id, nil, target_user_id, tenant_id) do
       {:ok, [tenant | _]} -> {:ok, tenant}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "No tenant selected")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -668,14 +694,16 @@ defmodule KeenAuthPermissions.Users do
           request_id: request_id
         },
         target_user_id,
-        tenant_uuid
+        tenant_uuid,
+        tenant_id \\ 1
       ) do
     case db_context().auth_update_user_last_selected_tenant(
            username,
            user_id,
            request_id,
            target_user_id,
-           tenant_uuid
+           tenant_uuid,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -694,8 +722,8 @@ defmodule KeenAuthPermissions.Users do
   Calls `auth.get_user_preferences`.
   """
   @spec get_preferences(integer(), integer()) :: {:ok, map()} | {:error, any()}
-  def get_preferences(user_id, target_user_id) do
-    case db_context().auth_get_user_preferences(user_id, nil, target_user_id) do
+  def get_preferences(user_id, target_user_id, tenant_id \\ 1) do
+    case db_context().auth_get_user_preferences(user_id, nil, target_user_id, tenant_id) do
       {:ok, [prefs | _]} -> {:ok, prefs}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Preferences not found")}
       {:error, error} -> {:error, ErrorParsers.parse_error(error)}
@@ -714,14 +742,16 @@ defmodule KeenAuthPermissions.Users do
           request_id: request_id
         },
         target_user_id,
-        update_data
+        update_data,
+        tenant_id \\ 1
       ) do
     case db_context().auth_update_user_preferences(
            username,
            user_id,
            request_id,
            target_user_id,
-           update_data
+           update_data,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -811,7 +841,8 @@ defmodule KeenAuthPermissions.Users do
         email,
         password_hash,
         display_name,
-        user_data \\ nil
+        user_data \\ nil,
+        tenant_id \\ 1
       ) do
     case db_context().auth_register_user(
            username,
@@ -821,7 +852,8 @@ defmodule KeenAuthPermissions.Users do
            password_hash,
            display_name,
            user_data,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -935,7 +967,8 @@ defmodule KeenAuthPermissions.Users do
         svc_username,
         email,
         display_name,
-        custom_service_user_id
+        custom_service_user_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_create_service_user_info(
            username,
@@ -944,7 +977,8 @@ defmodule KeenAuthPermissions.Users do
            svc_username,
            email,
            display_name,
-           custom_service_user_id
+           custom_service_user_id,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -954,13 +988,13 @@ defmodule KeenAuthPermissions.Users do
   end
 
   @doc """
-  Adds a user to default groups in a tenant.
+  Assigns a user to default groups in a tenant.
 
-  Calls `auth.add_user_to_default_groups`.
+  Calls `auth.assign_user_default_groups`.
   """
-  @spec add_to_default_groups(RequestContext.t(), integer(), integer()) ::
+  @spec assign_default_groups(RequestContext.t(), integer(), integer()) ::
           {:ok, list()} | {:error, any()}
-  def add_to_default_groups(
+  def assign_default_groups(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
           request_id: request_id
@@ -968,7 +1002,7 @@ defmodule KeenAuthPermissions.Users do
         target_user_id,
         tenant_id
       ) do
-    db_context().auth_add_user_to_default_groups(
+    db_context().auth_assign_user_default_groups(
       username,
       user_id,
       request_id,
@@ -998,7 +1032,8 @@ defmodule KeenAuthPermissions.Users do
         target_user_id,
         provider_code,
         provider_groups,
-        provider_roles
+        provider_roles,
+        tenant_id \\ 1
       ) do
     db_context().auth_ensure_groups_and_permissions(
       username,
@@ -1007,7 +1042,8 @@ defmodule KeenAuthPermissions.Users do
       target_user_id,
       provider_code,
       provider_groups,
-      provider_roles
+      provider_roles,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end

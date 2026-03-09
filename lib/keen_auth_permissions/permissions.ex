@@ -126,7 +126,8 @@ defmodule KeenAuthPermissions.Permissions do
         },
         permissions_json,
         source,
-        is_final_state \\ false
+        is_final_state \\ false,
+        tenant_id \\ 1
       ) do
     db_context().auth_ensure_permissions(
       username,
@@ -134,7 +135,8 @@ defmodule KeenAuthPermissions.Permissions do
       request_id,
       permissions_json,
       source,
-      is_final_state
+      is_final_state,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -261,7 +263,8 @@ defmodule KeenAuthPermissions.Permissions do
         parent_full_code,
         is_assignable,
         short_code \\ nil,
-        source \\ nil
+        source \\ nil,
+        tenant_id \\ 1
       ) do
     case db_context().auth_create_permission(
            username,
@@ -271,7 +274,8 @@ defmodule KeenAuthPermissions.Permissions do
            parent_full_code,
            is_assignable,
            short_code,
-           source
+           source,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -299,7 +303,8 @@ defmodule KeenAuthPermissions.Permissions do
         },
         permission_id,
         permission_full_code,
-        is_assignable
+        is_assignable,
+        tenant_id \\ 1
       ) do
     case db_context().auth_set_permission_as_assignable(
            username,
@@ -307,7 +312,8 @@ defmodule KeenAuthPermissions.Permissions do
            request_id,
            permission_id,
            permission_full_code,
-           is_assignable
+           is_assignable,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}

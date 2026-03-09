@@ -14,10 +14,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthUpdateResourceTypeModel do
     is_active: boolean(),
     source: String.t() | nil,
     parent_code: String.t() | nil,
-    path: String.t()
+    path: String.t(),
+    key_schema: map() | list()
   }
 
-  @fields [:code, :title, :full_title, :description, :is_active, :source, :parent_code, :path]
+  @fields [:code, :title, :full_title, :description, :is_active, :source, :parent_code, :path, :key_schema]
 
   @enforce_keys @fields
   defstruct @fields

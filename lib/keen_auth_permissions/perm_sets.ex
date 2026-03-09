@@ -17,7 +17,7 @@ defmodule KeenAuthPermissions.PermSets do
       KeenAuthPermissions.PermSets.create(request_context, "Admin", false, true, ["manage_users"], tenant_id)
 
       # Add permissions to a set
-      KeenAuthPermissions.PermSets.add_permissions(request_context, perm_set_id, ["perm1", "perm2"], tenant_id)
+      KeenAuthPermissions.PermSets.create_permissions(request_context, perm_set_id, ["perm1", "perm2"], tenant_id)
   """
 
   alias KeenAuthPermissions.User
@@ -41,13 +41,15 @@ defmodule KeenAuthPermissions.PermSets do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_perm_sets(
       username,
       user_id,
       request_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -75,7 +77,8 @@ defmodule KeenAuthPermissions.PermSets do
         page,
         page_size,
         tenant_id,
-        source \\ nil
+        source \\ nil,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_perm_sets(
       user_id,
@@ -86,7 +89,8 @@ defmodule KeenAuthPermissions.PermSets do
       page,
       page_size,
       tenant_id,
-      source
+      source,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -211,13 +215,13 @@ defmodule KeenAuthPermissions.PermSets do
   # ============================================================================
 
   @doc """
-  Adds permissions to a permission set.
+  Creates permissions in a permission set.
 
-  Calls `auth.add_perm_set_permissions`.
+  Calls `auth.create_perm_set_permissions`.
   """
-  @spec add_permissions(RequestContext.t(), integer(), list(String.t()), integer()) ::
+  @spec create_permissions(RequestContext.t(), integer(), list(String.t()), integer()) ::
           {:ok, list()} | {:error, any()}
-  def add_permissions(
+  def create_permissions(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
           request_id: request_id
@@ -226,7 +230,7 @@ defmodule KeenAuthPermissions.PermSets do
         permissions,
         tenant_id
       ) do
-    db_context().auth_add_perm_set_permissions(
+    db_context().auth_create_perm_set_permissions(
       username,
       user_id,
       request_id,

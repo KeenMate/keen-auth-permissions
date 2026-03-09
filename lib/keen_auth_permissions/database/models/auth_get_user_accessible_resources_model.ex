@@ -7,7 +7,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUserAccessibleResourcesMode
   """
 
   @type t() :: %__MODULE__{
-    resource_id: integer(),
+    resource_id: map() | list(),
     access_flags: list(String.t()),
     source: String.t()
   }

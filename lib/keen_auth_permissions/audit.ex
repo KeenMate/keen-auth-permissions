@@ -51,7 +51,9 @@ defmodule KeenAuthPermissions.Audit do
         from \\ nil,
         to \\ nil,
         page \\ 1,
-        page_size \\ 50
+        page_size \\ 50,
+        tenant_id \\ 1,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_user_audit_trail(
       user_id,
@@ -60,7 +62,9 @@ defmodule KeenAuthPermissions.Audit do
       from,
       to,
       page,
-      page_size
+      page_size,
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -84,7 +88,9 @@ defmodule KeenAuthPermissions.Audit do
         from \\ nil,
         to \\ nil,
         page \\ 1,
-        page_size \\ 50
+        page_size \\ 50,
+        tenant_id \\ 1,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_security_events(
       user_id,
@@ -92,7 +98,9 @@ defmodule KeenAuthPermissions.Audit do
       from,
       to,
       page,
-      page_size
+      page_size,
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -130,7 +138,9 @@ defmodule KeenAuthPermissions.Audit do
         from \\ nil,
         to \\ nil,
         page \\ 1,
-        page_size \\ 50
+        page_size \\ 50,
+        tenant_id \\ 1,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_user_events(
       user_id,
@@ -141,7 +151,9 @@ defmodule KeenAuthPermissions.Audit do
       from,
       to,
       page,
-      page_size
+      page_size,
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end

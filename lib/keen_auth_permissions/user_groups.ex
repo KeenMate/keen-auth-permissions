@@ -59,13 +59,15 @@ defmodule KeenAuthPermissions.UserGroups do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_tenant_groups(
       username,
       user_id,
       request_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -305,7 +307,8 @@ defmodule KeenAuthPermissions.UserGroups do
         is_system,
         page,
         page_size,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_user_groups(
       user_id,
@@ -316,7 +319,8 @@ defmodule KeenAuthPermissions.UserGroups do
       is_system,
       page,
       page_size,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -748,14 +752,16 @@ defmodule KeenAuthPermissions.UserGroups do
           request_id: request_id
         },
         group_id,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_user_group_mappings(
       username,
       user_id,
       request_id,
       group_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -981,8 +987,8 @@ defmodule KeenAuthPermissions.UserGroups do
   Calls `auth.get_user_groups_to_sync`.
   """
   @spec list_groups_to_sync(integer()) :: {:ok, list()} | {:error, any()}
-  def list_groups_to_sync(user_id) do
-    db_context().auth_get_user_groups_to_sync(user_id, nil)
+  def list_groups_to_sync(user_id, tenant_id \\ 1) do
+    db_context().auth_get_user_groups_to_sync(user_id, nil, tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 

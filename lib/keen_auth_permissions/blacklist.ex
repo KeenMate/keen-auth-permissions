@@ -10,7 +10,7 @@ defmodule KeenAuthPermissions.Blacklist do
   ## Examples
 
       # Add a user to the blacklist
-      KeenAuthPermissions.Blacklist.add(context, "john", "azure", "uid", "oid", "violation", "notes", tenant_id)
+      KeenAuthPermissions.Blacklist.create(context, "john", "azure", "uid", "oid", "violation", "notes", tenant_id)
 
       # Check if a user is blacklisted
       KeenAuthPermissions.Blacklist.is_blacklisted?("john", "azure", "uid", "oid")
@@ -26,11 +26,11 @@ defmodule KeenAuthPermissions.Blacklist do
   defp db_context(), do: KeenAuthPermissions.DbContext.get_global_db_context()
 
   @doc """
-  Adds an entry to the blacklist.
+  Creates a blacklist entry for a user.
 
-  Calls `auth.add_to_blacklist`.
+  Calls `auth.create_blacklist_user`.
   """
-  @spec add(
+  @spec create(
           RequestContext.t(),
           String.t(),
           String.t(),
@@ -40,7 +40,7 @@ defmodule KeenAuthPermissions.Blacklist do
           String.t() | nil,
           integer()
         ) :: {:ok, map()} | {:error, any()}
-  def add(
+  def create(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
           request_id: request_id
@@ -53,7 +53,7 @@ defmodule KeenAuthPermissions.Blacklist do
         notes,
         tenant_id
       ) do
-    case db_context().auth_add_to_blacklist(
+    case db_context().auth_create_blacklist_user(
            username,
            user_id,
            request_id,
@@ -67,18 +67,18 @@ defmodule KeenAuthPermissions.Blacklist do
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :add_failed}
+      {:ok, []} -> {:error, :create_failed}
       error -> error
     end
   end
 
   @doc """
-  Removes an entry from the blacklist.
+  Deletes a blacklist entry.
 
-  Calls `auth.remove_from_blacklist`.
+  Calls `auth.delete_blacklist_user`.
   """
-  @spec remove(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
-  def remove(
+  @spec delete(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
+  def delete(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
           request_id: request_id
@@ -86,7 +86,7 @@ defmodule KeenAuthPermissions.Blacklist do
         blacklist_id,
         tenant_id
       ) do
-    case db_context().auth_remove_from_blacklist(
+    case db_context().auth_delete_blacklist_user(
            username,
            user_id,
            request_id,
@@ -95,13 +95,17 @@ defmodule KeenAuthPermissions.Blacklist do
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :remove_failed}
+      {:ok, []} -> {:error, :delete_failed}
       error -> error
     end
   end
 
   @doc """
   Searches the blacklist with filters.
+
+  The blacklist operates at the application level, not per-tenant — a blacklisted user
+  is blocked from logging into the entire application. One tenant cannot blacklist a user
+  while another allows them access.
 
   Calls `auth.search_blacklist`.
   """

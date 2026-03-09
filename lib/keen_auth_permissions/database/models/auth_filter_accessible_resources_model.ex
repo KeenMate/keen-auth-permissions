@@ -7,7 +7,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthFilterAccessibleResourcesModel
   """
 
   @type t() :: %__MODULE__{
-    filter_accessible_resources: integer()
+    filter_accessible_resources: map() | list()
   }
 
   @fields [:filter_accessible_resources]

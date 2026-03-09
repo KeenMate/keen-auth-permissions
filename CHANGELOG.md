@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.4] - 2026-03-09
+
+### Added
+- **Tenant-Scoped Permission Enforcement** — all search/get stored procedures now accept `_tenant_id` (caller's tenant) and optionally `_target_tenant_id` (for cross-tenant admin access). This fixes a security issue where 69 out of 154 `has_permission` calls were defaulting to tenant 1 regardless of context.
+- **Resolver Facade** (`KeenAuthPermissions.Resolver`) — translates user-facing identifiers (UUID, code) into internal database IDs, so applications never need to expose integer IDs to clients
+  - `Resolver.user/1` — resolve bigint, UUID, or code → `user_id`
+  - `Resolver.tenant/1` — resolve integer, UUID, or code → `tenant_id`
+  - `Resolver.group/2` — resolve integer or code + tenant → `user_group_id`
+- 4 new stored procedures: `auth.ensure_access_flags`, `auth.ensure_resource_type_flags`, `auth.get_access_flags`, `auth.search_user_group_mappings`
+- 3 new resolver functions added to db-gen: `internal.resolve_user`, `internal.resolve_tenant`, `internal.resolve_group`
+- `access_flags` parameter on `ResourceAccess.create_resource_type` and `ResourceAccess.list_resource_types`
+
+### Changed
+- **Renamed facade methods** to match updated stored procedure names:
+  - `Blacklist.add/8` → `Blacklist.create/8` (calls `auth.create_blacklist_user`)
+  - `Blacklist.remove/3` → `Blacklist.delete/3` (calls `auth.delete_blacklist_user`)
+  - `PermSets.add_permissions/4` → `PermSets.create_permissions/4` (calls `auth.create_perm_set_permissions`)
+  - `Users.add_to_default_groups/3` → `Users.assign_default_groups/3` (calls `auth.assign_user_default_groups`)
+- `Blacklist.search/7` removed `target_tenant_id` parameter — blacklist operates at the application level, not per-tenant
+- Regenerated all database modules with db-gen (~236 stored procedure wrappers, up from ~229)
+- Updated all facade files to pass new `_tenant_id` / `_target_tenant_id` parameters
+
+### Database Compatibility
+- Requires postgresql-permissions-model **v2.23.0+** (tenant-scoped permissions, resolver functions, renamed procedures)
+
 ## [1.0.0-rc.3] - 2026-03-08
 
 ### Added

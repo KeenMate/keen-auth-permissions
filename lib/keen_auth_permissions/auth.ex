@@ -57,11 +57,14 @@ defmodule KeenAuthPermissions.Auth do
       |> Enum.reject(fn {_k, v} -> is_nil(v) end)
       |> Map.new()
 
+    tenant_id = Keyword.get(opts, :tenant_id, 1)
+
     case db_context().auth_get_user_by_email_for_authentication(
            authenticator.user_id,
            correlation_id,
            email,
-           context
+           context,
+           tenant_id
          ) do
       {:ok, [user]} ->
         if verify_password(password, user.password_hash) do
@@ -132,7 +135,8 @@ defmodule KeenAuthPermissions.Auth do
         email,
         password_hash,
         display_name,
-        user_data \\ nil
+        user_data \\ nil,
+        tenant_id \\ 1
       ) do
     case db_context().auth_register_user(
            username,
@@ -142,7 +146,8 @@ defmodule KeenAuthPermissions.Auth do
            password_hash,
            display_name,
            user_data,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -180,7 +185,8 @@ defmodule KeenAuthPermissions.Auth do
         token_channel_code,
         token,
         expires_at,
-        token_data
+        token_data,
+        tenant_id \\ 1
       ) do
     case db_context().auth_create_token(
            username,
@@ -193,7 +199,8 @@ defmodule KeenAuthPermissions.Auth do
            token_channel_code,
            token,
            expires_at,
-           token_data
+           token_data,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -222,7 +229,8 @@ defmodule KeenAuthPermissions.Auth do
         token_uid,
         token,
         token_type_code,
-        set_as_used
+        set_as_used,
+        tenant_id \\ 1
       ) do
     case db_context().auth_validate_token(
            username,
@@ -233,7 +241,8 @@ defmodule KeenAuthPermissions.Auth do
            token,
            token_type_code,
            RequestContext.to_context_map(ctx),
-           set_as_used
+           set_as_used,
+           tenant_id
          ) do
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, ErrorStruct.create(:invalid_token, "Token is invalid or expired")}
@@ -252,7 +261,8 @@ defmodule KeenAuthPermissions.Auth do
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         token_uid,
         token,
-        token_type_code
+        token_type_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_set_token_as_used(
            username,
@@ -261,7 +271,8 @@ defmodule KeenAuthPermissions.Auth do
            token_uid,
            token,
            token_type_code,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -308,7 +319,8 @@ defmodule KeenAuthPermissions.Auth do
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
         token_uid,
         token,
-        token_type_code
+        token_type_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_set_token_as_failed(
            username,
@@ -317,7 +329,8 @@ defmodule KeenAuthPermissions.Auth do
            token_uid,
            token,
            token_type_code,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -448,7 +461,8 @@ defmodule KeenAuthPermissions.Auth do
         provider_name,
         is_active,
         allows_group_mapping \\ false,
-        allows_group_sync \\ false
+        allows_group_sync \\ false,
+        tenant_id \\ 1
       ) do
     case db_context().auth_create_provider(
            username,
@@ -458,7 +472,8 @@ defmodule KeenAuthPermissions.Auth do
            provider_name,
            is_active,
            allows_group_mapping,
-           allows_group_sync
+           allows_group_sync,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -481,7 +496,8 @@ defmodule KeenAuthPermissions.Auth do
         provider_name,
         is_active,
         allows_group_mapping \\ false,
-        allows_group_sync \\ false
+        allows_group_sync \\ false,
+        tenant_id \\ 1
       ) do
     case db_context().auth_update_provider(
            username,
@@ -492,7 +508,8 @@ defmodule KeenAuthPermissions.Auth do
            provider_name,
            is_active,
            allows_group_mapping,
-           allows_group_sync
+           allows_group_sync,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -509,13 +526,15 @@ defmodule KeenAuthPermissions.Auth do
   @spec delete_provider(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete_provider(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_delete_provider(
            username,
            user_id,
            request_id,
-           provider_code
+           provider_code,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -532,13 +551,15 @@ defmodule KeenAuthPermissions.Auth do
   @spec enable_provider(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def enable_provider(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_enable_provider(
            username,
            user_id,
            request_id,
-           provider_code
+           provider_code,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -555,13 +576,15 @@ defmodule KeenAuthPermissions.Auth do
   @spec disable_provider(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def disable_provider(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_disable_provider(
            username,
            user_id,
            request_id,
-           provider_code
+           provider_code,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -586,7 +609,8 @@ defmodule KeenAuthPermissions.Auth do
       Keyword.get(opts, :is_active),
       Keyword.get(opts, :allows_group_mapping),
       Keyword.get(opts, :allows_group_sync),
-      Keyword.get(opts, :search)
+      Keyword.get(opts, :search),
+      Keyword.get(opts, :tenant_id, 1)
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -639,13 +663,15 @@ defmodule KeenAuthPermissions.Auth do
   @spec list_provider_users(RequestContext.t(), String.t()) :: {:ok, list()} | {:error, any()}
   def list_provider_users(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        provider_code
+        provider_code,
+        tenant_id \\ 1
       ) do
     db_context().auth_get_provider_users(
       username,
       user_id,
       request_id,
-      provider_code
+      provider_code,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end

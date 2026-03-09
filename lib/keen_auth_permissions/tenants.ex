@@ -47,8 +47,8 @@ defmodule KeenAuthPermissions.Tenants do
   Calls `auth.get_tenants`.
   """
   @spec list(integer()) :: {:ok, list()} | {:error, any()}
-  def list(user_id) do
-    db_context().auth_get_tenants(user_id, nil)
+  def list(user_id, tenant_id \\ 1, target_tenant_id \\ nil) do
+    db_context().auth_get_tenants(user_id, nil, tenant_id, target_tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -78,14 +78,18 @@ defmodule KeenAuthPermissions.Tenants do
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         search_text,
         page,
-        page_size
+        page_size,
+        tenant_id \\ 1,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_tenants(
       user_id,
       request_id,
       search_text,
       page,
-      page_size
+      page_size,
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -107,7 +111,8 @@ defmodule KeenAuthPermissions.Tenants do
         code,
         is_removable,
         is_assignable,
-        tenant_owner_id
+        tenant_owner_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_create_tenant(
            username,
@@ -117,7 +122,8 @@ defmodule KeenAuthPermissions.Tenants do
            code,
            is_removable,
            is_assignable,
-           tenant_owner_id
+           tenant_owner_id,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -175,13 +181,15 @@ defmodule KeenAuthPermissions.Tenants do
   @spec delete(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        tenant_uuid
+        tenant_uuid,
+        tenant_id \\ 1
       ) do
     case db_context().auth_delete_tenant(
            username,
            user_id,
            request_id,
-           tenant_uuid
+           tenant_uuid,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -198,13 +206,15 @@ defmodule KeenAuthPermissions.Tenants do
   @spec delete_by_uuid(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete_by_uuid(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        tenant_uuid
+        tenant_uuid,
+        tenant_id \\ 1
       ) do
     case db_context().auth_delete_tenant_by_uuid(
            username,
            user_id,
            request_id,
-           tenant_uuid
+           tenant_uuid,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -225,13 +235,15 @@ defmodule KeenAuthPermissions.Tenants do
   @spec list_users(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_users(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_tenant_users(
       username,
       user_id,
       request_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -244,13 +256,15 @@ defmodule KeenAuthPermissions.Tenants do
   @spec list_members(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_members(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_tenant_members(
       username,
       user_id,
       request_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -263,13 +277,15 @@ defmodule KeenAuthPermissions.Tenants do
   @spec list_groups(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_groups(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_get_tenant_groups(
       username,
       user_id,
       request_id,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -287,12 +303,14 @@ defmodule KeenAuthPermissions.Tenants do
           {:ok, list()} | {:error, any()}
   def get_user_available_tenants(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_get_user_available_tenants(
       user_id,
       request_id,
-      target_user_id
+      target_user_id,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -307,12 +325,14 @@ defmodule KeenAuthPermissions.Tenants do
           {:ok, map()} | {:error, any()}
   def get_user_last_selected_tenant(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     case db_context().auth_get_user_last_selected_tenant(
            user_id,
            request_id,
-           target_user_id
+           target_user_id,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result | _]} -> {:ok, result}
@@ -331,14 +351,16 @@ defmodule KeenAuthPermissions.Tenants do
   def update_user_last_selected_tenant(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         target_user_id,
-        tenant_uuid
+        tenant_uuid,
+        tenant_id \\ 1
       ) do
     case db_context().auth_update_user_last_selected_tenant(
            username,
            user_id,
            request_id,
            target_user_id,
-           tenant_uuid
+           tenant_uuid,
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result | _]} -> {:ok, result}

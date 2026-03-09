@@ -165,6 +165,7 @@ defmodule KeenAuthPermissions.Invitations do
           request_id: request_id
         },
         tenant_id,
+        target_tenant_id \\ nil,
         status_code \\ nil,
         target_email \\ nil,
         inviter_user_id \\ nil
@@ -174,6 +175,7 @@ defmodule KeenAuthPermissions.Invitations do
       user_id,
       request_id,
       tenant_id,
+      target_tenant_id,
       status_code,
       target_email,
       inviter_user_id
@@ -194,13 +196,15 @@ defmodule KeenAuthPermissions.Invitations do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        invitation_id
+        invitation_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_get_invitation_actions(
       username,
       user_id,
       request_id,
-      invitation_id
+      invitation_id,
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -224,7 +228,8 @@ defmodule KeenAuthPermissions.Invitations do
           request_id: request_id
         } = ctx,
         invitation_id,
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_accept_invitation(
       username,
@@ -232,7 +237,8 @@ defmodule KeenAuthPermissions.Invitations do
       request_id,
       invitation_id,
       target_user_id,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -251,14 +257,16 @@ defmodule KeenAuthPermissions.Invitations do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         } = ctx,
-        invitation_id
+        invitation_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_reject_invitation(
       username,
       user_id,
       request_id,
       invitation_id,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -274,14 +282,16 @@ defmodule KeenAuthPermissions.Invitations do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         } = ctx,
-        invitation_id
+        invitation_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_revoke_invitation(
       username,
       user_id,
       request_id,
       invitation_id,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
   end
 
@@ -359,7 +369,8 @@ defmodule KeenAuthPermissions.Invitations do
         title,
         description \\ nil,
         default_message \\ nil,
-        is_active \\ true
+        is_active \\ true,
+        tenant_id \\ 1
       ) do
     db_context().auth_update_invitation_template(
       username,
@@ -370,7 +381,8 @@ defmodule KeenAuthPermissions.Invitations do
       description,
       default_message,
       is_active,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
   end
 
@@ -385,14 +397,16 @@ defmodule KeenAuthPermissions.Invitations do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         } = ctx,
-        template_id
+        template_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_delete_invitation_template(
       username,
       user_id,
       request_id,
       template_id,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
   end
 end

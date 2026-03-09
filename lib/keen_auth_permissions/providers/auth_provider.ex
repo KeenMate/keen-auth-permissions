@@ -126,8 +126,8 @@ defmodule KeenAuthPermissions.Providers.AuthProvider do
     Users.enable_identity(system_ctx(), user_id, "email")
   end
 
-  @doc deprecated: "Use KeenAuthPermissions.Users.add_to_default_groups/3 instead"
+  @doc deprecated: "Use KeenAuthPermissions.Users.assign_default_groups/3 instead"
   def add_to_default_groups_in_tenant(target_user_id, tenant_id) do
-    Users.add_to_default_groups(system_ctx(), target_user_id, tenant_id)
+    Users.assign_default_groups(system_ctx(), target_user_id, tenant_id)
   end
 end

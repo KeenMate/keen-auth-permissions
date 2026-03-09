@@ -23,7 +23,8 @@ defmodule KeenAuthPermissions.Processor.Email do
              mapped_user.user_id,
              "email",
              fetch_groups(mapped_user),
-             fetch_roles(mapped_user)
+             fetch_roles(mapped_user),
+             1
            ) do
         {:ok, [%{groups: groups, short_code_permissions: short_code_permissions}]} ->
           {groups, short_code_permissions}

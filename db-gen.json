@@ -20,6 +20,15 @@
       "AllFunctions": true
     },
     {
+      "Schema": "internal",
+      "AllFunctions": false,
+      "Functions": {
+        "resolve_user": {},
+        "resolve_tenant": {},
+        "resolve_group": {}
+      }
+    },
+    {
       "Schema": "auth",
       "AllFunctions": true,
       "Functions": {
@@ -162,6 +171,11 @@
     {
       "DatabaseTypes": ["_int8"],
       "MappedType": "list(integer())",
+      "MappingFunction": "list"
+    },
+    {
+      "DatabaseTypes": ["_jsonb", "_json"],
+      "MappedType": "list(map() | list())",
       "MappingFunction": "list"
     },
     {

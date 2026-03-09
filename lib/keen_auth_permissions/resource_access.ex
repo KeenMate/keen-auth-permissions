@@ -5,6 +5,10 @@ defmodule KeenAuthPermissions.ResourceAccess do
   While RBAC (via `KeenAuthPermissions.Permissions`) controls **what actions** a user can perform,
   this module controls **which specific resources** they can act on.
 
+  Resource IDs are JSONB maps that match the resource type's `key_schema`.
+  For simple types, use `%{"id" => 42}`. For hierarchical types, use composite keys
+  like `%{"project_id" => 1, "folder_id" => 5}`.
+
   Access flags (e.g., `read`, `write`, `delete`, `share`) can be granted to individual users
   or to groups. Explicit user-level denies override all group-level grants.
 
@@ -31,11 +35,12 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @doc """
   Checks if a user has a specific access flag on a resource.
 
+  `resource_id` is a JSONB map matching the resource type's key_schema (e.g., `%{"id" => 42}`).
   When `throw_err` is `true`, raises a database exception on denial instead of returning `false`.
 
   Calls `auth.has_resource_access`.
   """
-  @spec has_access?(RequestContext.t(), String.t(), integer(), String.t(), integer(), boolean()) ::
+  @spec has_access?(RequestContext.t(), String.t(), map(), String.t(), integer(), boolean()) ::
           {:ok, boolean()} | {:error, any()}
   def has_access?(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
@@ -64,12 +69,13 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @doc """
   Filters a list of resource IDs to only those the user can access with the required flag.
 
-  Returns the subset of `resource_ids` that the user has access to.
+  `resource_ids` is a list of JSONB maps (e.g., `[%{"id" => 1}, %{"id" => 2}]`).
+  Returns the subset the user has access to.
 
   Calls `auth.filter_accessible_resources`.
   """
-  @spec filter_accessible(RequestContext.t(), String.t(), list(integer()), String.t(), integer()) ::
-          {:ok, list(integer())} | {:error, any()}
+  @spec filter_accessible(RequestContext.t(), String.t(), list(map()), String.t(), integer()) ::
+          {:ok, list(map())} | {:error, any()}
   def filter_accessible(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         resource_type,
@@ -98,6 +104,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @doc """
   Grants access flags on a resource to a user or group.
 
+  `resource_id` is a JSONB map matching the resource type's key_schema.
   Pass `target_user_id` for user-level grants, `user_group_id` for group-level grants.
   Set the other to `nil`.
 
@@ -106,7 +113,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @spec grant(
           RequestContext.t(),
           String.t(),
-          integer(),
+          map(),
           integer() | nil,
           integer() | nil,
           list(String.t()),
@@ -146,7 +153,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.deny_resource_access`.
   """
-  @spec deny(RequestContext.t(), String.t(), integer(), integer(), list(String.t()), integer()) ::
+  @spec deny(RequestContext.t(), String.t(), map(), integer(), list(String.t()), integer()) ::
           {:ok, list(map())} | {:error, any()}
   def deny(
         %RequestContext{
@@ -183,7 +190,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @spec revoke(
           RequestContext.t(),
           String.t(),
-          integer(),
+          map(),
           integer() | nil,
           integer() | nil,
           list(String.t()),
@@ -227,7 +234,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.revoke_all_resource_access`.
   """
-  @spec revoke_all(RequestContext.t(), String.t(), integer(), integer()) ::
+  @spec revoke_all(RequestContext.t(), String.t(), map(), integer()) ::
           {:ok, integer()} | {:error, any()}
   def revoke_all(
         %RequestContext{
@@ -264,7 +271,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.get_resource_access_flags`.
   """
-  @spec get_flags(RequestContext.t(), String.t(), integer(), integer()) ::
+  @spec get_flags(RequestContext.t(), String.t(), map(), integer()) ::
           {:ok, list(map())} | {:error, any()}
   def get_flags(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
@@ -290,7 +297,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.get_resource_access_matrix`.
   """
-  @spec get_matrix(RequestContext.t(), String.t(), integer(), integer()) ::
+  @spec get_matrix(RequestContext.t(), String.t(), map(), integer()) ::
           {:ok, list(map())} | {:error, any()}
   def get_matrix(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
@@ -315,7 +322,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.get_resource_grants`.
   """
-  @spec get_grants(RequestContext.t(), String.t(), integer(), integer()) ::
+  @spec get_grants(RequestContext.t(), String.t(), map(), integer()) ::
           {:ok, list(map())} | {:error, any()}
   def get_grants(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
@@ -335,6 +342,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   @doc """
   Lists resources a user can access, filtered by resource type and optional access flag.
+
+  Returns resource IDs as JSONB maps with their access flags.
 
   Calls `auth.get_user_accessible_resources`.
   """
@@ -365,6 +374,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
   @doc """
   Lists resource types, optionally filtered by source, parent code, and active status.
 
+  Returns types with `key_schema` describing the JSONB structure expected for resource IDs.
+
   Calls `auth.get_resource_types`.
   """
   @spec list_resource_types(String.t() | nil, String.t() | nil, boolean()) ::
@@ -375,18 +386,21 @@ defmodule KeenAuthPermissions.ResourceAccess do
   end
 
   @doc """
-  Ensures resource types exist (upsert from JSON).
+  Ensures resource types exist (upsert from JSONB).
+
+  `resource_types` is a list of maps with keys: `code`, `title`, `parent_code`, `description`,
+  and `key_schema`. It is passed as JSONB to the stored procedure.
 
   Calls `auth.ensure_resource_types`.
   """
-  @spec ensure_resource_types(RequestContext.t(), String.t(), String.t() | nil, integer()) ::
+  @spec ensure_resource_types(RequestContext.t(), list(map()), String.t() | nil, integer()) ::
           {:ok, list()} | {:error, any()}
   def ensure_resource_types(
         %RequestContext{
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         },
-        resource_types_json,
+        resource_types,
         source,
         tenant_id
       ) do
@@ -394,7 +408,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
       username,
       user_id,
       request_id,
-      resource_types_json,
+      resource_types,
       source,
       tenant_id
     )
@@ -452,6 +466,10 @@ defmodule KeenAuthPermissions.ResourceAccess do
   Resource types support hierarchy (e.g., `project` -> `project.documents` -> `project.invoices`).
   A partition is automatically created in `auth.resource_access` for each type.
 
+  `key_schema` defines the JSONB structure for resource IDs of this type.
+  For simple types: `%{"id" => "bigint"}`.
+  For composite keys: `%{"project_id" => "bigint", "folder_id" => "bigint"}`.
+
   Calls `auth.create_resource_type`.
   """
   @spec create_resource_type(
@@ -461,7 +479,9 @@ defmodule KeenAuthPermissions.ResourceAccess do
           String.t() | nil,
           String.t() | nil,
           integer(),
-          String.t() | nil
+          String.t() | nil,
+          map() | nil,
+          list(String.t()) | nil
         ) ::
           {:ok, map()} | {:error, any()}
   def create_resource_type(
@@ -474,7 +494,9 @@ defmodule KeenAuthPermissions.ResourceAccess do
         parent_code \\ nil,
         description \\ nil,
         tenant_id \\ 1,
-        source \\ nil
+        source \\ nil,
+        key_schema \\ nil,
+        access_flags \\ nil
       ) do
     case db_context().auth_create_resource_type(
            username,
@@ -485,7 +507,9 @@ defmodule KeenAuthPermissions.ResourceAccess do
            parent_code,
            description,
            tenant_id,
-           source
+           source,
+           key_schema,
+           access_flags
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}

@@ -12,7 +12,8 @@ A comprehensive Elixir library for authentication and authorization, extending [
 - **Permissions Map**: In-memory GenServer cache for fast full_code/short_code translation and permission checks
 - **API Key Management**: Create and manage API keys with granular permissions
 - **Resource Access (ACL)**: Resource-level authorization layered on top of RBAC — grant/deny/revoke per-resource flags to users or groups
-- **Blacklist Management**: Add/remove/search blacklisted users and identities with reason tracking
+- **Blacklist Management**: Create/delete/search blacklisted users and identities with reason tracking (app-level, not per-tenant)
+- **Identifier Resolver**: Translate user-facing UUIDs and codes into internal database IDs without exposing integer keys
 - **Multi-Factor Authentication (MFA)**: TOTP enrollment, challenge/verify flow, policy management (tenant/group/user-level), recovery codes, login verification
 - **Bulk Ensure Operations**: Idempotent upsert for permissions, permission sets, user groups, group mappings, and resource types from JSON with source tracking and final-state semantics
 - **Invitations**: Phase-based invitation system with templates, conditions, and action orchestration — invite users to tenants, groups, permission sets, and resources
@@ -31,7 +32,7 @@ Add `keen_auth_permissions` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:keen_auth_permissions, "~> 1.0.0-rc.3"}
+    {:keen_auth_permissions, "~> 1.0.0-rc.4"}
   ]
 end
 ```
@@ -633,8 +634,8 @@ alias KeenAuthPermissions.Blacklist
 
 ctx = RequestContext.new(user)
 
-# Add to blacklist
-Blacklist.add(ctx, "bad_user", "entra", "uid-123", "oid-456", "abuse", "Repeated violations", tenant_id)
+# Create a blacklist entry
+Blacklist.create(ctx, "bad_user", "entra", "uid-123", "oid-456", "abuse", "Repeated violations", tenant_id)
 
 # Search blacklist (with pagination)
 {:ok, entries} = Blacklist.search(ctx, "bad_user", nil, 1, 20, tenant_id)
@@ -642,9 +643,32 @@ Blacklist.add(ctx, "bad_user", "entra", "uid-123", "oid-456", "abuse", "Repeated
 # Check if blacklisted (no auth context needed)
 {:ok, true} = Blacklist.is_blacklisted?("bad_user", "entra", "uid-123", "oid-456")
 
-# Remove from blacklist
-Blacklist.remove(ctx, blacklist_id, tenant_id)
+# Delete a blacklist entry
+Blacklist.delete(ctx, blacklist_id, tenant_id)
 ```
+
+## Identifier Resolver
+
+When you don't want to expose internal integer IDs (user_id, tenant_id, group_id) to clients, use the resolver to translate UUIDs or codes:
+
+```elixir
+alias KeenAuthPermissions.Resolver
+
+# Resolve a user by UUID, code, or even stringified ID
+{:ok, user_id} = Resolver.user("a1b2c3d4-e5f6-...")
+{:ok, user_id} = Resolver.user("john.doe")
+{:ok, user_id} = Resolver.user("42")
+
+# Resolve a tenant
+{:ok, tenant_id} = Resolver.tenant("acme")
+{:ok, tenant_id} = Resolver.tenant("550e8400-...")
+
+# Resolve a group within a tenant
+{:ok, group_id} = Resolver.group("owners", tenant_id)
+{:ok, group_id} = Resolver.group("17", tenant_id)
+```
+
+All functions return `{:ok, id}` or `{:error, :not_found}` (with specific DB error codes: 33020, 34003, 33021).
 
 ## Multi-Factor Authentication (MFA)
 
@@ -819,7 +843,8 @@ The library provides high-level facade modules for common operations:
 - `KeenAuthPermissions.PermSets` - Permission set management, bulk ensure
 - `KeenAuthPermissions.ApiKeys` - API key management
 - `KeenAuthPermissions.ResourceAccess` - Resource-level ACL (grant, deny, revoke, check, resource types, bulk ensure)
-- `KeenAuthPermissions.Blacklist` - User/identity blacklist management (add, remove, search, check)
+- `KeenAuthPermissions.Blacklist` - User/identity blacklist management (create, delete, search, check)
+- `KeenAuthPermissions.Resolver` - Translate UUIDs/codes to internal IDs (user, tenant, group)
 - `KeenAuthPermissions.Mfa` - Multi-factor authentication (enroll, challenge, verify, policies, recovery codes)
 - `KeenAuthPermissions.Invitations` - Phase-based invitations with templates, actions, and lifecycle management
 - `KeenAuthPermissions.Audit` - Audit trail, security events, journal search

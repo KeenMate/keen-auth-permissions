@@ -45,7 +45,8 @@ defmodule KeenAuthPermissions.Mfa do
         } = ctx,
         target_user_id,
         mfa_type_code,
-        secret_encrypted
+        secret_encrypted,
+        tenant_id \\ 1
       ) do
     case db_context().auth_enroll_mfa(
            username,
@@ -54,7 +55,8 @@ defmodule KeenAuthPermissions.Mfa do
            target_user_id,
            mfa_type_code,
            secret_encrypted,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -77,7 +79,8 @@ defmodule KeenAuthPermissions.Mfa do
         } = ctx,
         target_user_id,
         mfa_type_code,
-        code_is_valid
+        code_is_valid,
+        tenant_id \\ 1
       ) do
     db_context().auth_confirm_mfa_enrollment(
       username,
@@ -86,7 +89,8 @@ defmodule KeenAuthPermissions.Mfa do
       target_user_id,
       mfa_type_code,
       code_is_valid,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
     |> case do
@@ -107,7 +111,8 @@ defmodule KeenAuthPermissions.Mfa do
           request_id: request_id
         } = ctx,
         target_user_id,
-        mfa_type_code
+        mfa_type_code,
+        tenant_id \\ 1
       ) do
     db_context().auth_disable_mfa(
       username,
@@ -115,7 +120,8 @@ defmodule KeenAuthPermissions.Mfa do
       request_id,
       target_user_id,
       mfa_type_code,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
     |> case do
@@ -133,9 +139,10 @@ defmodule KeenAuthPermissions.Mfa do
   @spec get_status(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def get_status(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        target_user_id
+        target_user_id,
+        tenant_id \\ 1
       ) do
-    db_context().auth_get_mfa_status(user_id, request_id, target_user_id)
+    db_context().auth_get_mfa_status(user_id, request_id, target_user_id, tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -152,7 +159,8 @@ defmodule KeenAuthPermissions.Mfa do
           request_id: request_id
         } = ctx,
         target_user_id,
-        mfa_type_code
+        mfa_type_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_reset_mfa(
            username,
@@ -160,7 +168,8 @@ defmodule KeenAuthPermissions.Mfa do
            request_id,
            target_user_id,
            mfa_type_code,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -187,7 +196,8 @@ defmodule KeenAuthPermissions.Mfa do
           request_id: request_id
         } = ctx,
         target_user_id,
-        mfa_type_code
+        mfa_type_code,
+        tenant_id \\ 1
       ) do
     case db_context().auth_create_mfa_challenge(
            username,
@@ -195,7 +205,8 @@ defmodule KeenAuthPermissions.Mfa do
            request_id,
            target_user_id,
            mfa_type_code,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -219,7 +230,8 @@ defmodule KeenAuthPermissions.Mfa do
         target_user_id,
         token_uid,
         code_is_valid,
-        recovery_code \\ nil
+        recovery_code \\ nil,
+        tenant_id \\ 1
       ) do
     db_context().auth_verify_mfa_challenge(
       username,
@@ -229,7 +241,8 @@ defmodule KeenAuthPermissions.Mfa do
       token_uid,
       code_is_valid,
       recovery_code,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
     |> case do
@@ -294,14 +307,16 @@ defmodule KeenAuthPermissions.Mfa do
           user: %User{username: username, user_id: user_id},
           request_id: request_id
         } = ctx,
-        mfa_policy_id
+        mfa_policy_id,
+        tenant_id \\ 1
       ) do
     db_context().auth_delete_mfa_policy(
       username,
       user_id,
       request_id,
       mfa_policy_id,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
     |> case do
@@ -369,14 +384,16 @@ defmodule KeenAuthPermissions.Mfa do
   def verify_user_by_email(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id} = ctx,
         email,
-        password_hash
+        password_hash,
+        tenant_id \\ 1
       ) do
     case db_context().auth_verify_user_by_email(
            user_id,
            request_id,
            email,
            password_hash,
-           RequestContext.to_context_map(ctx)
+           RequestContext.to_context_map(ctx),
+           tenant_id
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -396,14 +413,16 @@ defmodule KeenAuthPermissions.Mfa do
   def record_login_failure(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id} = ctx,
         target_user_id,
-        email
+        email,
+        tenant_id \\ 1
       ) do
     db_context().auth_record_login_failure(
       user_id,
       request_id,
       target_user_id,
       email,
-      RequestContext.to_context_map(ctx)
+      RequestContext.to_context_map(ctx),
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
     |> case do

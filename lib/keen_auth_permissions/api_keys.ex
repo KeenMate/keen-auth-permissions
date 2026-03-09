@@ -102,7 +102,8 @@ defmodule KeenAuthPermissions.ApiKeys do
         search_text,
         page,
         page_size,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_api_keys(
       user_id,
@@ -110,7 +111,8 @@ defmodule KeenAuthPermissions.ApiKeys do
       search_text,
       page,
       page_size,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -403,7 +405,8 @@ defmodule KeenAuthPermissions.ApiKeys do
         service_code,
         page,
         page_size,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     db_context().auth_search_outbound_api_keys(
       user_id,
@@ -412,7 +415,8 @@ defmodule KeenAuthPermissions.ApiKeys do
       service_code,
       page,
       page_size,
-      tenant_id
+      tenant_id,
+      target_tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -427,13 +431,15 @@ defmodule KeenAuthPermissions.ApiKeys do
   def get_outbound(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         service_code,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     case db_context().auth_get_outbound_api_key(
            user_id,
            request_id,
            service_code,
-           tenant_id
+           tenant_id,
+           target_tenant_id
          ) do
       {:ok, [key | _]} -> {:ok, key}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Outbound API key not found")}
@@ -452,13 +458,15 @@ defmodule KeenAuthPermissions.ApiKeys do
   def get_outbound_by_id(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
         api_key_id,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     case db_context().auth_get_outbound_api_key_by_id(
            user_id,
            request_id,
            api_key_id,
-           tenant_id
+           tenant_id,
+           target_tenant_id
          ) do
       {:ok, [key | _]} -> {:ok, key}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Outbound API key not found")}
@@ -477,14 +485,16 @@ defmodule KeenAuthPermissions.ApiKeys do
   def get_outbound_secret(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         service_code,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     case db_context().auth_get_outbound_api_key_secret(
            username,
            user_id,
            request_id,
            service_code,
-           tenant_id
+           tenant_id,
+           target_tenant_id
          ) do
       {:ok, [secret | _]} -> {:ok, secret}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Outbound API key secret not found")}
@@ -503,14 +513,16 @@ defmodule KeenAuthPermissions.ApiKeys do
   def get_outbound_secret_by_id(
         %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
         api_key_id,
-        tenant_id
+        tenant_id,
+        target_tenant_id \\ nil
       ) do
     case db_context().auth_get_outbound_api_key_secret_by_id(
            username,
            user_id,
            request_id,
            api_key_id,
-           tenant_id
+           tenant_id,
+           target_tenant_id
          ) do
       {:ok, [secret | _]} -> {:ok, secret}
       {:ok, []} -> {:error, ErrorStruct.create(:not_found, "Outbound API key secret not found")}
