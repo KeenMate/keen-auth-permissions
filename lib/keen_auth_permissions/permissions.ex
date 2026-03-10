@@ -73,37 +73,30 @@ defmodule KeenAuthPermissions.Permissions do
   Searches permissions with filters.
 
   Calls `auth.search_permissions`.
+
+  `search_criteria` is a map with optional keys: `search_text`, `is_assignable`, `parent_code`, `source`.
   """
   @spec search(
           RequestContext.t(),
-          String.t() | nil,
-          boolean() | nil,
-          String.t() | nil,
+          map() | nil,
           integer(),
           integer(),
-          integer(),
-          String.t() | nil
+          integer()
         ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        is_assignable,
-        parent_code,
-        page,
-        page_size,
-        tenant_id,
-        source \\ nil
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1
       ) do
     db_context().auth_search_permissions(
       user_id,
       request_id,
-      search_text,
-      is_assignable,
-      parent_code,
+      search_criteria,
       page,
       page_size,
-      tenant_id,
-      source
+      tenant_id
     )
     |> ErrorParsers.parse_if_error()
   end

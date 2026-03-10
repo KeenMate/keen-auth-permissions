@@ -16,10 +16,13 @@ defmodule KeenAuthPermissions.Database.Models.AuthSearchUserGroupsModel do
     is_active: boolean(),
     is_default: boolean(),
     member_count: integer(),
-    total_items: integer()
+    total_items: integer(),
+    tenant_id: integer(),
+    tenant_code: String.t(),
+    tenant_title: String.t()
   }
 
-  @fields [:user_group_id, :title, :code, :is_system, :is_external, :is_assignable, :is_active, :is_default, :member_count, :total_items]
+  @fields [:user_group_id, :title, :code, :is_system, :is_external, :is_assignable, :is_active, :is_default, :member_count, :total_items, :tenant_id, :tenant_code, :tenant_title]
 
   @enforce_keys @fields
   defstruct @fields

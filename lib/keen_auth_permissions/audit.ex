@@ -11,10 +11,10 @@ defmodule KeenAuthPermissions.Audit do
   ## Examples
 
       # Get audit trail for a user
-      KeenAuthPermissions.Audit.get_user_audit_trail(ctx, target_user_id, from, to, 1, 50)
+      KeenAuthPermissions.Audit.get_user_audit_trail(ctx, %{target_user_id: 1, from: ~U[2024-01-01 00:00:00Z]})
 
       # Get security events
-      KeenAuthPermissions.Audit.get_security_events(ctx, from, to, 1, 50)
+      KeenAuthPermissions.Audit.get_security_events(ctx, %{from: ~U[2024-01-01 00:00:00Z]})
 
       # Purge old audit data
       KeenAuthPermissions.Audit.purge(ctx, 365)
@@ -35,21 +35,21 @@ defmodule KeenAuthPermissions.Audit do
 
   Combines journal entries and user events into a single timeline.
 
+  `search_criteria` is a map with supported keys: `target_user_id`, `from`, `to`.
+
   Calls `auth.get_user_audit_trail`.
   """
   @spec get_user_audit_trail(
           RequestContext.t(),
+          map() | nil,
           integer(),
-          DateTime.t() | nil,
-          DateTime.t() | nil,
           integer(),
-          integer()
+          integer(),
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def get_user_audit_trail(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        target_user_id,
-        from \\ nil,
-        to \\ nil,
+        search_criteria \\ nil,
         page \\ 1,
         page_size \\ 50,
         tenant_id \\ 1,
@@ -58,9 +58,7 @@ defmodule KeenAuthPermissions.Audit do
     db_context().auth_get_user_audit_trail(
       user_id,
       request_id,
-      target_user_id,
-      from,
-      to,
+      search_criteria,
       page,
       page_size,
       tenant_id,
@@ -74,19 +72,21 @@ defmodule KeenAuthPermissions.Audit do
 
   Returns events such as failed logins, lockouts, disables, and permission denials.
 
+  `search_criteria` is a map with supported keys: `from`, `to`.
+
   Calls `auth.get_security_events`.
   """
   @spec get_security_events(
           RequestContext.t(),
-          DateTime.t() | nil,
-          DateTime.t() | nil,
+          map() | nil,
           integer(),
-          integer()
+          integer(),
+          integer(),
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def get_security_events(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        from \\ nil,
-        to \\ nil,
+        search_criteria \\ nil,
         page \\ 1,
         page_size \\ 50,
         tenant_id \\ 1,
@@ -95,8 +95,7 @@ defmodule KeenAuthPermissions.Audit do
     db_context().auth_get_security_events(
       user_id,
       request_id,
-      from,
-      to,
+      search_criteria,
       page,
       page_size,
       tenant_id,
@@ -112,31 +111,22 @@ defmodule KeenAuthPermissions.Audit do
   @doc """
   Searches user events with filters.
 
-  Supports filtering by event type, target user, request context criteria (e.g. IP, user agent),
-  and date range.
-
-  The `request_context_criteria` parameter is a map/list used to filter events by their
-  stored request context fields (ip, user_agent, origin, etc.).
+  `search_criteria` is a map with supported keys: `event_type_code`, `target_user_id`,
+  `request_context`, `correlation_id`, `from`, `to`.
 
   Calls `auth.search_user_events`.
   """
   @spec search_user_events(
           RequestContext.t(),
-          String.t() | nil,
-          integer() | nil,
           map() | nil,
-          DateTime.t() | nil,
-          DateTime.t() | nil,
           integer(),
-          integer()
+          integer(),
+          integer(),
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search_user_events(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        event_type_code \\ nil,
-        target_user_id \\ nil,
-        request_context_criteria \\ nil,
-        from \\ nil,
-        to \\ nil,
+        search_criteria \\ nil,
         page \\ 1,
         page_size \\ 50,
         tenant_id \\ 1,
@@ -145,11 +135,7 @@ defmodule KeenAuthPermissions.Audit do
     db_context().auth_search_user_events(
       user_id,
       request_id,
-      event_type_code,
-      target_user_id,
-      request_context_criteria,
-      from,
-      to,
+      search_criteria,
       page,
       page_size,
       tenant_id,

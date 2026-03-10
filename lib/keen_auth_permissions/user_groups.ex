@@ -288,35 +288,64 @@ defmodule KeenAuthPermissions.UserGroups do
   Searches user groups with filters.
 
   Calls `auth.search_user_groups`.
+
+  `search_criteria` is a map with optional keys: `search_text`, `is_active`, `is_external`, `is_system`.
   """
   @spec search(
           RequestContext.t(),
-          String.t() | nil,
-          boolean() | nil,
-          boolean() | nil,
-          boolean() | nil,
+          map() | nil,
           integer(),
           integer(),
-          integer()
+          integer(),
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        is_active,
-        is_external,
-        is_system,
-        page,
-        page_size,
-        tenant_id,
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1,
         target_tenant_id \\ nil
       ) do
     db_context().auth_search_user_groups(
       user_id,
       request_id,
-      search_text,
-      is_active,
-      is_external,
-      is_system,
+      search_criteria,
+      page,
+      page_size,
+      tenant_id,
+      target_tenant_id
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
+  Searches user group mappings with filters.
+
+  Calls `auth.search_user_group_mappings`.
+
+  `search_criteria` is a map with optional keys: `search_text`, `provider_code`, `mapped_object_id`, `mapped_role`.
+  """
+  @spec search_mappings(
+          RequestContext.t(),
+          map() | nil,
+          integer(),
+          integer(),
+          integer(),
+          integer() | nil
+        ) :: {:ok, list()} | {:error, any()}
+  def search_mappings(
+        %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1,
+        target_tenant_id \\ nil
+      ) do
+    db_context().auth_search_user_group_mappings(
+      user_id,
+      request_id,
+      search_criteria,
       page,
       page_size,
       tenant_id,

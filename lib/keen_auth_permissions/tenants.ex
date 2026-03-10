@@ -71,21 +71,29 @@ defmodule KeenAuthPermissions.Tenants do
   Searches tenants.
 
   Calls `auth.search_tenants`.
+
+  `search_criteria` is a map with optional keys: `search_text`.
   """
-  @spec search(RequestContext.t(), String.t() | nil, integer(), integer()) ::
-          {:ok, list()} | {:error, any()}
+  @spec search(
+          RequestContext.t(),
+          map() | nil,
+          integer(),
+          integer(),
+          integer(),
+          integer() | nil
+        ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        page,
-        page_size,
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
         tenant_id \\ 1,
         target_tenant_id \\ nil
       ) do
     db_context().auth_search_tenants(
       user_id,
       request_id,
-      search_text,
+      search_criteria,
       page,
       page_size,
       tenant_id,

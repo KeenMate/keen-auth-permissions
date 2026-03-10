@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-rc.4] - 2026-03-09
+## [1.0.0-rc.4] - 2026-03-10
 
 ### Added
 - **Tenant-Scoped Permission Enforcement** — all search/get stored procedures now accept `_tenant_id` (caller's tenant) and optionally `_target_tenant_id` (for cross-tenant admin access). This fixes a security issue where 69 out of 154 `has_permission` calls were defaulting to tenant 1 regardless of context.
@@ -18,17 +18,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `access_flags` parameter on `ResourceAccess.create_resource_type` and `ResourceAccess.list_resource_types`
 
 ### Changed
+- **Unified JSONB search signatures** — all 11 search/audit facade functions now use a consistent signature: `(ctx, search_criteria, page, page_size, tenant_id, target_tenant_id)` where `search_criteria` is a map with domain-specific filter keys instead of individual parameters:
+  - `Users.search` — criteria: `search_text`, `user_type_code`, `is_active`, `is_locked`
+  - `Blacklist.search` — criteria: `search_text`, `reason` (no `target_tenant_id` — app-level)
+  - `UserGroups.search` — criteria: `search_text`, `user_group_type_code`, `is_assignable`, `is_external`
+  - `Permissions.search` — criteria: `search_text`, `is_assignable`, `parent_code` (no `target_tenant_id`)
+  - `PermSets.search` — criteria: `search_text`, `is_assignable`, `is_system`, `source`
+  - `Tenants.search` — criteria: `search_text`
+  - `ApiKeys.search` / `ApiKeys.search_outbound` — criteria: `search_text`, `is_active`
+  - `Audit.search_user_events` — criteria: `event_type_code`, `target_user_id`, `request_context`, `correlation_id`, `from`, `to`
+  - `Audit.get_user_audit_trail` — criteria: `target_user_id`, `from`, `to`
+  - `Audit.get_security_events` — criteria: `from`, `to`
 - **Renamed facade methods** to match updated stored procedure names:
   - `Blacklist.add/8` → `Blacklist.create/8` (calls `auth.create_blacklist_user`)
   - `Blacklist.remove/3` → `Blacklist.delete/3` (calls `auth.delete_blacklist_user`)
   - `PermSets.add_permissions/4` → `PermSets.create_permissions/4` (calls `auth.create_perm_set_permissions`)
   - `Users.add_to_default_groups/3` → `Users.assign_default_groups/3` (calls `auth.assign_user_default_groups`)
-- `Blacklist.search/7` removed `target_tenant_id` parameter — blacklist operates at the application level, not per-tenant
 - Regenerated all database modules with db-gen (~236 stored procedure wrappers, up from ~229)
 - Updated all facade files to pass new `_tenant_id` / `_target_tenant_id` parameters
 
 ### Database Compatibility
-- Requires postgresql-permissions-model **v2.23.0+** (tenant-scoped permissions, resolver functions, renamed procedures)
+- Requires postgresql-permissions-model **v2.23.0+** (tenant-scoped permissions, resolver functions, renamed procedures, unified JSONB search)
 
 ## [1.0.0-rc.3] - 2026-03-08
 

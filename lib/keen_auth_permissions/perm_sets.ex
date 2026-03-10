@@ -58,38 +58,32 @@ defmodule KeenAuthPermissions.PermSets do
   Searches permission sets with filters.
 
   Calls `auth.search_perm_sets`.
+
+  `search_criteria` is a map with optional keys: `search_text`, `is_assignable`, `is_system`, `source`.
   """
   @spec search(
           RequestContext.t(),
-          String.t() | nil,
-          boolean() | nil,
-          boolean() | nil,
+          map() | nil,
           integer(),
           integer(),
           integer(),
-          String.t() | nil
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        is_assignable,
-        is_system,
-        page,
-        page_size,
-        tenant_id,
-        source \\ nil,
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1,
         target_tenant_id \\ nil
       ) do
     db_context().auth_search_perm_sets(
       user_id,
       request_id,
-      search_text,
-      is_assignable,
-      is_system,
+      search_criteria,
       page,
       page_size,
       tenant_id,
-      source,
       target_tenant_id
     )
     |> ErrorParsers.parse_if_error()

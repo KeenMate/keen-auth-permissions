@@ -12,10 +12,13 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUserAssignedGroupsModel do
     user_group_code: String.t(),
     user_group_title: String.t(),
     user_group_member_type_code: String.t(),
-    user_group_mapping_id: integer()
+    user_group_mapping_id: integer(),
+    tenant_id: integer(),
+    tenant_code: String.t(),
+    tenant_title: String.t()
   }
 
-  @fields [:user_group_member_id, :user_group_id, :user_group_code, :user_group_title, :user_group_member_type_code, :user_group_mapping_id]
+  @fields [:user_group_member_id, :user_group_id, :user_group_code, :user_group_title, :user_group_member_type_code, :user_group_mapping_id, :tenant_id, :tenant_code, :tenant_title]
 
   @enforce_keys @fields
   defstruct @fields

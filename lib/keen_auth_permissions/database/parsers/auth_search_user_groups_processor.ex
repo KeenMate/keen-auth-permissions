@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchUserGroupsParser do
     {:ok, results}
   end
 
-  defp parse_row([user_group_id, title, code, is_system, is_external, is_assignable, is_active, is_default, member_count, total_items]) do
+  defp parse_row([user_group_id, title, code, is_system, is_external, is_assignable, is_active, is_default, member_count, total_items, tenant_id, tenant_code, tenant_title]) do
     {:ok, %AuthSearchUserGroupsModel{
       user_group_id: user_group_id,
       title: title,
@@ -40,6 +40,9 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchUserGroupsParser do
       is_default: is_default,
       member_count: member_count,
       total_items: total_items,
+      tenant_id: tenant_id,
+      tenant_code: tenant_code,
+      tenant_title: tenant_title,
     }}
   end
 

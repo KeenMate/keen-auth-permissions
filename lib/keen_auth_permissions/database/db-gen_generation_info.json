@@ -1,6 +1,6 @@
 {
   "version": "v0.6.0-beta3",
-  "time": "2026-03-09T20:34:13.6742169+01:00",
+  "time": "2026-03-10T20:33:02.7024963+01:00",
   "routines": [
     {
       "RowNumber": 1,
@@ -5397,14 +5397,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "internal",
-      "RoutineNameWithParams": "throw_no_permission(int8,text)",
+      "RoutineNameWithParams": "throw_no_permission(int8,text,int4)",
       "HasOverload": true,
       "RoutineName": "throw_no_permission",
       "SpecificName": "",
       "DataType": "void",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "void",
-      "ParamCount": 2,
+      "ParamCount": 3,
       "FuncType": "function",
       "InParameters": [
         {
@@ -5422,6 +5422,14 @@
           "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": null
@@ -5461,46 +5469,6 @@
     {
       "RowNumber": 3,
       "RoutineSchema": "internal",
-      "RoutineNameWithParams": "throw_no_permission(int8,text,int4)",
-      "HasOverload": true,
-      "RoutineName": "throw_no_permission",
-      "SpecificName": "",
-      "DataType": "void",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "void",
-      "ParamCount": 3,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_perm_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 4,
-      "RoutineSchema": "internal",
       "RoutineNameWithParams": "throw_no_permission(int8,_text,int4)",
       "HasOverload": true,
       "RoutineName": "throw_no_permission",
@@ -5534,6 +5502,38 @@
           "UDTName": "int4",
           "IsNullable": false,
           "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 4,
+      "RoutineSchema": "internal",
+      "RoutineNameWithParams": "throw_no_permission(int8,text)",
+      "HasOverload": true,
+      "RoutineName": "throw_no_permission",
+      "SpecificName": "",
+      "DataType": "void",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "void",
+      "ParamCount": 2,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_perm_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
         }
       ],
       "OutParameters": null
@@ -15002,14 +15002,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "get_security_events(int8,text,timestamptz,timestamptz,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "get_security_events(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "get_security_events",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 19,
+      "ParamCount": 18,
       "FuncType": "function",
       "InParameters": [
         {
@@ -15030,22 +15030,14 @@
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_from",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "timestamptz",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_to",
-          "Mode": "IN",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -15053,7 +15045,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 6,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -15061,7 +15053,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -15069,7 +15061,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -15079,7 +15071,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -15087,7 +15079,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "__event_type_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -15095,7 +15087,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "__requester_user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -15103,7 +15095,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "__requester_username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -15111,7 +15103,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 12,
           "Name": "__target_user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -15119,7 +15111,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 13,
           "Name": "__target_username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -15127,7 +15119,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 14,
           "Name": "__request_context",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -15135,7 +15127,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 15,
           "Name": "__event_data",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -15143,7 +15135,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 16,
           "Name": "__correlation_id",
           "Mode": "OUT",
           "UDTName": "text",
@@ -15151,7 +15143,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 17,
           "Name": "__created_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -15159,7 +15151,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 18,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -15913,7 +15905,7 @@
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 11,
+      "ParamCount": 14,
       "FuncType": "function",
       "InParameters": [
         {
@@ -16003,6 +15995,30 @@
           "Name": "__user_group_mapping_id",
           "Mode": "OUT",
           "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__tenant_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__tenant_title",
+          "Mode": "OUT",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
         }
@@ -16116,14 +16132,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "get_user_audit_trail(int8,text,int8,timestamptz,timestamptz,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "get_user_audit_trail(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "get_user_audit_trail",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 20,
+      "ParamCount": 18,
       "FuncType": "function",
       "InParameters": [
         {
@@ -16144,30 +16160,14 @@
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_target_user_id",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "int8",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_from",
-          "Mode": "IN",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_to",
-          "Mode": "IN",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -16175,7 +16175,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -16183,7 +16183,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -16191,7 +16191,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -16201,7 +16201,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 8,
           "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -16209,7 +16209,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 9,
           "Name": "__event_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -16217,7 +16217,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 10,
           "Name": "__event_type_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -16225,7 +16225,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 11,
           "Name": "__event_category",
           "Mode": "OUT",
           "UDTName": "text",
@@ -16233,7 +16233,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 12,
           "Name": "__message",
           "Mode": "OUT",
           "UDTName": "text",
@@ -16241,7 +16241,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 13,
           "Name": "__request_context",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -16249,7 +16249,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 14,
           "Name": "__event_data",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -16257,7 +16257,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 15,
           "Name": "__correlation_id",
           "Mode": "OUT",
           "UDTName": "text",
@@ -16265,7 +16265,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 16,
           "Name": "__created_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -16273,7 +16273,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 17,
           "Name": "__created_by",
           "Mode": "OUT",
           "UDTName": "text",
@@ -16281,7 +16281,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 20,
+          "OrdinalPosition": 18,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -17641,14 +17641,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "get_user_permissions(int8,text,int8,int4)",
+      "RoutineNameWithParams": "get_user_permissions(int8,text,int8,int4,int4)",
       "HasOverload": false,
       "RoutineName": "get_user_permissions",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 12,
+      "ParamCount": 16,
       "FuncType": "function",
       "InParameters": [
         {
@@ -17682,11 +17682,19 @@
           "UDTName": "int4",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_target_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 5,
+          "OrdinalPosition": 6,
           "Name": "__assignment_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -17694,7 +17702,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 6,
+          "OrdinalPosition": 7,
           "Name": "__perm_set_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -17702,7 +17710,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 8,
           "Name": "__perm_set_title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -17710,7 +17718,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 9,
           "Name": "__user_group_member_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -17718,7 +17726,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 10,
           "Name": "__user_group_title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -17726,7 +17734,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 11,
           "Name": "__permission_inheritance_type",
           "Mode": "OUT",
           "UDTName": "text",
@@ -17734,7 +17742,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 12,
           "Name": "__permission_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -17742,8 +17750,32 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 13,
           "Name": "__permission_title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__tenant_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 16,
+          "Name": "__tenant_title",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
@@ -19411,7 +19443,7 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_api_keys(int8,text,text,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_api_keys(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_api_keys",
       "SpecificName": "",
@@ -19435,15 +19467,15 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
@@ -19580,14 +19612,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_blacklist(int8,text,text,text,int4,int4,int4)",
+      "RoutineNameWithParams": "search_blacklist(int8,text,jsonb,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_blacklist",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 18,
+      "ParamCount": 17,
       "FuncType": "function",
       "InParameters": [
         {
@@ -19604,26 +19636,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_reason",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19631,7 +19655,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 6,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19639,7 +19663,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19649,7 +19673,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 7,
           "Name": "__blacklist_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -19657,7 +19681,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "__username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19665,7 +19689,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "__provider_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19673,7 +19697,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "__provider_uid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19681,7 +19705,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "__provider_oid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19689,7 +19713,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 12,
           "Name": "__original_user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -19697,7 +19721,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 13,
           "Name": "__reason",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19705,7 +19729,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 14,
           "Name": "__notes",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19713,7 +19737,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 15,
           "Name": "__created_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -19721,7 +19745,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 16,
           "Name": "__created_by",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19729,7 +19753,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 17,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -19741,14 +19765,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_outbound_api_keys(int8,text,text,text,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_outbound_api_keys(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_outbound_api_keys",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 20,
+      "ParamCount": 19,
       "FuncType": "function",
       "InParameters": [
         {
@@ -19765,26 +19789,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_service_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19792,7 +19808,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 6,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19800,7 +19816,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19808,7 +19824,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19818,7 +19834,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "__api_key_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -19826,7 +19842,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "__api_key",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19834,7 +19850,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19842,7 +19858,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "__description",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19850,7 +19866,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 12,
           "Name": "__service_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19858,7 +19874,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 13,
           "Name": "__service_url",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19866,7 +19882,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 14,
           "Name": "__extra_data",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -19874,7 +19890,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 15,
           "Name": "__expire_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -19882,7 +19898,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 16,
           "Name": "__notification_email",
           "Mode": "OUT",
           "UDTName": "text",
@@ -19890,7 +19906,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 17,
           "Name": "__created_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -19898,7 +19914,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 18,
           "Name": "__updated_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -19906,7 +19922,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 20,
+          "OrdinalPosition": 19,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -19918,14 +19934,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_perm_sets(int8,text,text,bool,bool,int4,int4,int4,text,int4)",
+      "RoutineNameWithParams": "search_perm_sets(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_perm_sets",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 18,
+      "ParamCount": 15,
       "FuncType": "function",
       "InParameters": [
         {
@@ -19942,34 +19958,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_is_assignable",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_is_system",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19977,7 +19977,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19985,7 +19985,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -19993,15 +19993,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
-          "Name": "_source",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20011,7 +20003,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 8,
           "Name": "__perm_set_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -20019,7 +20011,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 9,
           "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20027,7 +20019,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 10,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20035,7 +20027,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 11,
           "Name": "__is_system",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20043,7 +20035,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 12,
           "Name": "__is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20051,7 +20043,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 13,
           "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20059,7 +20051,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 14,
           "Name": "__permission_count",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20067,7 +20059,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 15,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20079,14 +20071,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_permissions(int8,text,text,bool,text,int4,int4,int4,text)",
+      "RoutineNameWithParams": "search_permissions(int8,text,jsonb,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_permissions",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 18,
+      "ParamCount": 15,
       "FuncType": "function",
       "InParameters": [
         {
@@ -20103,34 +20095,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_is_assignable",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_parent_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20138,7 +20114,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20146,25 +20122,17 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "_source",
-          "Mode": "IN",
-          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 7,
           "Name": "__permission_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -20172,7 +20140,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 8,
           "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20180,7 +20148,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 9,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20188,7 +20156,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 10,
           "Name": "__full_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20196,7 +20164,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 11,
           "Name": "__short_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20204,7 +20172,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 12,
           "Name": "__is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20212,7 +20180,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 13,
           "Name": "__has_children",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20220,7 +20188,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 14,
           "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20228,7 +20196,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 15,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20240,7 +20208,7 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_tenants(int8,text,text,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_tenants(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_tenants",
       "SpecificName": "",
@@ -20264,13 +20232,13 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
@@ -20369,14 +20337,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_user_events(int8,text,text,int8,jsonb,timestamptz,timestamptz,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_user_events(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_user_events",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 24,
+      "ParamCount": 20,
       "FuncType": "function",
       "InParameters": [
         {
@@ -20397,46 +20365,14 @@
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_event_type_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_target_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_request_context_criteria",
+          "Name": "_search_criteria",
           "Mode": "IN",
           "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 6,
-          "Name": "_from",
-          "Mode": "IN",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_to",
-          "Mode": "IN",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 4,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20444,7 +20380,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20452,7 +20388,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20460,7 +20396,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20470,7 +20406,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 8,
           "Name": "__user_event_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20478,7 +20414,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 9,
           "Name": "__event_type_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20486,7 +20422,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 10,
           "Name": "__requester_user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20494,7 +20430,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 11,
           "Name": "__requester_username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20502,7 +20438,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 12,
           "Name": "__target_user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20510,7 +20446,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 13,
           "Name": "__target_username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20518,7 +20454,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 14,
           "Name": "__target_user_oid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20526,7 +20462,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 15,
           "Name": "__request_context",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -20534,7 +20470,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 20,
+          "OrdinalPosition": 16,
           "Name": "__event_data",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -20542,7 +20478,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 21,
+          "OrdinalPosition": 17,
           "Name": "__correlation_id",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20550,7 +20486,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 22,
+          "OrdinalPosition": 18,
           "Name": "__created_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -20558,7 +20494,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 23,
+          "OrdinalPosition": 19,
           "Name": "__created_by",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20566,7 +20502,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 24,
+          "OrdinalPosition": 20,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20578,14 +20514,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_user_group_mappings(int8,text,text,text,text,text,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_user_group_mappings(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_user_group_mappings",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 19,
+      "ParamCount": 16,
       "FuncType": "function",
       "InParameters": [
         {
@@ -20602,42 +20538,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_provider_code",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_mapped_object_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_mapped_role",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_search_text",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20645,7 +20557,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20653,7 +20565,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20661,7 +20573,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20671,7 +20583,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 8,
           "Name": "__user_group_mapping_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -20679,7 +20591,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 9,
           "Name": "__user_group_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -20687,7 +20599,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 10,
           "Name": "__user_group_title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20695,7 +20607,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 11,
           "Name": "__user_group_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20703,7 +20615,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 12,
           "Name": "__provider_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20711,7 +20623,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 13,
           "Name": "__mapped_object_id",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20719,7 +20631,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 14,
           "Name": "__mapped_object_name",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20727,7 +20639,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 15,
           "Name": "__mapped_role",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20735,7 +20647,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 16,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20747,7 +20659,7 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_user_groups(int8,text,text,bool,bool,bool,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_user_groups(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_user_groups",
       "SpecificName": "",
@@ -20771,42 +20683,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_is_active",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_is_external",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_is_system",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20814,7 +20702,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20822,7 +20710,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20830,7 +20718,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20840,7 +20728,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 8,
           "Name": "__user_group_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -20848,7 +20736,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 9,
           "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20856,7 +20744,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 10,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -20864,7 +20752,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 11,
           "Name": "__is_system",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20872,7 +20760,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 12,
           "Name": "__is_external",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20880,7 +20768,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 13,
           "Name": "__is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20888,7 +20776,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 14,
           "Name": "__is_active",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20896,7 +20784,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 15,
           "Name": "__is_default",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -20904,7 +20792,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 16,
           "Name": "__member_count",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -20912,10 +20800,34 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 20,
+          "OrdinalPosition": 17,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 18,
+          "Name": "__tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 19,
+          "Name": "__tenant_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 20,
+          "Name": "__tenant_title",
+          "Mode": "OUT",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
         }
@@ -20924,14 +20836,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "search_users(int8,text,text,text,bool,bool,int4,int4,int4,int4)",
+      "RoutineNameWithParams": "search_users(int8,text,jsonb,int4,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_users",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 20,
+      "ParamCount": 17,
       "FuncType": "function",
       "InParameters": [
         {
@@ -20948,42 +20860,18 @@
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": false
+          "IsOptional": true
         },
         {
           "OrdinalPosition": 3,
-          "Name": "_search_text",
+          "Name": "_search_criteria",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "jsonb",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 4,
-          "Name": "_user_type_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_is_active",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_is_locked",
-          "Mode": "IN",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20991,7 +20879,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 5,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -20999,7 +20887,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 6,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -21007,7 +20895,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 7,
           "Name": "_target_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -21017,7 +20905,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 8,
           "Name": "__user_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -21025,7 +20913,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 9,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -21033,7 +20921,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 10,
           "Name": "__uuid",
           "Mode": "OUT",
           "UDTName": "text",
@@ -21041,7 +20929,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 11,
           "Name": "__username",
           "Mode": "OUT",
           "UDTName": "text",
@@ -21049,7 +20937,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 12,
           "Name": "__email",
           "Mode": "OUT",
           "UDTName": "text",
@@ -21057,7 +20945,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 13,
           "Name": "__display_name",
           "Mode": "OUT",
           "UDTName": "text",
@@ -21065,7 +20953,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 14,
           "Name": "__user_type_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -21073,7 +20961,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 15,
           "Name": "__is_active",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -21081,7 +20969,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 16,
           "Name": "__is_locked",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -21089,7 +20977,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 20,
+          "OrdinalPosition": 17,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",

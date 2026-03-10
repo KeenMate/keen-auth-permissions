@@ -17,7 +17,7 @@ defmodule KeenAuthPermissions.Users do
       KeenAuthPermissions.Users.get_by_id(user_id)
 
       # Search users
-      KeenAuthPermissions.Users.search(request_context, "john", nil, nil, nil, 1, 20, tenant_id)
+      KeenAuthPermissions.Users.search(request_context, %{search_text: "john"}, 1, 20, tenant_id)
   """
 
   alias KeenAuthPermissions.User
@@ -129,35 +129,29 @@ defmodule KeenAuthPermissions.Users do
   Searches users with filters.
 
   Calls `auth.search_users`.
+
+  `search_criteria` is a map with optional keys: `search_text`, `user_type_code`, `is_active`, `is_locked`.
   """
   @spec search(
           RequestContext.t(),
-          String.t() | nil,
-          String.t() | nil,
-          boolean() | nil,
-          boolean() | nil,
+          map() | nil,
           integer(),
           integer(),
-          integer()
+          integer(),
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        user_type_code,
-        is_active,
-        is_locked,
-        page,
-        page_size,
-        tenant_id,
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1,
         target_tenant_id \\ nil
       ) do
     db_context().auth_search_users(
       user_id,
       request_id,
-      search_text,
-      user_type_code,
-      is_active,
-      is_locked,
+      search_criteria,
       page,
       page_size,
       tenant_id,
@@ -555,9 +549,10 @@ defmodule KeenAuthPermissions.Users do
 
   Calls `auth.get_user_permissions`.
   """
-  @spec list_permissions(integer(), integer(), integer()) :: {:ok, list()} | {:error, any()}
-  def list_permissions(user_id, target_user_id, tenant_id) do
-    db_context().auth_get_user_permissions(user_id, nil, target_user_id, tenant_id)
+  @spec list_permissions(integer(), integer(), integer(), integer() | nil) ::
+          {:ok, list()} | {:error, any()}
+  def list_permissions(user_id, target_user_id, tenant_id, target_tenant_id \\ nil) do
+    db_context().auth_get_user_permissions(user_id, nil, target_user_id, tenant_id, target_tenant_id)
     |> ErrorParsers.parse_if_error()
   end
 

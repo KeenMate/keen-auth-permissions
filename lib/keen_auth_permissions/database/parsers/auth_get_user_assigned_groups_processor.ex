@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserAssignedGroupsParser d
     {:ok, results}
   end
 
-  defp parse_row([user_group_member_id, user_group_id, user_group_code, user_group_title, user_group_member_type_code, user_group_mapping_id]) do
+  defp parse_row([user_group_member_id, user_group_id, user_group_code, user_group_title, user_group_member_type_code, user_group_mapping_id, tenant_id, tenant_code, tenant_title]) do
     {:ok, %AuthGetUserAssignedGroupsModel{
       user_group_member_id: user_group_member_id,
       user_group_id: user_group_id,
@@ -36,6 +36,9 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserAssignedGroupsParser d
       user_group_title: user_group_title,
       user_group_member_type_code: user_group_member_type_code,
       user_group_mapping_id: user_group_mapping_id,
+      tenant_id: tenant_id,
+      tenant_code: tenant_code,
+      tenant_title: tenant_title,
     }}
   end
 

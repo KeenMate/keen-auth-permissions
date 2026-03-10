@@ -11,7 +11,7 @@ defmodule KeenAuthPermissions.ApiKeys do
   ## Examples
 
       # Search API keys
-      KeenAuthPermissions.ApiKeys.search(context, "my-key", 1, 20, tenant_id)
+      KeenAuthPermissions.ApiKeys.search(context, %{search_text: "my-key"}, 1, 20)
 
       # Create an API key
       KeenAuthPermissions.ApiKeys.create(context, "My Key", "Description", ...)
@@ -93,22 +93,30 @@ defmodule KeenAuthPermissions.ApiKeys do
   @doc """
   Searches API keys.
 
+  `search_criteria` is a map with supported keys: `search_text`.
+
   Calls `auth.search_api_keys`.
   """
-  @spec search(RequestContext.t(), String.t() | nil, integer(), integer(), integer()) ::
-          {:ok, list()} | {:error, any()}
+  @spec search(
+          RequestContext.t(),
+          map() | nil,
+          integer(),
+          integer(),
+          integer(),
+          integer() | nil
+        ) :: {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        page,
-        page_size,
-        tenant_id,
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1,
         target_tenant_id \\ nil
       ) do
     db_context().auth_search_api_keys(
       user_id,
       request_id,
-      search_text,
+      search_criteria,
       page,
       page_size,
       tenant_id,
@@ -389,30 +397,30 @@ defmodule KeenAuthPermissions.ApiKeys do
   @doc """
   Searches outbound API keys.
 
+  `search_criteria` is a map with supported keys: `search_text`, `service_code`.
+
   Calls `auth.search_outbound_api_keys`.
   """
   @spec search_outbound(
           RequestContext.t(),
-          String.t() | nil,
-          String.t() | nil,
+          map() | nil,
           integer(),
           integer(),
-          integer()
+          integer(),
+          integer() | nil
         ) :: {:ok, list()} | {:error, any()}
   def search_outbound(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        service_code,
-        page,
-        page_size,
-        tenant_id,
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1,
         target_tenant_id \\ nil
       ) do
     db_context().auth_search_outbound_api_keys(
       user_id,
       request_id,
-      search_text,
-      service_code,
+      search_criteria,
       page,
       page_size,
       tenant_id,

@@ -16,7 +16,7 @@ defmodule KeenAuthPermissions.Blacklist do
       KeenAuthPermissions.Blacklist.is_blacklisted?("john", "azure", "uid", "oid")
 
       # Search the blacklist
-      KeenAuthPermissions.Blacklist.search(context, "john", nil, 1, 20, tenant_id)
+      KeenAuthPermissions.Blacklist.search(context, %{search_text: "john"}, 1, 20, tenant_id)
   """
 
   alias KeenAuthPermissions.User
@@ -108,11 +108,12 @@ defmodule KeenAuthPermissions.Blacklist do
   while another allows them access.
 
   Calls `auth.search_blacklist`.
+
+  `search_criteria` is a map with optional keys: `search_text`, `reason`.
   """
   @spec search(
           RequestContext.t(),
-          String.t() | nil,
-          String.t() | nil,
+          map() | nil,
           integer(),
           integer(),
           integer()
@@ -120,17 +121,15 @@ defmodule KeenAuthPermissions.Blacklist do
           {:ok, list()} | {:error, any()}
   def search(
         %RequestContext{user: %User{user_id: user_id}, request_id: request_id},
-        search_text,
-        reason,
-        page,
-        page_size,
-        tenant_id
+        search_criteria \\ nil,
+        page \\ 1,
+        page_size \\ 50,
+        tenant_id \\ 1
       ) do
     db_context().auth_search_blacklist(
       user_id,
       request_id,
-      search_text,
-      reason,
+      search_criteria,
       page,
       page_size,
       tenant_id
