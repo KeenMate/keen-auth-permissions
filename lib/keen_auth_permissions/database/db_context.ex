@@ -58,22 +58,6 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.check_version
       """
-      @spec check_version(String.t(), String.t(), boolean()) ::
-              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
-      def check_version(version, component, throw_err) do
-        Logger.debug("Calling stored procedure", procedure: "check_version")
-
-        query(
-          "select * from public.check_version($1, $2, $3)",
-          [version, component, throw_err]
-        )
-        |> Parsers.CheckVersionParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.check_version
-      """
       @spec check_version(String.t(), String.t()) ::
               {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
       def check_version(version, component) do
@@ -82,6 +66,22 @@ defmodule KeenAuthPermissions.Database do
         query(
           "select * from public.check_version($1, $2)",
           [version, component]
+        )
+        |> Parsers.CheckVersionParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function public.check_version
+      """
+      @spec check_version(String.t(), String.t(), boolean()) ::
+              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
+      def check_version(version, component, throw_err) do
+        Logger.debug("Calling stored procedure", procedure: "check_version")
+
+        query(
+          "select * from public.check_version($1, $2, $3)",
+          [version, component, throw_err]
         )
         |> Parsers.CheckVersionParser.parse_result()
       end
@@ -1726,6 +1726,22 @@ defmodule KeenAuthPermissions.Database do
           [created_by, user_id, correlation_id, target_user_id, provider_code, provider_groups, provider_roles, tenant_id]
         )
         |> Parsers.AuthEnsureGroupsAndPermissionsParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.ensure_invitation_templates
+      """
+      @spec auth_ensure_invitation_templates(String.t(), integer(), String.t(), map() | list(), integer(), String.t(), boolean(), map() | list()) ::
+              {:ok, [Models.AuthEnsureInvitationTemplatesModel.t()]} | {:error, any()}
+      def auth_ensure_invitation_templates(created_by, user_id, correlation_id, templates, tenant_id, source, is_final_state, request_context) do
+        Logger.debug("Calling stored procedure", procedure: "ensure_invitation_templates")
+
+        query(
+          "select * from auth.ensure_invitation_templates($1, $2, $3, $4, $5, $6, $7, $8)",
+          [created_by, user_id, correlation_id, templates, tenant_id, source, is_final_state, request_context]
+        )
+        |> Parsers.AuthEnsureInvitationTemplatesParser.parse_result()
       end
 
 

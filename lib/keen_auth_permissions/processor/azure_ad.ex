@@ -50,7 +50,7 @@ defmodule KeenAuthPermissions.Processor.AzureAD do
              mapped_user.roles,
              1
            ) do
-        {:ok, [%{groups: groups, short_code_permissions: short_code_permissions}]} ->
+        {:ok, [%{groups: groups, short_code_permissions: short_code_permissions} | _]} ->
           {groups, short_code_permissions}
 
         {:ok, []} ->

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.5] - 2026-03-12
+
+### Added
+- **`Invitations.ensure_templates/5`** facade — wraps `auth.ensure_invitation_templates` for idempotent template upsert from a JSONB array of templates with nested actions. Supports `source` and `is_final_state` for cleanup of templates not in the input set.
+- New db-gen output: `auth_ensure_invitation_templates/8` function, model, and parser (237 functions total)
+
+### Fixed
+- Multi-tenant `CaseClauseError` in `Processor.Email` and `Processor.AzureAD` — `ensure_groups_and_permissions` now returns multiple rows (one per tenant); pattern match updated from `[%{...}]` to `[%{...} | _]` to take the first tenant's groups/permissions
+
 ## [1.0.0-rc.4] - 2026-03-10
 
 ### Added

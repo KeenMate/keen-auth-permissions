@@ -300,6 +300,39 @@ defmodule KeenAuthPermissions.Invitations do
   # ============================================================================
 
   @doc """
+  Ensures invitation templates exist (upsert from JSONB array).
+
+  Skips templates that already exist (by code + tenant_id), creates missing ones with their actions.
+  When `is_final_state` is true, removes templates from `source` that are not in the input set.
+
+  Calls `auth.ensure_invitation_templates`.
+  """
+  @spec ensure_templates(RequestContext.t(), list(map()), integer(), String.t() | nil, boolean()) ::
+          {:ok, list()} | {:error, any()}
+  def ensure_templates(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        } = ctx,
+        templates,
+        tenant_id,
+        source \\ nil,
+        is_final_state \\ false
+      ) do
+    db_context().auth_ensure_invitation_templates(
+      username,
+      user_id,
+      request_id,
+      templates,
+      tenant_id,
+      source,
+      is_final_state,
+      RequestContext.to_context_map(ctx)
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
   Creates an invitation template.
 
   Templates define reusable sets of actions with a code, title, description, and default message.
