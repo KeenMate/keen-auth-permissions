@@ -7,11 +7,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthAddUserToDefaultGroupsModel do
   """
 
   @type t() :: %__MODULE__{
-    user_id: integer(),
-    user_group_id: integer(),
-    user_group_code: String.t(),
-    user_group_title: String.t()
-  }
+          user_id: integer(),
+          user_group_id: integer(),
+          user_group_code: String.t(),
+          user_group_title: String.t()
+        }
 
   @fields [:user_id, :user_group_id, :user_group_code, :user_group_title]
 

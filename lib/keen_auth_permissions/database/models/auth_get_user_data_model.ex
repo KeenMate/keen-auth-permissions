@@ -16,10 +16,13 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUserDataModel do
     first_name: String.t() | nil,
     middle_name: String.t() | nil,
     last_name: String.t() | nil,
+    settings: map() | list(),
+    preferences: map() | list(),
+    custom_data: map() | list(),
     nrm_search_data: String.t() | nil
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :user_data_id, :user_id, :first_name, :middle_name, :last_name, :nrm_search_data]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :user_data_id, :user_id, :first_name, :middle_name, :last_name, :settings, :preferences, :custom_data, :nrm_search_data]
 
   @enforce_keys @fields
   defstruct @fields

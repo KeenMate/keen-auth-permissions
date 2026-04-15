@@ -28,21 +28,12 @@ defmodule KeenAuthPermissions.UsersTest do
     end
   end
 
-  describe "search/8" do
+  describe "search/6" do
     test "searches users with filters" do
       ctx = system_context()
 
       assert {:ok, results} =
-               Users.search(
-                 ctx,
-                 nil,
-                 nil,
-                 nil,
-                 nil,
-                 1,
-                 100,
-                 default_tenant_id()
-               )
+               Users.search(ctx, nil, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -51,16 +42,7 @@ defmodule KeenAuthPermissions.UsersTest do
       ctx = system_context()
 
       assert {:ok, results} =
-               Users.search(
-                 ctx,
-                 "system",
-                 nil,
-                 nil,
-                 nil,
-                 1,
-                 100,
-                 default_tenant_id()
-               )
+               Users.search(ctx, %{search_text: "system"}, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -220,7 +202,6 @@ defmodule KeenAuthPermissions.UsersTest do
   end
 
   describe "ensure_from_provider/8" do
-    @tag :skip
     test "ensures a user from provider exists" do
       ctx = system_context()
       provider_uid = "test_uid_#{unique_string()}"
@@ -229,7 +210,7 @@ defmodule KeenAuthPermissions.UsersTest do
       assert {:ok, ensured} =
                Users.ensure_from_provider(
                  ctx,
-                 "aad",
+                 ensure_entra_provider(),
                  provider_uid,
                  "oid_#{unique_string()}",
                  email,
@@ -243,7 +224,6 @@ defmodule KeenAuthPermissions.UsersTest do
   end
 
   describe "add_to_default_groups/3" do
-    @tag :skip
     test "adds user to default groups in tenant" do
       ctx = system_context()
 

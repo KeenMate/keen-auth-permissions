@@ -114,7 +114,10 @@ defmodule KeenAuthPermissions.Tenants do
   @spec create(RequestContext.t(), String.t(), String.t(), boolean(), boolean(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         title,
         code,
         is_removable,
@@ -155,7 +158,10 @@ defmodule KeenAuthPermissions.Tenants do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id,
         title,
         code,
@@ -188,7 +194,10 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec delete(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_uuid,
         tenant_id \\ 1
       ) do
@@ -213,7 +222,10 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec delete_by_uuid(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete_by_uuid(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_uuid,
         tenant_id \\ 1
       ) do
@@ -242,7 +254,10 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec list_users(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_users(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id,
         target_tenant_id \\ nil
       ) do
@@ -263,7 +278,10 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec list_members(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_members(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id,
         target_tenant_id \\ nil
       ) do
@@ -284,7 +302,10 @@ defmodule KeenAuthPermissions.Tenants do
   """
   @spec list_groups(RequestContext.t(), integer()) :: {:ok, list()} | {:error, any()}
   def list_groups(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         tenant_id,
         target_tenant_id \\ nil
       ) do
@@ -357,7 +378,10 @@ defmodule KeenAuthPermissions.Tenants do
   @spec update_user_last_selected_tenant(RequestContext.t(), integer(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def update_user_last_selected_tenant(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         tenant_uuid,
         tenant_id \\ 1
@@ -385,7 +409,10 @@ defmodule KeenAuthPermissions.Tenants do
   @spec create_user_tenant_preferences(RequestContext.t(), integer(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def create_user_tenant_preferences(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         update_data,
         tenant_id
@@ -418,7 +445,10 @@ defmodule KeenAuthPermissions.Tenants do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update_user_tenant_preferences(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         update_data,
         should_overwrite,

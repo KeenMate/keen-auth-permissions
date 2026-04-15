@@ -29,9 +29,10 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthAddToBlacklistParser do
   end
 
   defp parse_row([add_to_blacklist]) do
-    {:ok, %AuthAddToBlacklistModel{
-      add_to_blacklist: add_to_blacklist,
-    }}
+    {:ok,
+     %AuthAddToBlacklistModel{
+       add_to_blacklist: add_to_blacklist
+     }}
   end
 
   defp parse_row(_row) do

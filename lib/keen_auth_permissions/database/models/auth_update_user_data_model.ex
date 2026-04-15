@@ -7,11 +7,22 @@ defmodule KeenAuthPermissions.Database.Models.AuthUpdateUserDataModel do
   """
 
   @type t() :: %__MODULE__{
+    created_at: DateTime.t(),
+    created_by: String.t(),
+    updated_at: DateTime.t(),
+    updated_by: String.t(),
+    user_data_id: integer(),
     user_id: integer(),
-    user_data_id: integer()
+    first_name: String.t() | nil,
+    middle_name: String.t() | nil,
+    last_name: String.t() | nil,
+    settings: map() | list(),
+    preferences: map() | list(),
+    custom_data: map() | list(),
+    nrm_search_data: String.t() | nil
   }
 
-  @fields [:user_id, :user_data_id]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :user_data_id, :user_id, :first_name, :middle_name, :last_name, :settings, :preferences, :custom_data, :nrm_search_data]
 
   @enforce_keys @fields
   defstruct @fields

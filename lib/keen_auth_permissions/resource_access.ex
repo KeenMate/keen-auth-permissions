@@ -108,7 +108,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
   Pass `target_user_id` for user-level grants, `user_group_id` for group-level grants.
   Set the other to `nil`.
 
-  Calls `auth.grant_resource_access`.
+  Calls `auth.assign_resource_access`.
   """
   @spec grant(
           RequestContext.t(),
@@ -132,7 +132,7 @@ defmodule KeenAuthPermissions.ResourceAccess do
         access_flags,
         tenant_id
       ) do
-    db_context().auth_grant_resource_access(
+    db_context().auth_assign_resource_access(
       username,
       user_id,
       request_id,
@@ -372,16 +372,16 @@ defmodule KeenAuthPermissions.ResourceAccess do
   # ============================================================================
 
   @doc """
-  Lists resource types, optionally filtered by source, parent code, and active status.
+  Lists resource types, optionally filtered by source and active status.
 
   Returns types with `key_schema` describing the JSONB structure expected for resource IDs.
 
   Calls `auth.get_resource_types`.
   """
-  @spec list_resource_types(String.t() | nil, String.t() | nil, boolean()) ::
+  @spec list_resource_types(String.t() | nil, boolean(), String.t() | nil) ::
           {:ok, list(map())} | {:error, any()}
-  def list_resource_types(source \\ nil, parent_code \\ nil, active_only \\ true) do
-    db_context().auth_get_resource_types(source, parent_code, active_only)
+  def list_resource_types(source \\ nil, active_only \\ true, language_code \\ nil) do
+    db_context().auth_get_resource_types(source, active_only, language_code)
     |> ErrorParsers.parse_if_error()
   end
 
@@ -393,7 +393,13 @@ defmodule KeenAuthPermissions.ResourceAccess do
 
   Calls `auth.ensure_resource_types`.
   """
-  @spec ensure_resource_types(RequestContext.t(), list(map()), String.t() | nil, integer()) ::
+  @spec ensure_resource_types(
+          RequestContext.t(),
+          list(map()),
+          String.t() | nil,
+          integer(),
+          String.t() | nil
+        ) ::
           {:ok, list()} | {:error, any()}
   def ensure_resource_types(
         %RequestContext{
@@ -402,7 +408,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
         },
         resource_types,
         source,
-        tenant_id
+        tenant_id,
+        language_code \\ nil
       ) do
     db_context().auth_ensure_resource_types(
       username,
@@ -410,7 +417,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
       request_id,
       resource_types,
       source,
-      tenant_id
+      tenant_id,
+      language_code
     )
     |> ErrorParsers.parse_if_error()
   end
@@ -427,7 +435,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
           String.t() | nil,
           boolean(),
           String.t() | nil,
-          integer()
+          integer(),
+          String.t() | nil
         ) ::
           {:ok, map()} | {:error, any()}
   def update_resource_type(
@@ -440,7 +449,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
         description,
         is_active,
         source,
-        tenant_id
+        tenant_id,
+        language_code \\ nil
       ) do
     case db_context().auth_update_resource_type(
            username,
@@ -451,7 +461,8 @@ defmodule KeenAuthPermissions.ResourceAccess do
            description,
            is_active,
            source,
-           tenant_id
+           tenant_id,
+           language_code
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
@@ -459,6 +470,101 @@ defmodule KeenAuthPermissions.ResourceAccess do
       error -> error
     end
   end
+
+  # ============================================================================
+  # Access Flag Management
+  # ============================================================================
+
+  @doc """
+  Lists all registered access flags, optionally filtered by source, in a given language.
+
+  Access flags (`"read"`, `"write"`, `"share"`, ...) are the atomic permissions that
+  roles bundle together. This returns the canonical set with translated titles.
+
+  Calls `auth.get_access_flags`.
+  """
+  @spec list_access_flags(String.t() | nil, String.t() | nil) ::
+          {:ok, list(map())} | {:error, any()}
+  def list_access_flags(source \\ nil, language_code \\ "en") do
+    db_context().auth_get_access_flags(source, language_code)
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
+  Upserts a batch of access-flag definitions (code + title + description).
+
+  `flags` is a JSONB list: `[%{"code" => "read", "title" => "Read", "description" => "..."}, ...]`.
+  Idempotent — safe to run on every bootstrap.
+
+  Calls `auth.ensure_access_flags`.
+  """
+  @spec ensure_access_flags(
+          RequestContext.t(),
+          list(map()) | map(),
+          String.t() | nil,
+          integer(),
+          String.t() | nil
+        ) :: {:ok, list()} | {:error, any()}
+  def ensure_access_flags(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        flags,
+        source,
+        tenant_id,
+        language_code \\ "en"
+      ) do
+    db_context().auth_ensure_access_flags(
+      username,
+      user_id,
+      request_id,
+      flags,
+      source,
+      tenant_id,
+      language_code
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  @doc """
+  Syncs the set of access flags attached to a given resource type.
+
+  Any flag in `access_flags` not already attached is linked; any attached flag
+  not in the list is detached. Useful when a resource-type's permission surface
+  evolves between releases.
+
+  Calls `auth.ensure_resource_type_flags`.
+  """
+  @spec ensure_resource_type_flags(
+          RequestContext.t(),
+          String.t(),
+          list(String.t()),
+          integer()
+        ) :: {:ok, list()} | {:error, any()}
+  def ensure_resource_type_flags(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        resource_type,
+        access_flags,
+        tenant_id
+      ) do
+    db_context().auth_ensure_resource_type_flags(
+      username,
+      user_id,
+      request_id,
+      resource_type,
+      access_flags,
+      tenant_id
+    )
+    |> ErrorParsers.parse_if_error()
+  end
+
+  # ============================================================================
+  # Resource Type Management
+  # ============================================================================
 
   @doc """
   Registers a new resource type.
@@ -477,11 +583,11 @@ defmodule KeenAuthPermissions.ResourceAccess do
           String.t(),
           String.t(),
           String.t() | nil,
-          String.t() | nil,
           integer(),
           String.t() | nil,
           map() | nil,
-          list(String.t()) | nil
+          list(String.t()) | nil,
+          String.t() | nil
         ) ::
           {:ok, map()} | {:error, any()}
   def create_resource_type(
@@ -491,12 +597,12 @@ defmodule KeenAuthPermissions.ResourceAccess do
         },
         code,
         title,
-        parent_code \\ nil,
         description \\ nil,
         tenant_id \\ 1,
         source \\ nil,
         key_schema \\ nil,
-        access_flags \\ nil
+        access_flags \\ nil,
+        language_code \\ nil
       ) do
     case db_context().auth_create_resource_type(
            username,
@@ -504,12 +610,12 @@ defmodule KeenAuthPermissions.ResourceAccess do
            request_id,
            code,
            title,
-           parent_code,
            description,
            tenant_id,
            source,
            key_schema,
-           access_flags
+           access_flags,
+           language_code
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}

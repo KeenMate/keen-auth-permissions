@@ -60,6 +60,9 @@ defmodule KeenAuthPermissions.SysParams do
   def get(group_code, code) do
     case db_context().auth_get_sys_param(group_code, code)
          |> ErrorParsers.parse_if_error() do
+      # SP returns exactly one row; a miss comes back as a row of NULLs, so
+      # treat a nil sys_param_id / group_code as :not_found.
+      {:ok, [%{sys_param_id: nil, group_code: nil}]} -> {:error, :not_found}
       {:ok, [result]} -> {:ok, result}
       {:ok, []} -> {:error, :not_found}
       error -> error

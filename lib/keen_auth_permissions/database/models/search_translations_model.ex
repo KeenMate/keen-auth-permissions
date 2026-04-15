@@ -13,6 +13,7 @@ defmodule KeenAuthPermissions.Database.Models.SearchTranslationsModel do
     data_group: String.t(),
     data_object_code: String.t(),
     data_object_id: integer(),
+    context: String.t(),
     value: String.t(),
     created_at: DateTime.t(),
     created_by: String.t(),
@@ -21,7 +22,7 @@ defmodule KeenAuthPermissions.Database.Models.SearchTranslationsModel do
     total_items: integer()
   }
 
-  @fields [:translation_id, :language_code, :language_value, :data_group, :data_object_code, :data_object_id, :value, :created_at, :created_by, :updated_at, :updated_by, :total_items]
+  @fields [:translation_id, :language_code, :language_value, :data_group, :data_object_code, :data_object_id, :context, :value, :created_at, :created_by, :updated_at, :updated_by, :total_items]
 
   @enforce_keys @fields
   defstruct @fields

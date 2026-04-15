@@ -29,11 +29,12 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthRemoveFromBlacklistParser do
   end
 
   defp parse_row([removed_blacklist_id, username, provider_code]) do
-    {:ok, %AuthRemoveFromBlacklistModel{
-      removed_blacklist_id: removed_blacklist_id,
-      username: username,
-      provider_code: provider_code,
-    }}
+    {:ok,
+     %AuthRemoveFromBlacklistModel{
+       removed_blacklist_id: removed_blacklist_id,
+       username: username,
+       provider_code: provider_code
+     }}
   end
 
   defp parse_row(_row) do

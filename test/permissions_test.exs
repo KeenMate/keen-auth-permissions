@@ -40,20 +40,12 @@ defmodule KeenAuthPermissions.PermissionsTest do
     end
   end
 
-  describe "search/7" do
+  describe "search/5" do
     test "searches permissions with filters" do
       ctx = system_context()
 
       assert {:ok, results} =
-               Permissions.search(
-                 ctx,
-                 nil,
-                 nil,
-                 nil,
-                 1,
-                 100,
-                 default_tenant_id()
-               )
+               Permissions.search(ctx, nil, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -62,15 +54,7 @@ defmodule KeenAuthPermissions.PermissionsTest do
       ctx = system_context()
 
       assert {:ok, results} =
-               Permissions.search(
-                 ctx,
-                 nil,
-                 true,
-                 nil,
-                 1,
-                 100,
-                 default_tenant_id()
-               )
+               Permissions.search(ctx, %{is_assignable: true}, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -142,26 +126,21 @@ defmodule KeenAuthPermissions.PermissionsTest do
     test "creates a new permission" do
       ctx = system_context()
 
-      title = "test_permission_#{unique_string()}"
+      code = "test_permission_#{unique_string()}"
 
-      # Get an existing permission to use as parent
       {:ok, permissions} = Permissions.list(ctx, default_tenant_id())
       parent = List.first(permissions)
 
       if parent do
         assert {:ok, created} =
-                 Permissions.create(ctx, title, parent.full_code, true)
+                 Permissions.create(ctx, code, parent.full_code, true)
 
-        assert created.title == title
+        assert created.code == code
       end
     end
   end
 
   describe "set_assignable/4" do
-    @tag :skip
-    # Skip: auth.set_permission_as_assignable returns empty result set.
-    # The stored procedure should return the assignment info but currently doesn't.
-    # This is a DB-side issue that needs investigation.
     test "sets a permission as assignable" do
       ctx = system_context()
 
@@ -169,16 +148,13 @@ defmodule KeenAuthPermissions.PermissionsTest do
       permission = List.first(permissions)
 
       if permission do
-        assert {:ok, result} =
+        assert {:ok, _} =
                  Permissions.set_assignable(
                    ctx,
                    permission.permission_id,
                    permission.full_code,
                    true
                  )
-
-        # Model returns assignment info with permission_id
-        assert result.permission_id == permission.permission_id
       end
     end
   end

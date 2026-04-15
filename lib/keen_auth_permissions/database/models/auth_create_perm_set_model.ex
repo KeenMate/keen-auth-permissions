@@ -13,7 +13,6 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreatePermSetModel do
     updated_by: String.t(),
     perm_set_id: integer(),
     tenant_id: integer() | nil,
-    title: String.t(),
     code: String.t(),
     is_system: boolean(),
     is_assignable: boolean(),
@@ -21,7 +20,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreatePermSetModel do
     source: String.t() | nil
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :perm_set_id, :tenant_id, :title, :code, :is_system, :is_assignable, :nrm_search_data, :source]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :perm_set_id, :tenant_id, :code, :is_system, :is_assignable, :nrm_search_data, :source]
 
   @enforce_keys @fields
   defstruct @fields

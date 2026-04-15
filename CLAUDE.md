@@ -31,21 +31,12 @@ This library follows a database-first approach where business logic is implement
 ### Key Components
 
 #### 1. Database Layer (`lib/keen_auth_permissions/database/`)
-- **Auto-generated Database Context** (`db_context.ex`): Contains ~194 auto-generated functions that call PostgreSQL stored procedures. Each function corresponds to a stored procedure in the `auth` schema.
+- **Auto-generated Database Context** (`db_context.ex`): Contains 245 stored procedures (238 facade-reachable, 7 intentionally left at raw db_context — see README for the list). Each function corresponds to a stored procedure in the `auth` schema.
 - **Models** (`models/`): Data structures representing return types from stored procedures (e.g., `AuthCreateUserItem`, `AuthGetUserPermissionsItem`)
 - **Parsers** (`parsers/`): Convert raw database results into structured Elixir data
 
-#### 2. Provider Layer (`lib/keen_auth_permissions/providers/`)
-- **AuthProvider**: Core authentication operations (login, registration, tokens)
-- **UsersProvider**: User management and data operations
-- **GroupsProvider**: User group management
-- **PermissionsProvider**: Permission and authorization logic
-
-#### 3. Manager Layer (`lib/keen_auth_permissions/managers/`)
-- Higher-level business logic that combines multiple provider operations
-- **UsersManager**: Complex user operations
-- **GroupsManager**: Group management workflows
-- **ManagerHelpers**: Shared utilities for managers
+#### 2. Facade Layer (`lib/keen_auth_permissions/*.ex`)
+The code is a flat facade layout (no `providers/` or `managers/` subdirectories). Facade modules: `Auth`, `Users`, `UserGroups`, `Tenants`, `Permissions`, `PermSets`, `ApiKeys`, `ResourceAccess`, `ResourceRoles`, `Blacklist`, `Resolver`, `Mfa`, `Invitations`, `Audit`, `Journal`, `Providers`, `Events`, `Translations`, `SysParams`, `PermissionsMap`, `TokenTypes`, `ServiceAccounts`, `PermissionHelpers`, `Notifier`, `PgListener`, `EventClassification`.
 
 #### 4. Core Types
 - **User** (`user.ex`): Main user struct with enforced keys for user data
@@ -73,20 +64,19 @@ The system is designed with multi-tenancy in mind - most operations require a `t
 - Common error types include permission denials, user not found, and validation failures
 
 ## Dependencies
-- `keen_auth` (~> 0.2.2): Base authentication library
-- `jason` (~> 1.3): JSON encoding/decoding
-- `postgrex` (~> 0.16.4): PostgreSQL driver
+- `keen_auth` (~> 1.0): Base authentication library
+- `jason` (~> 1.4): JSON encoding/decoding
+- `postgrex` (~> 0.19): PostgreSQL driver
+- `pbkdf2_elixir`: Password hashing
 - `ex_doc`: Documentation generation (dev only)
 
 ## Testing
-- Test files are located in `test/`
-- Main test file: `test/keen_auth_permissions_test.exs`
-- Test helper: `test/test_helper.exs`
+- 9+ test files under `test/`; 229 tests, 0 failures as of rc.7. Support modules in `test/support/` (`data_case.ex`, `test_factory.ex`, `test_repo.ex`, `test_database.ex`) — includes `ensure_entra_provider/0` helper for tests that need a group-mapping-capable provider.
 
 ## Database Code Generation System
 
 ### Overview
-This project includes a sophisticated code generation system for automatically creating Elixir code from PostgreSQL stored procedures. The system uses Go templates and database introspection to maintain the ~170 database wrapper functions.
+This project includes a sophisticated code generation system for automatically creating Elixir code from PostgreSQL stored procedures. The system uses Go templates and database introspection to maintain the 245 database wrapper functions.
 
 ### Configuration (`db-gen.json`)
 The main configuration file specifies:
@@ -134,6 +124,7 @@ PostgreSQL types are mapped to Elixir types:
 - `timestamptz` → `DateTime.t()`
 - `uuid` → `String.t()`
 - `_text` → `list(String.t())`
+- `jsonb` → `map() | list()`
 
 ### Usage
 The generation system works with executables (`db-gen-win.exe`, `db-gen-linux`) that:

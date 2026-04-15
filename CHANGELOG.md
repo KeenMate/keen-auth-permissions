@@ -5,6 +5,37 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.7] - 2026-04-15
+
+### Added
+- **Facade modules** — `ResourceRoles`, `Journal`, `Providers`, `Events`, `Translations` round out the facade layer on top of db_context
+- **`Users.add_to_default_groups/3`** wrapper for `auth.assign_user_default_groups` (sibling to `Users.assign_default_groups/3`)
+- **Access flag catalog on `ResourceAccess`** — `list_access_flags/2`, `ensure_access_flags/5`, `ensure_resource_type_flags/4`
+- Test helper `ensure_entra_provider/0` in `test/support/data_case.ex` for tests that need a group-mapping-capable provider
+
+### Changed
+- **db-gen regenerated** — function count grew from 237 to 245 SPs; 238 now have a facade wrapper, 7 intentionally left at raw db_context: `auth_seed_permission_data`, `check_version`, `get_version`, `start_version_update`, `stop_version_update`, `journal_keys` (VARIADIC), `validate_token` (legacy public shadow)
+- **SP rename**: `grant_resource_access` → `assign_resource_access` (facade method is still `ResourceAccess.grant/7` for API stability)
+- **`language_code` parameter** added to resource types, roles, translations, and permission/perm-set title writes
+- **Titles are now translations** — `perm_set.title` / `permission.title` columns removed; titles are stored as translations keyed by `code`. `PermSets.update/5` updates `is_assignable` and writes the title-as-translation, but does **not** mutate `code`
+- `SysParams.get/2` now returns `{:error, :not_found}` for all-NULL rows from the SP
+- `Permissions.set_assignable/4` returns `{:ok, nil}` on empty SP result (was `{:error, :update_failed}`)
+- `unique_string/1` test helper now mixes `System.system_time(:microsecond)` to avoid collisions across separate test-VM runs
+
+### Removed
+- **`aad` provider** removed from default seed — library now uses `entra`; tests use the `ensure_entra_provider/0` helper
+- Obsolete legacy SPs `add_journal_msg` / `add_journal_msg_jsonb` removed (superseded by `create_journal_message` per ppm source comment)
+
+### Tests
+- 229 passing, 0 failures, 1 excluded (`Journal.search/12` test pending an upstream `search_journal` cast fix)
+
+## [1.0.0-rc.6] - 2026-03-17
+
+### Changed
+- Regenerated all database modules with db-gen — code formatting now uses multi-line function signatures and parameter lists (237 functions, no functional changes)
+- Reformatted all facade modules (`ApiKeys`, `Audit`, `Auth`, `Invitations`, `PermissionsMap`, `Resolver`, `ServiceAccounts`, `SysParams`, `Tenants`, `Users`) with `mix format` line-length compliance
+- `internal.throw_no_permission` now accepts `_text[]` (array) instead of `text` for permission codes
+
 ## [1.0.0-rc.5] - 2026-03-12
 
 ### Added
@@ -42,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `Blacklist.add/8` → `Blacklist.create/8` (calls `auth.create_blacklist_user`)
   - `Blacklist.remove/3` → `Blacklist.delete/3` (calls `auth.delete_blacklist_user`)
   - `PermSets.add_permissions/4` → `PermSets.create_permissions/4` (calls `auth.create_perm_set_permissions`)
-  - `Users.add_to_default_groups/3` → `Users.assign_default_groups/3` (calls `auth.assign_user_default_groups`)
+  - `Users.add_to_default_groups/3` → `Users.assign_default_groups/3` (calls `auth.assign_user_default_groups`) (Note: `add_to_default_groups/3` was restored in rc.7 as a sibling wrapper; both names now coexist.)
 - Regenerated all database modules with db-gen (~236 stored procedure wrappers, up from ~229)
 - Updated all facade files to pass new `_tenant_id` / `_target_tenant_id` parameters
 

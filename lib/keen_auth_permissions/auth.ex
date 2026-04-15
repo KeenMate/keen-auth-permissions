@@ -131,7 +131,8 @@ defmodule KeenAuthPermissions.Auth do
   @spec register(RequestContext.t(), String.t(), String.t(), String.t(), map() | nil) ::
           {:ok, map()} | {:error, any()}
   def register(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         email,
         password_hash,
         display_name,
@@ -177,7 +178,10 @@ defmodule KeenAuthPermissions.Auth do
           String.t() | nil
         ) :: {:ok, map()} | {:error, any()}
   def create_token(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         target_user_id,
         target_user_oid,
         user_event_id,
@@ -224,7 +228,8 @@ defmodule KeenAuthPermissions.Auth do
         ) ::
           {:ok, map()} | {:error, any()}
   def validate_token(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         target_user_id,
         token_uid,
         token,
@@ -258,7 +263,8 @@ defmodule KeenAuthPermissions.Auth do
   @spec set_token_as_used(RequestContext.t(), String.t() | nil, String.t(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def set_token_as_used(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         token_uid,
         token,
         token_type_code,
@@ -289,7 +295,8 @@ defmodule KeenAuthPermissions.Auth do
   @spec set_token_as_used_by_token(RequestContext.t(), String.t(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def set_token_as_used_by_token(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         token,
         token_type
       ) do
@@ -316,7 +323,8 @@ defmodule KeenAuthPermissions.Auth do
   @spec set_token_as_failed(RequestContext.t(), String.t() | nil, String.t(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def set_token_as_failed(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         token_uid,
         token,
         token_type_code,
@@ -347,7 +355,8 @@ defmodule KeenAuthPermissions.Auth do
   @spec set_token_as_failed_by_token(RequestContext.t(), String.t(), String.t()) ::
           {:ok, map()} | {:error, any()}
   def set_token_as_failed_by_token(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         token,
         token_type
       ) do
@@ -384,7 +393,8 @@ defmodule KeenAuthPermissions.Auth do
           String.t() | nil
         ) :: {:ok, map()} | {:error, any()}
   def create_event(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         event_type_code,
         target_user_id,
         event_data,
@@ -421,7 +431,8 @@ defmodule KeenAuthPermissions.Auth do
           map()
         ) :: {:ok, map()} | {:error, any()}
   def create_event_with_payload(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         event_type_code,
         target_user_id,
         payload_map
@@ -453,10 +464,20 @@ defmodule KeenAuthPermissions.Auth do
 
   Calls `auth.create_provider`.
   """
-  @spec create_provider(RequestContext.t(), String.t(), String.t(), boolean(), boolean(), boolean()) ::
+  @spec create_provider(
+          RequestContext.t(),
+          String.t(),
+          String.t(),
+          boolean(),
+          boolean(),
+          boolean()
+        ) ::
           {:ok, map()} | {:error, any()}
   def create_provider(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_code,
         provider_name,
         is_active,
@@ -487,10 +508,21 @@ defmodule KeenAuthPermissions.Auth do
 
   Calls `auth.update_provider`.
   """
-  @spec update_provider(RequestContext.t(), integer(), String.t(), String.t(), boolean(), boolean(), boolean()) ::
+  @spec update_provider(
+          RequestContext.t(),
+          integer(),
+          String.t(),
+          String.t(),
+          boolean(),
+          boolean(),
+          boolean()
+        ) ::
           {:ok, map()} | {:error, any()}
   def update_provider(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_id,
         provider_code,
         provider_name,
@@ -525,7 +557,10 @@ defmodule KeenAuthPermissions.Auth do
   """
   @spec delete_provider(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def delete_provider(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_code,
         tenant_id \\ 1
       ) do
@@ -550,7 +585,10 @@ defmodule KeenAuthPermissions.Auth do
   """
   @spec enable_provider(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def enable_provider(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_code,
         tenant_id \\ 1
       ) do
@@ -575,7 +613,10 @@ defmodule KeenAuthPermissions.Auth do
   """
   @spec disable_provider(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
   def disable_provider(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_code,
         tenant_id \\ 1
       ) do
@@ -662,7 +703,10 @@ defmodule KeenAuthPermissions.Auth do
   """
   @spec list_provider_users(RequestContext.t(), String.t()) :: {:ok, list()} | {:error, any()}
   def list_provider_users(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         provider_code,
         tenant_id \\ 1
       ) do

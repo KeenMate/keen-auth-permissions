@@ -76,7 +76,7 @@ defmodule KeenAuthPermissions.TestFactory do
   """
   def create_test_perm_set(user, attrs \\ %{}) do
     defaults = %{
-      title: "Test PermSet #{unique_id()}",
+      code: "test_permset_#{unique_id()}",
       is_system: false,
       is_assignable: true,
       permissions: [],
@@ -87,7 +87,7 @@ defmodule KeenAuthPermissions.TestFactory do
 
     PermSets.create(
       to_context(user),
-      params.title,
+      params.code,
       params.is_system,
       params.is_assignable,
       params.permissions,

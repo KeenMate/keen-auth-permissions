@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.SearchTranslationsParser do
     {:ok, results}
   end
 
-  defp parse_row([translation_id, language_code, language_value, data_group, data_object_code, data_object_id, value, created_at, created_by, updated_at, updated_by, total_items]) do
+  defp parse_row([translation_id, language_code, language_value, data_group, data_object_code, data_object_id, context, value, created_at, created_by, updated_at, updated_by, total_items]) do
     {:ok, %SearchTranslationsModel{
       translation_id: translation_id,
       language_code: language_code,
@@ -36,6 +36,7 @@ defmodule KeenAuthPermissions.Database.Parsers.SearchTranslationsParser do
       data_group: data_group,
       data_object_code: data_object_code,
       data_object_id: data_object_id,
+      context: context,
       value: value,
       created_at: created_at,
       created_by: created_by,

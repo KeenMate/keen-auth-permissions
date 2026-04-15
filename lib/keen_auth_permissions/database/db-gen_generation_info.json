@@ -1,395 +1,9 @@
 {
   "version": "v0.6.0-beta3",
-  "time": "2026-03-11T13:03:14.0487295+01:00",
+  "time": "2026-04-14T16:39:05.6001704+02:00",
   "routines": [
     {
       "RowNumber": 1,
-      "RoutineSchema": "public",
-      "RoutineNameWithParams": "add_journal_msg(text,int8,text,text,text,int8,_text,int4,text,int4)",
-      "HasOverload": false,
-      "RoutineName": "add_journal_msg",
-      "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "public",
-      "UdtTypeName": "journal",
-      "ParamCount": 10,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_created_by",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_correlation_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_msg",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_data_group",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_data_object_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_payload",
-          "Mode": "IN",
-          "UDTName": "_text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "_event_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "_data_object_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 10,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "created_at",
-          "Mode": "OUT",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "created_by",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "correlation_id",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "journal_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "tenant_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "event_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "user_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "keys",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "data_payload",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 10,
-          "Name": "request_context",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        }
-      ]
-    },
-    {
-      "RowNumber": 1,
-      "RoutineSchema": "public",
-      "RoutineNameWithParams": "add_journal_msg_jsonb(text,int8,text,text,text,int8,jsonb,int4,text,int4)",
-      "HasOverload": false,
-      "RoutineName": "add_journal_msg_jsonb",
-      "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "public",
-      "UdtTypeName": "journal",
-      "ParamCount": 10,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_created_by",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_correlation_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_msg",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_data_group",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_data_object_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_payload",
-          "Mode": "IN",
-          "UDTName": "jsonb",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "_event_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "_data_object_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 10,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "created_at",
-          "Mode": "OUT",
-          "UDTName": "timestamptz",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "created_by",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "correlation_id",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "journal_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "tenant_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "event_id",
-          "Mode": "OUT",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "user_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "keys",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "data_payload",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 10,
-          "Name": "request_context",
-          "Mode": "OUT",
-          "UDTName": "jsonb",
-          "IsNullable": true,
-          "IsOptional": true
-        }
-      ]
-    },
-    {
-      "RowNumber": 1,
-      "RoutineSchema": "public",
-      "RoutineNameWithParams": "check_version(text,text)",
-      "HasOverload": true,
-      "RoutineName": "check_version",
-      "SpecificName": "",
-      "DataType": "boolean",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "bool",
-      "ParamCount": 2,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_version",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_component",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 2,
       "RoutineSchema": "public",
       "RoutineNameWithParams": "check_version(text,text,bool)",
       "HasOverload": true,
@@ -422,6 +36,38 @@
           "Name": "_throw_err",
           "Mode": "IN",
           "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 2,
+      "RoutineSchema": "public",
+      "RoutineNameWithParams": "check_version(text,text)",
+      "HasOverload": true,
+      "RoutineName": "check_version",
+      "SpecificName": "",
+      "DataType": "boolean",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "bool",
+      "ParamCount": 2,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_version",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_component",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         }
@@ -638,14 +284,6 @@
         },
         {
           "OrdinalPosition": 2,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
           "Name": "range_start",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -653,7 +291,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 4,
+          "OrdinalPosition": 3,
           "Name": "range_end",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -661,7 +299,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 5,
+          "OrdinalPosition": 4,
           "Name": "is_error",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -669,7 +307,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 6,
+          "OrdinalPosition": 5,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -799,22 +437,6 @@
         },
         {
           "OrdinalPosition": 4,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "description",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
           "Name": "is_read_only",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -822,7 +444,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 5,
           "Name": "is_system",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -830,7 +452,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 6,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -2009,14 +1631,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "public",
-      "RoutineNameWithParams": "create_translation(text,int8,text,text,text,text,text,int8,int4)",
+      "RoutineNameWithParams": "create_translation(text,int8,text,text,text,text,text,int8,text,int4)",
       "HasOverload": false,
       "RoutineName": "create_translation",
       "SpecificName": "",
       "DataType": "USER-DEFINED",
       "UdtTypeScheme": "public",
       "UdtTypeName": "translation",
-      "ParamCount": 9,
+      "ParamCount": 10,
       "FuncType": "function",
       "InParameters": [
         {
@@ -2085,6 +1707,14 @@
         },
         {
           "OrdinalPosition": 9,
+          "Name": "_context",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -2175,7 +1805,7 @@
         },
         {
           "OrdinalPosition": 11,
-          "Name": "value",
+          "Name": "context",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
@@ -2183,6 +1813,14 @@
         },
         {
           "OrdinalPosition": 12,
+          "Name": "value",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 13,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -2190,7 +1828,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 14,
           "Name": "ts_search_data",
           "Mode": "OUT",
           "UDTName": "tsvector",
@@ -2918,14 +2556,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "public",
-      "RoutineNameWithParams": "get_group_translations(text,text,int4)",
+      "RoutineNameWithParams": "get_group_translations(text,text,text,int4)",
       "HasOverload": false,
       "RoutineName": "get_group_translations",
       "SpecificName": "",
       "DataType": "jsonb",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "jsonb",
-      "ParamCount": 3,
+      "ParamCount": 4,
       "FuncType": "function",
       "InParameters": [
         {
@@ -2946,6 +2584,14 @@
         },
         {
           "OrdinalPosition": 3,
+          "Name": "_context",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 4,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -4174,14 +3820,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "public",
-      "RoutineNameWithParams": "search_translations(int8,text,text,text,text,text,text,int8,int4,int4,int4)",
+      "RoutineNameWithParams": "search_translations(int8,text,text,text,text,text,text,int8,text,int4,int4,int4)",
       "HasOverload": false,
       "RoutineName": "search_translations",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 23,
+      "ParamCount": 25,
       "FuncType": "function",
       "InParameters": [
         {
@@ -4250,6 +3896,14 @@
         },
         {
           "OrdinalPosition": 9,
+          "Name": "_context",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
           "Name": "_page",
           "Mode": "IN",
           "UDTName": "int4",
@@ -4257,7 +3911,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 11,
           "Name": "_page_size",
           "Mode": "IN",
           "UDTName": "int4",
@@ -4265,7 +3919,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 12,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -4275,7 +3929,7 @@
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 13,
           "Name": "__translation_id",
           "Mode": "OUT",
           "UDTName": "int4",
@@ -4283,7 +3937,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 14,
           "Name": "__language_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4291,7 +3945,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 15,
           "Name": "__language_value",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4299,7 +3953,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 16,
           "Name": "__data_group",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4307,7 +3961,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 16,
+          "OrdinalPosition": 17,
           "Name": "__data_object_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4315,7 +3969,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 17,
+          "OrdinalPosition": 18,
           "Name": "__data_object_id",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -4323,7 +3977,15 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 18,
+          "OrdinalPosition": 19,
+          "Name": "__context",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 20,
           "Name": "__value",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4331,7 +3993,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 19,
+          "OrdinalPosition": 21,
           "Name": "__created_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -4339,7 +4001,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 20,
+          "OrdinalPosition": 22,
           "Name": "__created_by",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4347,7 +4009,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 21,
+          "OrdinalPosition": 23,
           "Name": "__updated_at",
           "Mode": "OUT",
           "UDTName": "timestamptz",
@@ -4355,7 +4017,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 22,
+          "OrdinalPosition": 24,
           "Name": "__updated_by",
           "Mode": "OUT",
           "UDTName": "text",
@@ -4363,7 +4025,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 23,
+          "OrdinalPosition": 25,
           "Name": "__total_items",
           "Mode": "OUT",
           "UDTName": "int8",
@@ -5081,7 +4743,7 @@
         },
         {
           "OrdinalPosition": 11,
-          "Name": "value",
+          "Name": "context",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
@@ -5089,6 +4751,14 @@
         },
         {
           "OrdinalPosition": 12,
+          "Name": "value",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 13,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -5096,7 +4766,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 14,
           "Name": "ts_search_data",
           "Mode": "OUT",
           "UDTName": "tsvector",
@@ -5253,6 +4923,21 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "internal",
+      "RoutineNameWithParams": "refresh_translation_cache()",
+      "HasOverload": false,
+      "RoutineName": "refresh_translation_cache",
+      "SpecificName": "",
+      "DataType": "void",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "void",
+      "ParamCount": 0,
+      "FuncType": "function",
+      "InParameters": null,
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "internal",
       "RoutineNameWithParams": "resolve_cross_tenant_access(int8,text,text,text,int4,int4)",
       "HasOverload": false,
       "RoutineName": "resolve_cross_tenant_access",
@@ -5397,6 +5082,38 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "internal",
+      "RoutineNameWithParams": "throw_no_permission(int8,_text)",
+      "HasOverload": true,
+      "RoutineName": "throw_no_permission",
+      "SpecificName": "",
+      "DataType": "void",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "void",
+      "ParamCount": 2,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_perm_codes",
+          "Mode": "IN",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 2,
+      "RoutineSchema": "internal",
       "RoutineNameWithParams": "throw_no_permission(int8,text,int4)",
       "HasOverload": true,
       "RoutineName": "throw_no_permission",
@@ -5435,7 +5152,7 @@
       "OutParameters": null
     },
     {
-      "RowNumber": 2,
+      "RowNumber": 3,
       "RoutineSchema": "internal",
       "RoutineNameWithParams": "throw_no_permission(int8,_text,int4)",
       "HasOverload": true,
@@ -5470,38 +5187,6 @@
           "UDTName": "int4",
           "IsNullable": false,
           "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 3,
-      "RoutineSchema": "internal",
-      "RoutineNameWithParams": "throw_no_permission(int8,_text)",
-      "HasOverload": true,
-      "RoutineName": "throw_no_permission",
-      "SpecificName": "",
-      "DataType": "void",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "void",
-      "ParamCount": 2,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_perm_codes",
-          "Mode": "IN",
-          "UDTName": "_text",
-          "IsNullable": false,
-          "IsOptional": false
         }
       ],
       "OutParameters": null
@@ -5930,6 +5615,216 @@
           "UDTName": "int4",
           "IsNullable": true,
           "IsOptional": true
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "assign_resource_access(text,int8,text,text,jsonb,int8,int4,_text,int4)",
+      "HasOverload": false,
+      "RoutineName": "assign_resource_access",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 11,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_resource_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_resource_id",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_target_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_user_group_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_access_flags",
+          "Mode": "IN",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 10,
+          "Name": "__resource_access_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "__access_flag",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "assign_resource_role(text,int8,text,text,jsonb,int8,int4,_text,int4)",
+      "HasOverload": false,
+      "RoutineName": "assign_resource_role",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 11,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_resource_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_resource_id",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_target_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_user_group_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_role_codes",
+          "Mode": "IN",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 10,
+          "Name": "__resource_role_assignment_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "__role_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
         }
       ]
     },
@@ -7393,14 +7288,6 @@
         },
         {
           "OrdinalPosition": 7,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
           "Name": "code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7408,7 +7295,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "is_system",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -7416,7 +7303,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -7424,7 +7311,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7432,7 +7319,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7675,14 +7562,6 @@
         },
         {
           "OrdinalPosition": 7,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
           "Name": "code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7690,7 +7569,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "full_code",
           "Mode": "OUT",
           "UDTName": "ltree",
@@ -7698,7 +7577,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "node_path",
           "Mode": "OUT",
           "UDTName": "ltree",
@@ -7706,7 +7585,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "has_children",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -7714,15 +7593,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 12,
-          "Name": "full_title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 11,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7730,7 +7601,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 12,
           "Name": "short_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7738,7 +7609,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 13,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -7847,14 +7718,175 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "create_resource_type(text,int8,text,text,text,text,text,int4,text,jsonb,_text)",
+      "RoutineNameWithParams": "create_resource_role(text,int8,text,text,text,text,text,_text,text,int4,text)",
+      "HasOverload": false,
+      "RoutineName": "create_resource_role",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 18,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_resource_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_title",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_description",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_access_flags",
+          "Mode": "IN",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "_source",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 12,
+          "Name": "__code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__resource_type",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__description",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 16,
+          "Name": "__is_active",
+          "Mode": "OUT",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 17,
+          "Name": "__source",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 18,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "create_resource_type(text,int8,text,text,text,text,int4,text,jsonb,_text,text)",
       "HasOverload": false,
       "RoutineName": "create_resource_type",
       "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "const",
-      "UdtTypeName": "resource_type",
-      "ParamCount": 11,
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 20,
       "FuncType": "function",
       "InParameters": [
         {
@@ -7899,14 +7931,6 @@
         },
         {
           "OrdinalPosition": 6,
-          "Name": "_parent_code",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
           "Name": "_description",
           "Mode": "IN",
           "UDTName": "text",
@@ -7914,7 +7938,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 7,
           "Name": "_tenant_id",
           "Mode": "IN",
           "UDTName": "int4",
@@ -7922,7 +7946,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "_source",
           "Mode": "IN",
           "UDTName": "text",
@@ -7930,7 +7954,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "_key_schema",
           "Mode": "IN",
           "UDTName": "jsonb",
@@ -7938,86 +7962,94 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "_access_flags",
           "Mode": "IN",
           "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 1,
-          "Name": "code",
+          "OrdinalPosition": 12,
+          "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 2,
-          "Name": "title",
+          "OrdinalPosition": 13,
+          "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 3,
-          "Name": "full_title",
+          "OrdinalPosition": 14,
+          "Name": "__full_title",
           "Mode": "OUT",
           "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
+          "IsNullable": false,
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 4,
-          "Name": "description",
+          "OrdinalPosition": 15,
+          "Name": "__description",
           "Mode": "OUT",
           "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
+          "IsNullable": false,
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 5,
-          "Name": "is_active",
+          "OrdinalPosition": 16,
+          "Name": "__is_active",
           "Mode": "OUT",
           "UDTName": "bool",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 6,
-          "Name": "source",
+          "OrdinalPosition": 17,
+          "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
+          "IsNullable": false,
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 7,
-          "Name": "parent_code",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "path",
+          "OrdinalPosition": 18,
+          "Name": "__path",
           "Mode": "OUT",
           "UDTName": "ltree",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
         },
         {
-          "OrdinalPosition": 9,
-          "Name": "key_schema",
+          "OrdinalPosition": 19,
+          "Name": "__key_schema",
           "Mode": "OUT",
           "UDTName": "jsonb",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 20,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
         }
       ]
     },
@@ -9461,6 +9493,62 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
+      "RoutineNameWithParams": "delete_resource_role(text,int8,text,text,int4)",
+      "HasOverload": false,
+      "RoutineName": "delete_resource_role",
+      "SpecificName": "",
+      "DataType": "bigint",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "int8",
+      "ParamCount": 5,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_deleted_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
       "RoutineNameWithParams": "delete_tenant(text,int8,text,uuid,int4)",
       "HasOverload": false,
       "RoutineName": "delete_tenant",
@@ -10851,14 +10939,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "ensure_access_flags(text,int8,text,jsonb,text,int4)",
+      "RoutineNameWithParams": "ensure_access_flags(text,int8,text,jsonb,text,int4,text)",
       "HasOverload": false,
       "RoutineName": "ensure_access_flags",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 9,
+      "ParamCount": 10,
       "FuncType": "function",
       "InParameters": [
         {
@@ -10908,11 +10996,19 @@
           "UDTName": "int4",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 7,
+          "OrdinalPosition": 8,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -10920,7 +11016,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 8,
+          "OrdinalPosition": 9,
           "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -10928,7 +11024,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 10,
           "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11356,14 +11452,6 @@
         },
         {
           "OrdinalPosition": 7,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
           "Name": "code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11371,7 +11459,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "is_system",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -11379,7 +11467,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -11387,7 +11475,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11395,7 +11483,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11525,14 +11613,6 @@
         },
         {
           "OrdinalPosition": 7,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
           "Name": "code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11540,7 +11620,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "full_code",
           "Mode": "OUT",
           "UDTName": "ltree",
@@ -11548,7 +11628,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "node_path",
           "Mode": "OUT",
           "UDTName": "ltree",
@@ -11556,7 +11636,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "has_children",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -11564,15 +11644,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 12,
-          "Name": "full_title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 11,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11580,7 +11652,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 14,
+          "OrdinalPosition": 12,
           "Name": "short_code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11588,7 +11660,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 15,
+          "OrdinalPosition": 13,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -11705,6 +11777,224 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
+      "RoutineNameWithParams": "ensure_resource_role_flags(text,int8,text,text,_text,int4)",
+      "HasOverload": false,
+      "RoutineName": "ensure_resource_role_flags",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 8,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_updated_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_role_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_access_flags",
+          "Mode": "IN",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 7,
+          "Name": "__resource_role_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "__access_flag_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "ensure_resource_roles(text,int8,text,jsonb,text,bool,int4,text)",
+      "HasOverload": false,
+      "RoutineName": "ensure_resource_roles",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 15,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_created_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_roles",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_source",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_is_final_state",
+          "Mode": "IN",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 9,
+          "Name": "__code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "__resource_type",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "__title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__description",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__is_active",
+          "Mode": "OUT",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__source",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
       "RoutineNameWithParams": "ensure_resource_type_flags(text,int8,text,text,_text,int4)",
       "HasOverload": false,
       "RoutineName": "ensure_resource_type_flags",
@@ -11786,14 +12076,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "ensure_resource_types(text,int8,text,jsonb,text,int4)",
+      "RoutineNameWithParams": "ensure_resource_types(text,int8,text,jsonb,text,int4,text)",
       "HasOverload": false,
       "RoutineName": "ensure_resource_types",
       "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "const",
-      "UdtTypeName": "resource_type",
-      "ParamCount": 6,
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 16,
       "FuncType": "function",
       "InParameters": [
         {
@@ -11843,80 +12133,88 @@
           "UDTName": "int4",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 1,
-          "Name": "code",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "full_title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "description",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "is_active",
-          "Mode": "OUT",
-          "UDTName": "bool",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "source",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "parent_code",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
-        },
-        {
           "OrdinalPosition": 8,
-          "Name": "path",
+          "Name": "__code",
           "Mode": "OUT",
-          "UDTName": "ltree",
+          "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
         },
         {
           "OrdinalPosition": 9,
-          "Name": "key_schema",
+          "Name": "__title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "__full_title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "__description",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__is_active",
+          "Mode": "OUT",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__source",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__path",
+          "Mode": "OUT",
+          "UDTName": "ltree",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__key_schema",
           "Mode": "OUT",
           "UDTName": "jsonb",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 16,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
         }
       ]
     },
@@ -12823,14 +13121,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "get_access_flags(text)",
+      "RoutineNameWithParams": "get_access_flags(text,text)",
       "HasOverload": false,
       "RoutineName": "get_access_flags",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 4,
+      "ParamCount": 5,
       "FuncType": "function",
       "InParameters": [
         {
@@ -12840,11 +13138,19 @@
           "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 2,
+          "OrdinalPosition": 3,
           "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -12852,7 +13158,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 3,
+          "OrdinalPosition": 4,
           "Name": "__title",
           "Mode": "OUT",
           "UDTName": "text",
@@ -12860,7 +13166,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 4,
+          "OrdinalPosition": 5,
           "Name": "__source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -13040,7 +13346,7 @@
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 12,
+      "ParamCount": 15,
       "FuncType": "function",
       "InParameters": [
         {
@@ -13136,6 +13442,30 @@
         {
           "OrdinalPosition": 12,
           "Name": "__permission_title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__tenant_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__tenant_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__tenant_title",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
@@ -15058,14 +15388,200 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "get_resource_types(text,text,bool)",
+      "RoutineNameWithParams": "get_resource_role_assignments(int8,text,text,jsonb,int4,text)",
       "HasOverload": false,
-      "RoutineName": "get_resource_types",
+      "RoutineName": "get_resource_role_assignments",
       "SpecificName": "",
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 13,
+      "ParamCount": 17,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_resource_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_resource_id",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 7,
+          "Name": "__resource_role_assignment_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "__user_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "__user_display_name",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "__user_group_id",
+          "Mode": "OUT",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "__group_title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__role_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__role_title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__granted_by",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 16,
+          "Name": "__granted_by_name",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 17,
+          "Name": "__created_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "get_resource_role_flags(text)",
+      "HasOverload": false,
+      "RoutineName": "get_resource_role_flags",
+      "SpecificName": "",
+      "DataType": "text",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "text",
+      "ParamCount": 2,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_role_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 2,
+          "Name": "__access_flag_code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "get_resource_roles(text,text,bool,text)",
+      "HasOverload": false,
+      "RoutineName": "get_resource_roles",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 11,
       "FuncType": "function",
       "InParameters": [
         {
@@ -15078,7 +15594,7 @@
         },
         {
           "OrdinalPosition": 2,
-          "Name": "_parent_code",
+          "Name": "_resource_type",
           "Mode": "IN",
           "UDTName": "text",
           "IsNullable": false,
@@ -15089,6 +15605,111 @@
           "Name": "_active_only",
           "Mode": "IN",
           "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 5,
+          "Name": "__code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "__resource_type",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "__title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "__description",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "__is_active",
+          "Mode": "OUT",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "__source",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "get_resource_types(text,bool,text)",
+      "HasOverload": false,
+      "RoutineName": "get_resource_types",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 12,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_source",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_active_only",
+          "Mode": "IN",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         }
@@ -15144,14 +15765,6 @@
         },
         {
           "OrdinalPosition": 10,
-          "Name": "__parent_code",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 11,
           "Name": "__path",
           "Mode": "OUT",
           "UDTName": "ltree",
@@ -15159,7 +15772,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "__key_schema",
           "Mode": "OUT",
           "UDTName": "jsonb",
@@ -15167,7 +15780,7 @@
           "IsOptional": false
         },
         {
-          "OrdinalPosition": 13,
+          "OrdinalPosition": 12,
           "Name": "__access_flags",
           "Mode": "OUT",
           "UDTName": "_text",
@@ -16976,6 +17589,30 @@
         },
         {
           "OrdinalPosition": 10,
+          "Name": "settings",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "preferences",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "custom_data",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 13,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -18124,111 +18761,6 @@
           "Name": "__short_code_permissions",
           "Mode": "OUT",
           "UDTName": "_text",
-          "IsNullable": false,
-          "IsOptional": false
-        }
-      ]
-    },
-    {
-      "RowNumber": 1,
-      "RoutineSchema": "auth",
-      "RoutineNameWithParams": "grant_resource_access(text,int8,text,text,jsonb,int8,int4,_text,int4)",
-      "HasOverload": false,
-      "RoutineName": "grant_resource_access",
-      "SpecificName": "",
-      "DataType": "record",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "record",
-      "ParamCount": 11,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_created_by",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 3,
-          "Name": "_correlation_id",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 4,
-          "Name": "_resource_type",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 5,
-          "Name": "_resource_id",
-          "Mode": "IN",
-          "UDTName": "jsonb",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 6,
-          "Name": "_target_user_id",
-          "Mode": "IN",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 7,
-          "Name": "_user_group_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
-          "Name": "_access_flags",
-          "Mode": "IN",
-          "UDTName": "_text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 9,
-          "Name": "_tenant_id",
-          "Mode": "IN",
-          "UDTName": "int4",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": [
-        {
-          "OrdinalPosition": 10,
-          "Name": "__resource_access_id",
-          "Mode": "OUT",
-          "UDTName": "int8",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 11,
-          "Name": "__access_flag",
-          "Mode": "OUT",
-          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
         }
@@ -19468,6 +20000,70 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
+      "RoutineNameWithParams": "revoke_all_resource_roles(text,int8,text,text,jsonb,int4)",
+      "HasOverload": false,
+      "RoutineName": "revoke_all_resource_roles",
+      "SpecificName": "",
+      "DataType": "bigint",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "int8",
+      "ParamCount": 6,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_deleted_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_resource_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_resource_id",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
       "RoutineNameWithParams": "revoke_invitation(text,int8,text,int8,jsonb,int4)",
       "HasOverload": false,
       "RoutineName": "revoke_invitation",
@@ -19601,6 +20197,94 @@
         {
           "OrdinalPosition": 8,
           "Name": "_access_flags",
+          "Mode": "IN",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "revoke_resource_role(text,int8,text,text,jsonb,int8,int4,_text,int4)",
+      "HasOverload": false,
+      "RoutineName": "revoke_resource_role",
+      "SpecificName": "",
+      "DataType": "bigint",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "int8",
+      "ParamCount": 9,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_deleted_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_resource_type",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_resource_id",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_target_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_user_group_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_role_codes",
           "Mode": "IN",
           "UDTName": "_text",
           "IsNullable": false,
@@ -23136,14 +23820,6 @@
         },
         {
           "OrdinalPosition": 7,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        },
-        {
-          "OrdinalPosition": 8,
           "Name": "code",
           "Mode": "OUT",
           "UDTName": "text",
@@ -23151,7 +23827,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 9,
+          "OrdinalPosition": 8,
           "Name": "is_system",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -23159,7 +23835,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 10,
+          "OrdinalPosition": 9,
           "Name": "is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
@@ -23167,7 +23843,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 11,
+          "OrdinalPosition": 10,
           "Name": "nrm_search_data",
           "Mode": "OUT",
           "UDTName": "text",
@@ -23175,7 +23851,7 @@
           "IsOptional": true
         },
         {
-          "OrdinalPosition": 12,
+          "OrdinalPosition": 11,
           "Name": "source",
           "Mode": "OUT",
           "UDTName": "text",
@@ -23292,14 +23968,14 @@
     {
       "RowNumber": 1,
       "RoutineSchema": "auth",
-      "RoutineNameWithParams": "update_resource_type(text,int8,text,text,text,text,bool,text,int4)",
+      "RoutineNameWithParams": "update_resource_role(text,int8,text,text,text,text,bool,text,int4,text)",
       "HasOverload": false,
-      "RoutineName": "update_resource_type",
+      "RoutineName": "update_resource_role",
       "SpecificName": "",
-      "DataType": "USER-DEFINED",
-      "UdtTypeScheme": "const",
-      "UdtTypeName": "resource_type",
-      "ParamCount": 9,
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 17,
       "FuncType": "function",
       "InParameters": [
         {
@@ -23373,80 +24049,241 @@
           "UDTName": "int4",
           "IsNullable": false,
           "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
         }
       ],
       "OutParameters": [
         {
-          "OrdinalPosition": 1,
-          "Name": "code",
+          "OrdinalPosition": 11,
+          "Name": "__code",
           "Mode": "OUT",
           "UDTName": "text",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__resource_type",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__description",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__is_active",
+          "Mode": "OUT",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 16,
+          "Name": "__source",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 17,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 1,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "update_resource_type(text,int8,text,text,text,text,bool,text,int4,text)",
+      "HasOverload": false,
+      "RoutineName": "update_resource_type",
+      "SpecificName": "",
+      "DataType": "record",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "record",
+      "ParamCount": 19,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_updated_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
         },
         {
           "OrdinalPosition": 2,
-          "Name": "title",
-          "Mode": "OUT",
-          "UDTName": "text",
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
         },
         {
           "OrdinalPosition": 3,
-          "Name": "full_title",
-          "Mode": "OUT",
+          "Name": "_correlation_id",
+          "Mode": "IN",
           "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
+          "IsNullable": false,
+          "IsOptional": false
         },
         {
           "OrdinalPosition": 4,
-          "Name": "description",
-          "Mode": "OUT",
+          "Name": "_code",
+          "Mode": "IN",
           "UDTName": "text",
-          "IsNullable": true,
-          "IsOptional": true
+          "IsNullable": false,
+          "IsOptional": false
         },
         {
           "OrdinalPosition": 5,
-          "Name": "is_active",
-          "Mode": "OUT",
-          "UDTName": "bool",
+          "Name": "_title",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 6,
-          "Name": "source",
-          "Mode": "OUT",
+          "Name": "_description",
+          "Mode": "IN",
           "UDTName": "text",
-          "IsNullable": true,
+          "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 7,
-          "Name": "parent_code",
-          "Mode": "OUT",
-          "UDTName": "text",
-          "IsNullable": true,
+          "Name": "_is_active",
+          "Mode": "IN",
+          "UDTName": "bool",
+          "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 8,
-          "Name": "path",
-          "Mode": "OUT",
-          "UDTName": "ltree",
+          "Name": "_source",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         },
         {
           "OrdinalPosition": 9,
-          "Name": "key_schema",
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "_language_code",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 11,
+          "Name": "__code",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__full_title",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 14,
+          "Name": "__description",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 15,
+          "Name": "__is_active",
+          "Mode": "OUT",
+          "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 16,
+          "Name": "__source",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 17,
+          "Name": "__path",
+          "Mode": "OUT",
+          "UDTName": "ltree",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 18,
+          "Name": "__key_schema",
           "Mode": "OUT",
           "UDTName": "jsonb",
           "IsNullable": false,
-          "IsOptional": true
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 19,
+          "Name": "__access_flags",
+          "Mode": "OUT",
+          "UDTName": "_text",
+          "IsNullable": false,
+          "IsOptional": false
         }
       ]
     },
@@ -23752,7 +24589,7 @@
       "RowNumber": 1,
       "RoutineSchema": "auth",
       "RoutineNameWithParams": "update_user_data(text,int8,text,int8,text,jsonb)",
-      "HasOverload": false,
+      "HasOverload": true,
       "RoutineName": "update_user_data",
       "SpecificName": "",
       "DataType": "record",
@@ -23826,6 +24663,215 @@
           "UDTName": "int8",
           "IsNullable": false,
           "IsOptional": false
+        }
+      ]
+    },
+    {
+      "RowNumber": 2,
+      "RoutineSchema": "auth",
+      "RoutineNameWithParams": "update_user_data(text,int8,text,int8,text,text,text,jsonb,jsonb,jsonb,int4)",
+      "HasOverload": true,
+      "RoutineName": "update_user_data",
+      "SpecificName": "",
+      "DataType": "USER-DEFINED",
+      "UdtTypeScheme": "auth",
+      "UdtTypeName": "user_data",
+      "ParamCount": 11,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_updated_by",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "_correlation_id",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "_target_user_id",
+          "Mode": "IN",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "_first_name",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "_middle_name",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "_last_name",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "_settings",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "_preferences",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "_custom_data",
+          "Mode": "IN",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "_tenant_id",
+          "Mode": "IN",
+          "UDTName": "int4",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "created_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "created_by",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 3,
+          "Name": "updated_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 4,
+          "Name": "updated_by",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 5,
+          "Name": "user_data_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 6,
+          "Name": "user_id",
+          "Mode": "OUT",
+          "UDTName": "int8",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 7,
+          "Name": "first_name",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 8,
+          "Name": "middle_name",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 9,
+          "Name": "last_name",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 10,
+          "Name": "settings",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 11,
+          "Name": "preferences",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "custom_data",
+          "Mode": "OUT",
+          "UDTName": "jsonb",
+          "IsNullable": false,
+          "IsOptional": true
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "nrm_search_data",
+          "Mode": "OUT",
+          "UDTName": "text",
+          "IsNullable": true,
+          "IsOptional": true
         }
       ]
     },
@@ -24195,7 +25241,7 @@
           "OrdinalPosition": 8,
           "Name": "__updated_by",
           "Mode": "OUT",
-          "UDTName": "varchar",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
         }

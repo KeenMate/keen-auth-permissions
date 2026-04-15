@@ -14,12 +14,12 @@ defmodule KeenAuthPermissions.PermSetsTest do
     end
   end
 
-  describe "search/7" do
+  describe "search/6" do
     test "searches permission sets" do
       ctx = system_context()
 
       assert {:ok, results} =
-               PermSets.search(ctx, nil, nil, nil, 1, 100, default_tenant_id())
+               PermSets.search(ctx, nil, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.PermSetsTest do
       ctx = system_context()
 
       assert {:ok, results} =
-               PermSets.search(ctx, "test", nil, nil, 1, 100, default_tenant_id())
+               PermSets.search(ctx, %{search_text: "test"}, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -37,7 +37,7 @@ defmodule KeenAuthPermissions.PermSetsTest do
       ctx = system_context()
 
       assert {:ok, results} =
-               PermSets.search(ctx, nil, true, nil, 1, 100, default_tenant_id())
+               PermSets.search(ctx, %{is_assignable: true}, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -46,7 +46,7 @@ defmodule KeenAuthPermissions.PermSetsTest do
       ctx = system_context()
 
       assert {:ok, results} =
-               PermSets.search(ctx, nil, nil, false, 1, 100, default_tenant_id())
+               PermSets.search(ctx, %{is_system: false}, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end
@@ -55,25 +55,23 @@ defmodule KeenAuthPermissions.PermSetsTest do
   describe "create/6" do
     test "creates a new permission set" do
       ctx = system_context()
-      title = "Test PermSet #{unique_string()}"
+      code = "test_permset_#{unique_string()}"
 
       assert {:ok, created} =
-               PermSets.create(ctx, title, false, true, [], default_tenant_id())
+               PermSets.create(ctx, code, false, true, [], default_tenant_id())
 
-      assert created.title == title
+      assert created.code == code
       assert created.is_system == false
       assert created.is_assignable == true
     end
 
     test "creates a permission set with permissions" do
       ctx = system_context()
-      title = "Test PermSet With Perms #{unique_string()}"
+      code = "test_permset_with_perms_#{unique_string()}"
 
-      # Note: This may fail if the permissions don't exist
-      # The test is structured to handle that case
-      case PermSets.create(ctx, title, false, true, [], default_tenant_id()) do
+      case PermSets.create(ctx, code, false, true, [], default_tenant_id()) do
         {:ok, created} ->
-          assert created.title == title
+          assert created.code == code
 
         {:error, _} ->
           :ok
@@ -85,11 +83,12 @@ defmodule KeenAuthPermissions.PermSetsTest do
     test "updates an existing permission set" do
       ctx = system_context()
 
-      # Create a permission set first
       {:ok, created} = create_test_perm_set(ctx)
 
-      new_title = "Updated PermSet #{unique_string()}"
+      new_title = "Updated Title #{unique_string()}"
 
+      # `update_perm_set` stores the new display title as a translation and flips
+      # `is_assignable`; the immutable `code` column stays the same.
       assert {:ok, updated} =
                PermSets.update(
                  ctx,
@@ -99,28 +98,24 @@ defmodule KeenAuthPermissions.PermSetsTest do
                  default_tenant_id()
                )
 
-      assert updated.title == new_title
+      assert updated.perm_set_id == created.perm_set_id
+      assert updated.code == created.code
+      assert updated.is_assignable == false
     end
   end
 
-  describe "add_permissions/4 and delete_permissions/4" do
-    @tag :skip
+  describe "create_permissions/4 and delete_permissions/4" do
     test "adds and removes permissions from a permission set" do
       ctx = system_context()
 
-      # Create a permission set
       {:ok, perm_set} = create_test_perm_set(ctx)
-
-      # Get available permissions
       {:ok, all_permissions} = KeenAuthPermissions.Permissions.list(ctx, default_tenant_id())
 
-      # Find an assignable permission
       assignable = Enum.find(all_permissions, fn p -> p.is_assignable end)
 
       if assignable do
-        # Add the permission
         assert {:ok, added} =
-                 PermSets.add_permissions(
+                 PermSets.create_permissions(
                    ctx,
                    perm_set.perm_set_id,
                    [assignable.full_code],
@@ -129,7 +124,6 @@ defmodule KeenAuthPermissions.PermSetsTest do
 
         assert is_list(added)
 
-        # Remove the permission
         assert {:ok, removed} =
                  PermSets.delete_permissions(
                    ctx,

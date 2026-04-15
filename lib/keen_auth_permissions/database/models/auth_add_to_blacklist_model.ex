@@ -7,8 +7,8 @@ defmodule KeenAuthPermissions.Database.Models.AuthAddToBlacklistModel do
   """
 
   @type t() :: %__MODULE__{
-    add_to_blacklist: integer()
-  }
+          add_to_blacklist: integer()
+        }
 
   @fields [:add_to_blacklist]
 

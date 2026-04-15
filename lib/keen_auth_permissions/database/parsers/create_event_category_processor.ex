@@ -28,10 +28,9 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCategoryParser do
     {:ok, results}
   end
 
-  defp parse_row([category_code, title, range_start, range_end, is_error, source]) do
+  defp parse_row([category_code, range_start, range_end, is_error, source]) do
     {:ok, %CreateEventCategoryModel{
       category_code: category_code,
-      title: title,
       range_start: range_start,
       range_end: range_end,
       is_error: is_error,

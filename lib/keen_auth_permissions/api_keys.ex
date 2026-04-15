@@ -143,7 +143,10 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def create(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         title,
         description,
         perm_set_code,
@@ -190,7 +193,10 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         title,
         description,
@@ -224,7 +230,10 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec update_secret(RequestContext.t(), integer(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update_secret(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         api_secret,
         tenant_id
@@ -251,7 +260,10 @@ defmodule KeenAuthPermissions.ApiKeys do
   """
   @spec delete(RequestContext.t(), integer(), integer()) :: {:ok, map()} | {:error, any()}
   def delete(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         tenant_id
       ) do
@@ -307,7 +319,10 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, list()} | {:error, any()}
   def assign_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         perm_set_code,
         permission_codes,
@@ -338,7 +353,10 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, list()} | {:error, any()}
   def unassign_permissions(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         perm_set_code,
         permission_codes,
@@ -369,7 +387,8 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec validate(RequestContext.t(), String.t(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def validate(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} = ctx,
+        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id} =
+          ctx,
         api_key,
         api_secret,
         tenant_id
@@ -491,7 +510,10 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec get_outbound_secret(RequestContext.t(), String.t(), integer()) ::
           {:ok, map()} | {:error, any()}
   def get_outbound_secret(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         service_code,
         tenant_id,
         target_tenant_id \\ nil
@@ -519,7 +541,10 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec get_outbound_secret_by_id(RequestContext.t(), integer(), integer()) ::
           {:ok, map()} | {:error, any()}
   def get_outbound_secret_by_id(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         tenant_id,
         target_tenant_id \\ nil
@@ -556,7 +581,10 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def create_outbound(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         title,
         description,
         service_code,
@@ -605,7 +633,10 @@ defmodule KeenAuthPermissions.ApiKeys do
           integer()
         ) :: {:ok, map()} | {:error, any()}
   def update_outbound(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         title,
         description,
@@ -643,7 +674,10 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec update_outbound_secret(RequestContext.t(), integer(), binary(), integer()) ::
           {:ok, map()} | {:error, any()}
   def update_outbound_secret(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         encrypted_secret,
         tenant_id
@@ -671,7 +705,10 @@ defmodule KeenAuthPermissions.ApiKeys do
   @spec delete_outbound(RequestContext.t(), integer(), integer()) ::
           {:ok, map()} | {:error, any()}
   def delete_outbound(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         api_key_id,
         tenant_id
       ) do

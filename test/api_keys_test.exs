@@ -176,11 +176,11 @@ defmodule KeenAuthPermissions.ApiKeysTest do
   end
 
   describe "outbound API key operations" do
-    test "search_outbound/6 searches outbound API keys" do
+    test "search_outbound/5 searches outbound API keys" do
       ctx = system_context()
 
       assert {:ok, results} =
-               ApiKeys.search_outbound(ctx, nil, nil, 1, 100, default_tenant_id())
+               ApiKeys.search_outbound(ctx, nil, 1, 100, default_tenant_id())
 
       assert is_list(results)
     end

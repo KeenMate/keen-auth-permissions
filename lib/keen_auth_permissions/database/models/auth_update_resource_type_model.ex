@@ -9,16 +9,16 @@ defmodule KeenAuthPermissions.Database.Models.AuthUpdateResourceTypeModel do
   @type t() :: %__MODULE__{
     code: String.t(),
     title: String.t(),
-    full_title: String.t() | nil,
-    description: String.t() | nil,
+    full_title: String.t(),
+    description: String.t(),
     is_active: boolean(),
-    source: String.t() | nil,
-    parent_code: String.t() | nil,
+    source: String.t(),
     path: String.t(),
-    key_schema: map() | list()
+    key_schema: map() | list(),
+    access_flags: list(String.t())
   }
 
-  @fields [:code, :title, :full_title, :description, :is_active, :source, :parent_code, :path, :key_schema]
+  @fields [:code, :title, :full_title, :description, :is_active, :source, :path, :key_schema, :access_flags]
 
   @enforce_keys @fields
   defstruct @fields

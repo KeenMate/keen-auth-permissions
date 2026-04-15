@@ -29,12 +29,13 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthAddUserToDefaultGroupsParser 
   end
 
   defp parse_row([user_id, user_group_id, user_group_code, user_group_title]) do
-    {:ok, %AuthAddUserToDefaultGroupsModel{
-      user_id: user_id,
-      user_group_id: user_group_id,
-      user_group_code: user_group_code,
-      user_group_title: user_group_title,
-    }}
+    {:ok,
+     %AuthAddUserToDefaultGroupsModel{
+       user_id: user_id,
+       user_group_id: user_group_id,
+       user_group_code: user_group_code,
+       user_group_title: user_group_title
+     }}
   end
 
   defp parse_row(_row) do

@@ -19,7 +19,7 @@ defmodule KeenAuthPermissions.Invitations do
   ## Built-in Action Types
 
   **Database actions** (executed automatically by the DB):
-  - `add_tenant_user`, `add_group_member`, `assign_perm_set`, `assign_permission`, `grant_resource_access`
+  - `add_tenant_user`, `add_group_member`, `assign_perm_set`, `assign_permission`, `assign_resource_access`
 
   **Backend actions** (returned to the calling application for execution):
   - `send_welcome_email`, `send_sms_invite`, `notify_inviter`

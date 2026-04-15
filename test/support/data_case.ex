@@ -145,9 +145,33 @@ defmodule KeenAuthPermissions.DataCase do
   def default_tenant_id, do: 1
 
   @doc """
+  Ensures the `entra` provider exists with `allows_group_mapping` and `allows_group_sync`
+  both `true`. Returns the provider code so tests can use it as the value for `_provider_code`.
+
+  Used to be `aad` — ppm no longer seeds it, so tests that exercise group-mapping create
+  their own capability-enabled provider.
+  """
+  def ensure_entra_provider do
+    KeenAuthPermissions.Providers.ensure(
+      system_context(),
+      "entra",
+      "Microsoft Entra ID",
+      is_active: true,
+      allows_group_mapping: true,
+      allows_group_sync: true
+    )
+
+    "entra"
+  end
+
+  @doc """
   Generates a unique string for test data.
   """
   def unique_string(prefix \\ "test") do
-    "#{prefix}_#{:erlang.unique_integer([:positive])}"
+    # Combine a per-VM monotonic integer with system time microseconds so
+    # values stay unique across separate test-VM runs (the integer alone
+    # restarts at 0 each VM boot, which collides with rows left in the DB
+    # by previous runs).
+    "#{prefix}_#{System.system_time(:microsecond)}_#{:erlang.unique_integer([:positive])}"
   end
 end

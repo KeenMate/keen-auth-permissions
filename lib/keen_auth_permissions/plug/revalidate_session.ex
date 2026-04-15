@@ -114,7 +114,10 @@ defmodule KeenAuthPermissions.Plug.RevalidateSession do
           put_session(conn, @session_key, now)
 
         {:error, reason} ->
-          Logger.info("RevalidateSession: user #{user_id} failed revalidation: #{inspect(reason)}")
+          Logger.info(
+            "RevalidateSession: user #{user_id} failed revalidation: #{inspect(reason)}"
+          )
+
           handle_invalid(conn, opts, reason)
       end
     end

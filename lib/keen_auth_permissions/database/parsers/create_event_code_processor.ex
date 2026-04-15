@@ -28,13 +28,11 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateEventCodeParser do
     {:ok, results}
   end
 
-  defp parse_row([event_id, code, category_code, title, description, is_read_only, is_system, source]) do
+  defp parse_row([event_id, code, category_code, is_read_only, is_system, source]) do
     {:ok, %CreateEventCodeModel{
       event_id: event_id,
       code: code,
       category_code: category_code,
-      title: title,
-      description: description,
       is_read_only: is_read_only,
       is_system: is_system,
       source: source,

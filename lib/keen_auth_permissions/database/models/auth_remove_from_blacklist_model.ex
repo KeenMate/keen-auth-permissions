@@ -7,10 +7,10 @@ defmodule KeenAuthPermissions.Database.Models.AuthRemoveFromBlacklistModel do
   """
 
   @type t() :: %__MODULE__{
-    removed_blacklist_id: integer(),
-    username: String.t(),
-    provider_code: String.t()
-  }
+          removed_blacklist_id: integer(),
+          username: String.t(),
+          provider_code: String.t()
+        }
 
   @fields [:removed_blacklist_id, :username, :provider_code]
 

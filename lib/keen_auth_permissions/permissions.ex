@@ -310,7 +310,9 @@ defmodule KeenAuthPermissions.Permissions do
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [result]} -> {:ok, result}
-      {:ok, []} -> {:error, :update_failed}
+      # SP declares SETOF auth.permission_assignment but only UPDATEs auth.permission,
+      # so a successful call returns no rows — treat empty as success.
+      {:ok, []} -> {:ok, nil}
       error -> error
     end
   end

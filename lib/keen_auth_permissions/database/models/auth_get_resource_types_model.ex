@@ -13,13 +13,12 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetResourceTypesModel do
     description: String.t(),
     is_active: boolean(),
     source: String.t(),
-    parent_code: String.t(),
     path: String.t(),
     key_schema: map() | list(),
     access_flags: list(String.t())
   }
 
-  @fields [:code, :title, :full_title, :description, :is_active, :source, :parent_code, :path, :key_schema, :access_flags]
+  @fields [:code, :title, :full_title, :description, :is_active, :source, :path, :key_schema, :access_flags]
 
   @enforce_keys @fields
   defstruct @fields

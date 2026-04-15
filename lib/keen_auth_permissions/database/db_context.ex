@@ -24,34 +24,18 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
-      Calls database function public.add_journal_msg
+      Calls database function public.check_version
       """
-      @spec add_journal_msg(String.t(), integer(), String.t(), String.t(), String.t(), integer(), list(String.t()), integer(), String.t(), integer()) ::
-              {:ok, [Models.AddJournalMsgModel.t()]} | {:error, any()}
-      def add_journal_msg(created_by, user_id, correlation_id, msg, data_group, data_object_id, payload, event_id, data_object_code, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "add_journal_msg")
+      @spec check_version(String.t(), String.t(), boolean()) ::
+              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
+      def check_version(version, component, throw_err) do
+        Logger.debug("Calling stored procedure", procedure: "check_version")
 
         query(
-          "select * from public.add_journal_msg($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-          [created_by, user_id, correlation_id, msg, data_group, data_object_id, payload, event_id, data_object_code, tenant_id]
+          "select * from public.check_version($1, $2, $3)",
+          [version, component, throw_err]
         )
-        |> Parsers.AddJournalMsgParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.add_journal_msg_jsonb
-      """
-      @spec add_journal_msg_jsonb(String.t(), integer(), String.t(), String.t(), String.t(), integer(), map() | list(), integer(), String.t(), integer()) ::
-              {:ok, [Models.AddJournalMsgJsonbModel.t()]} | {:error, any()}
-      def add_journal_msg_jsonb(created_by, user_id, correlation_id, msg, data_group, data_object_id, payload, event_id, data_object_code, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "add_journal_msg_jsonb")
-
-        query(
-          "select * from public.add_journal_msg_jsonb($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-          [created_by, user_id, correlation_id, msg, data_group, data_object_id, payload, event_id, data_object_code, tenant_id]
-        )
-        |> Parsers.AddJournalMsgJsonbParser.parse_result()
+        |> Parsers.CheckVersionParser.parse_result()
       end
 
 
@@ -66,22 +50,6 @@ defmodule KeenAuthPermissions.Database do
         query(
           "select * from public.check_version($1, $2)",
           [version, component]
-        )
-        |> Parsers.CheckVersionParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.check_version
-      """
-      @spec check_version(String.t(), String.t(), boolean()) ::
-              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
-      def check_version(version, component, throw_err) do
-        Logger.debug("Calling stored procedure", procedure: "check_version")
-
-        query(
-          "select * from public.check_version($1, $2, $3)",
-          [version, component, throw_err]
         )
         |> Parsers.CheckVersionParser.parse_result()
       end
@@ -250,14 +218,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.create_translation
       """
-      @spec create_translation(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), String.t(), integer(), integer()) ::
+      @spec create_translation(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), String.t(), integer(), String.t(), integer()) ::
               {:ok, [Models.CreateTranslationModel.t()]} | {:error, any()}
-      def create_translation(created_by, user_id, correlation_id, language_code, data_group, value, data_object_code, data_object_id, tenant_id) do
+      def create_translation(created_by, user_id, correlation_id, language_code, data_group, value, data_object_code, data_object_id, context, tenant_id) do
         Logger.debug("Calling stored procedure", procedure: "create_translation")
 
         query(
-          "select * from public.create_translation($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-          [created_by, user_id, correlation_id, language_code, data_group, value, data_object_code, data_object_id, tenant_id]
+          "select * from public.create_translation($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+          [created_by, user_id, correlation_id, language_code, data_group, value, data_object_code, data_object_id, context, tenant_id]
         )
         |> Parsers.CreateTranslationParser.parse_result()
       end
@@ -470,14 +438,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.get_group_translations
       """
-      @spec get_group_translations(String.t(), String.t(), integer()) ::
+      @spec get_group_translations(String.t(), String.t(), String.t(), integer()) ::
               {:ok, [Models.GetGroupTranslationsModel.t()]} | {:error, any()}
-      def get_group_translations(language_code, data_group, tenant_id) do
+      def get_group_translations(language_code, data_group, context, tenant_id) do
         Logger.debug("Calling stored procedure", procedure: "get_group_translations")
 
         query(
-          "select * from public.get_group_translations($1, $2, $3)",
-          [language_code, data_group, tenant_id]
+          "select * from public.get_group_translations($1, $2, $3, $4)",
+          [language_code, data_group, context, tenant_id]
         )
         |> Parsers.GetGroupTranslationsParser.parse_result()
       end
@@ -662,14 +630,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.search_translations
       """
-      @spec search_translations(integer(), String.t(), String.t(), String.t(), String.t(), String.t(), String.t(), integer(), integer(), integer(), integer()) ::
+      @spec search_translations(integer(), String.t(), String.t(), String.t(), String.t(), String.t(), String.t(), integer(), String.t(), integer(), integer(), integer()) ::
               {:ok, [Models.SearchTranslationsModel.t()]} | {:error, any()}
-      def search_translations(user_id, correlation_id, display_language_code, search_text, language_code, data_group, data_object_code, data_object_id, page, page_size, tenant_id) do
+      def search_translations(user_id, correlation_id, display_language_code, search_text, language_code, data_group, data_object_code, data_object_id, context, page, page_size, tenant_id) do
         Logger.debug("Calling stored procedure", procedure: "search_translations")
 
         query(
-          "select * from public.search_translations($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
-          [user_id, correlation_id, display_language_code, search_text, language_code, data_group, data_object_code, data_object_id, page, page_size, tenant_id]
+          "select * from public.search_translations($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+          [user_id, correlation_id, display_language_code, search_text, language_code, data_group, data_object_code, data_object_id, context, page, page_size, tenant_id]
         )
         |> Parsers.SearchTranslationsParser.parse_result()
       end
@@ -864,6 +832,38 @@ defmodule KeenAuthPermissions.Database do
           [created_by, user_id, correlation_id, user_group_id, target_user_id, perm_set_code, perm_code, tenant_id]
         )
         |> Parsers.AuthAssignPermissionParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.assign_resource_access
+      """
+      @spec auth_assign_resource_access(String.t(), integer(), String.t(), String.t(), map() | list(), integer(), integer(), list(String.t()), integer()) ::
+              {:ok, [Models.AuthAssignResourceAccessModel.t()]} | {:error, any()}
+      def auth_assign_resource_access(created_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, access_flags, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "assign_resource_access")
+
+        query(
+          "select * from auth.assign_resource_access($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+          [created_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, access_flags, tenant_id]
+        )
+        |> Parsers.AuthAssignResourceAccessParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.assign_resource_role
+      """
+      @spec auth_assign_resource_role(String.t(), integer(), String.t(), String.t(), map() | list(), integer(), integer(), list(String.t()), integer()) ::
+              {:ok, [Models.AuthAssignResourceRoleModel.t()]} | {:error, any()}
+      def auth_assign_resource_role(created_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, role_codes, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "assign_resource_role")
+
+        query(
+          "select * from auth.assign_resource_role($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+          [created_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, role_codes, tenant_id]
+        )
+        |> Parsers.AuthAssignResourceRoleParser.parse_result()
       end
 
 
@@ -1142,16 +1142,32 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
+      Calls database function auth.create_resource_role
+      """
+      @spec auth_create_resource_role(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), String.t(), list(String.t()), String.t(), integer(), String.t()) ::
+              {:ok, [Models.AuthCreateResourceRoleModel.t()]} | {:error, any()}
+      def auth_create_resource_role(created_by, user_id, correlation_id, code, resource_type, title, description, access_flags, source, tenant_id, language_code) do
+        Logger.debug("Calling stored procedure", procedure: "create_resource_role")
+
+        query(
+          "select * from auth.create_resource_role($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+          [created_by, user_id, correlation_id, code, resource_type, title, description, access_flags, source, tenant_id, language_code]
+        )
+        |> Parsers.AuthCreateResourceRoleParser.parse_result()
+      end
+
+
+      @doc """
       Calls database function auth.create_resource_type
       """
-      @spec auth_create_resource_type(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), String.t(), integer(), String.t(), map() | list(), list(String.t())) ::
+      @spec auth_create_resource_type(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), integer(), String.t(), map() | list(), list(String.t()), String.t()) ::
               {:ok, [Models.AuthCreateResourceTypeModel.t()]} | {:error, any()}
-      def auth_create_resource_type(created_by, user_id, correlation_id, code, title, parent_code, description, tenant_id, source, key_schema, access_flags) do
+      def auth_create_resource_type(created_by, user_id, correlation_id, code, title, description, tenant_id, source, key_schema, access_flags, language_code) do
         Logger.debug("Calling stored procedure", procedure: "create_resource_type")
 
         query(
           "select * from auth.create_resource_type($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
-          [created_by, user_id, correlation_id, code, title, parent_code, description, tenant_id, source, key_schema, access_flags]
+          [created_by, user_id, correlation_id, code, title, description, tenant_id, source, key_schema, access_flags, language_code]
         )
         |> Parsers.AuthCreateResourceTypeParser.parse_result()
       end
@@ -1416,6 +1432,22 @@ defmodule KeenAuthPermissions.Database do
           [deleted_by, user_id, correlation_id, provider_code, tenant_id]
         )
         |> Parsers.AuthDeleteProviderParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.delete_resource_role
+      """
+      @spec auth_delete_resource_role(String.t(), integer(), String.t(), String.t(), integer()) ::
+              {:ok, [Models.AuthDeleteResourceRoleModel.t()]} | {:error, any()}
+      def auth_delete_resource_role(deleted_by, user_id, correlation_id, code, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "delete_resource_role")
+
+        query(
+          "select * from auth.delete_resource_role($1, $2, $3, $4, $5)",
+          [deleted_by, user_id, correlation_id, code, tenant_id]
+        )
+        |> Parsers.AuthDeleteResourceRoleParser.parse_result()
       end
 
 
@@ -1700,14 +1732,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function auth.ensure_access_flags
       """
-      @spec auth_ensure_access_flags(String.t(), integer(), String.t(), map() | list(), String.t(), integer()) ::
+      @spec auth_ensure_access_flags(String.t(), integer(), String.t(), map() | list(), String.t(), integer(), String.t()) ::
               {:ok, [Models.AuthEnsureAccessFlagsModel.t()]} | {:error, any()}
-      def auth_ensure_access_flags(created_by, user_id, correlation_id, flags, source, tenant_id) do
+      def auth_ensure_access_flags(created_by, user_id, correlation_id, flags, source, tenant_id, language_code) do
         Logger.debug("Calling stored procedure", procedure: "ensure_access_flags")
 
         query(
-          "select * from auth.ensure_access_flags($1, $2, $3, $4, $5, $6)",
-          [created_by, user_id, correlation_id, flags, source, tenant_id]
+          "select * from auth.ensure_access_flags($1, $2, $3, $4, $5, $6, $7)",
+          [created_by, user_id, correlation_id, flags, source, tenant_id, language_code]
         )
         |> Parsers.AuthEnsureAccessFlagsParser.parse_result()
       end
@@ -1794,6 +1826,38 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
+      Calls database function auth.ensure_resource_role_flags
+      """
+      @spec auth_ensure_resource_role_flags(String.t(), integer(), String.t(), String.t(), list(String.t()), integer()) ::
+              {:ok, [Models.AuthEnsureResourceRoleFlagsModel.t()]} | {:error, any()}
+      def auth_ensure_resource_role_flags(updated_by, user_id, correlation_id, role_code, access_flags, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "ensure_resource_role_flags")
+
+        query(
+          "select * from auth.ensure_resource_role_flags($1, $2, $3, $4, $5, $6)",
+          [updated_by, user_id, correlation_id, role_code, access_flags, tenant_id]
+        )
+        |> Parsers.AuthEnsureResourceRoleFlagsParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.ensure_resource_roles
+      """
+      @spec auth_ensure_resource_roles(String.t(), integer(), String.t(), map() | list(), String.t(), boolean(), integer(), String.t()) ::
+              {:ok, [Models.AuthEnsureResourceRolesModel.t()]} | {:error, any()}
+      def auth_ensure_resource_roles(created_by, user_id, correlation_id, roles, source, is_final_state, tenant_id, language_code) do
+        Logger.debug("Calling stored procedure", procedure: "ensure_resource_roles")
+
+        query(
+          "select * from auth.ensure_resource_roles($1, $2, $3, $4, $5, $6, $7, $8)",
+          [created_by, user_id, correlation_id, roles, source, is_final_state, tenant_id, language_code]
+        )
+        |> Parsers.AuthEnsureResourceRolesParser.parse_result()
+      end
+
+
+      @doc """
       Calls database function auth.ensure_resource_type_flags
       """
       @spec auth_ensure_resource_type_flags(String.t(), integer(), String.t(), String.t(), list(String.t()), integer()) ::
@@ -1812,14 +1876,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function auth.ensure_resource_types
       """
-      @spec auth_ensure_resource_types(String.t(), integer(), String.t(), map() | list(), String.t(), integer()) ::
+      @spec auth_ensure_resource_types(String.t(), integer(), String.t(), map() | list(), String.t(), integer(), String.t()) ::
               {:ok, [Models.AuthEnsureResourceTypesModel.t()]} | {:error, any()}
-      def auth_ensure_resource_types(created_by, user_id, correlation_id, resource_types, source, tenant_id) do
+      def auth_ensure_resource_types(created_by, user_id, correlation_id, resource_types, source, tenant_id, language_code) do
         Logger.debug("Calling stored procedure", procedure: "ensure_resource_types")
 
         query(
-          "select * from auth.ensure_resource_types($1, $2, $3, $4, $5, $6)",
-          [created_by, user_id, correlation_id, resource_types, source, tenant_id]
+          "select * from auth.ensure_resource_types($1, $2, $3, $4, $5, $6, $7)",
+          [created_by, user_id, correlation_id, resource_types, source, tenant_id, language_code]
         )
         |> Parsers.AuthEnsureResourceTypesParser.parse_result()
       end
@@ -1988,14 +2052,14 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function auth.get_access_flags
       """
-      @spec auth_get_access_flags(String.t()) ::
+      @spec auth_get_access_flags(String.t(), String.t()) ::
               {:ok, [Models.AuthGetAccessFlagsModel.t()]} | {:error, any()}
-      def auth_get_access_flags(source) do
+      def auth_get_access_flags(source, language_code) do
         Logger.debug("Calling stored procedure", procedure: "get_access_flags")
 
         query(
-          "select * from auth.get_access_flags($1)",
-          [source]
+          "select * from auth.get_access_flags($1, $2)",
+          [source, language_code]
         )
         |> Parsers.AuthGetAccessFlagsParser.parse_result()
       end
@@ -2306,16 +2370,64 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
+      Calls database function auth.get_resource_role_assignments
+      """
+      @spec auth_get_resource_role_assignments(integer(), String.t(), String.t(), map() | list(), integer(), String.t()) ::
+              {:ok, [Models.AuthGetResourceRoleAssignmentsModel.t()]} | {:error, any()}
+      def auth_get_resource_role_assignments(user_id, correlation_id, resource_type, resource_id, tenant_id, language_code) do
+        Logger.debug("Calling stored procedure", procedure: "get_resource_role_assignments")
+
+        query(
+          "select * from auth.get_resource_role_assignments($1, $2, $3, $4, $5, $6)",
+          [user_id, correlation_id, resource_type, resource_id, tenant_id, language_code]
+        )
+        |> Parsers.AuthGetResourceRoleAssignmentsParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.get_resource_role_flags
+      """
+      @spec auth_get_resource_role_flags(String.t()) ::
+              {:ok, [Models.AuthGetResourceRoleFlagsModel.t()]} | {:error, any()}
+      def auth_get_resource_role_flags(role_code) do
+        Logger.debug("Calling stored procedure", procedure: "get_resource_role_flags")
+
+        query(
+          "select * from auth.get_resource_role_flags($1)",
+          [role_code]
+        )
+        |> Parsers.AuthGetResourceRoleFlagsParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.get_resource_roles
+      """
+      @spec auth_get_resource_roles(String.t(), String.t(), boolean(), String.t()) ::
+              {:ok, [Models.AuthGetResourceRolesModel.t()]} | {:error, any()}
+      def auth_get_resource_roles(source, resource_type, active_only, language_code) do
+        Logger.debug("Calling stored procedure", procedure: "get_resource_roles")
+
+        query(
+          "select * from auth.get_resource_roles($1, $2, $3, $4)",
+          [source, resource_type, active_only, language_code]
+        )
+        |> Parsers.AuthGetResourceRolesParser.parse_result()
+      end
+
+
+      @doc """
       Calls database function auth.get_resource_types
       """
-      @spec auth_get_resource_types(String.t(), String.t(), boolean()) ::
+      @spec auth_get_resource_types(String.t(), boolean(), String.t()) ::
               {:ok, [Models.AuthGetResourceTypesModel.t()]} | {:error, any()}
-      def auth_get_resource_types(source, parent_code, active_only) do
+      def auth_get_resource_types(source, active_only, language_code) do
         Logger.debug("Calling stored procedure", procedure: "get_resource_types")
 
         query(
           "select * from auth.get_resource_types($1, $2, $3)",
-          [source, parent_code, active_only]
+          [source, active_only, language_code]
         )
         |> Parsers.AuthGetResourceTypesParser.parse_result()
       end
@@ -2754,22 +2866,6 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
-      Calls database function auth.grant_resource_access
-      """
-      @spec auth_grant_resource_access(String.t(), integer(), String.t(), String.t(), map() | list(), integer(), integer(), list(String.t()), integer()) ::
-              {:ok, [Models.AuthGrantResourceAccessModel.t()]} | {:error, any()}
-      def auth_grant_resource_access(created_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, access_flags, tenant_id) do
-        Logger.debug("Calling stored procedure", procedure: "grant_resource_access")
-
-        query(
-          "select * from auth.grant_resource_access($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-          [created_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, access_flags, tenant_id]
-        )
-        |> Parsers.AuthGrantResourceAccessParser.parse_result()
-      end
-
-
-      @doc """
       Calls database function auth.has_owner
       """
       @spec auth_has_owner(integer(), integer()) ::
@@ -3044,6 +3140,22 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
+      Calls database function auth.revoke_all_resource_roles
+      """
+      @spec auth_revoke_all_resource_roles(String.t(), integer(), String.t(), String.t(), map() | list(), integer()) ::
+              {:ok, [Models.AuthRevokeAllResourceRolesModel.t()]} | {:error, any()}
+      def auth_revoke_all_resource_roles(deleted_by, user_id, correlation_id, resource_type, resource_id, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "revoke_all_resource_roles")
+
+        query(
+          "select * from auth.revoke_all_resource_roles($1, $2, $3, $4, $5, $6)",
+          [deleted_by, user_id, correlation_id, resource_type, resource_id, tenant_id]
+        )
+        |> Parsers.AuthRevokeAllResourceRolesParser.parse_result()
+      end
+
+
+      @doc """
       Calls database function auth.revoke_invitation
       """
       @spec auth_revoke_invitation(String.t(), integer(), String.t(), integer(), map() | list(), integer()) ::
@@ -3074,6 +3186,22 @@ defmodule KeenAuthPermissions.Database do
           [deleted_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, access_flags, tenant_id]
         )
         |> Parsers.AuthRevokeResourceAccessParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.revoke_resource_role
+      """
+      @spec auth_revoke_resource_role(String.t(), integer(), String.t(), String.t(), map() | list(), integer(), integer(), list(String.t()), integer()) ::
+              {:ok, [Models.AuthRevokeResourceRoleModel.t()]} | {:error, any()}
+      def auth_revoke_resource_role(deleted_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, role_codes, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "revoke_resource_role")
+
+        query(
+          "select * from auth.revoke_resource_role($1, $2, $3, $4, $5, $6, $7, $8, $9)",
+          [deleted_by, user_id, correlation_id, resource_type, resource_id, target_user_id, user_group_id, role_codes, tenant_id]
+        )
+        |> Parsers.AuthRevokeResourceRoleParser.parse_result()
       end
 
 
@@ -3586,16 +3714,32 @@ defmodule KeenAuthPermissions.Database do
 
 
       @doc """
+      Calls database function auth.update_resource_role
+      """
+      @spec auth_update_resource_role(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), boolean(), String.t(), integer(), String.t()) ::
+              {:ok, [Models.AuthUpdateResourceRoleModel.t()]} | {:error, any()}
+      def auth_update_resource_role(updated_by, user_id, correlation_id, code, title, description, is_active, source, tenant_id, language_code) do
+        Logger.debug("Calling stored procedure", procedure: "update_resource_role")
+
+        query(
+          "select * from auth.update_resource_role($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+          [updated_by, user_id, correlation_id, code, title, description, is_active, source, tenant_id, language_code]
+        )
+        |> Parsers.AuthUpdateResourceRoleParser.parse_result()
+      end
+
+
+      @doc """
       Calls database function auth.update_resource_type
       """
-      @spec auth_update_resource_type(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), boolean(), String.t(), integer()) ::
+      @spec auth_update_resource_type(String.t(), integer(), String.t(), String.t(), String.t(), String.t(), boolean(), String.t(), integer(), String.t()) ::
               {:ok, [Models.AuthUpdateResourceTypeModel.t()]} | {:error, any()}
-      def auth_update_resource_type(updated_by, user_id, correlation_id, code, title, description, is_active, source, tenant_id) do
+      def auth_update_resource_type(updated_by, user_id, correlation_id, code, title, description, is_active, source, tenant_id, language_code) do
         Logger.debug("Calling stored procedure", procedure: "update_resource_type")
 
         query(
-          "select * from auth.update_resource_type($1, $2, $3, $4, $5, $6, $7, $8, $9)",
-          [updated_by, user_id, correlation_id, code, title, description, is_active, source, tenant_id]
+          "select * from auth.update_resource_type($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+          [updated_by, user_id, correlation_id, code, title, description, is_active, source, tenant_id, language_code]
         )
         |> Parsers.AuthUpdateResourceTypeParser.parse_result()
       end
@@ -3644,6 +3788,22 @@ defmodule KeenAuthPermissions.Database do
         query(
           "select * from auth.update_user_data($1, $2, $3, $4, $5, $6)",
           [updated_by, user_id, correlation_id, target_user_id, provider, user_data]
+        )
+        |> Parsers.AuthUpdateUserDataParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function auth.update_user_data
+      """
+      @spec auth_update_user_data(String.t(), integer(), String.t(), integer(), String.t(), String.t(), String.t(), map() | list(), map() | list(), map() | list(), integer()) ::
+              {:ok, [Models.AuthUpdateUserDataModel.t()]} | {:error, any()}
+      def auth_update_user_data(updated_by, user_id, correlation_id, target_user_id, first_name, middle_name, last_name, settings, preferences, custom_data, tenant_id) do
+        Logger.debug("Calling stored procedure", procedure: "update_user_data")
+
+        query(
+          "select * from auth.update_user_data($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+          [updated_by, user_id, correlation_id, target_user_id, first_name, middle_name, last_name, settings, preferences, custom_data, tenant_id]
         )
         |> Parsers.AuthUpdateUserDataParser.parse_result()
       end

@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdatePermSetParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, perm_set_id, tenant_id, title, code, is_system, is_assignable, nrm_search_data, source]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, perm_set_id, tenant_id, code, is_system, is_assignable, nrm_search_data, source]) do
     {:ok, %AuthUpdatePermSetModel{
       created_at: created_at,
       created_by: created_by,
@@ -36,7 +36,6 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdatePermSetParser do
       updated_by: updated_by,
       perm_set_id: perm_set_id,
       tenant_id: tenant_id,
-      title: title,
       code: code,
       is_system: is_system,
       is_assignable: is_assignable,

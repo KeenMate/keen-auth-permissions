@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateResourceTypeParser do
     {:ok, results}
   end
 
-  defp parse_row([code, title, full_title, description, is_active, source, parent_code, path, key_schema]) do
+  defp parse_row([code, title, full_title, description, is_active, source, path, key_schema, access_flags]) do
     {:ok, %AuthUpdateResourceTypeModel{
       code: code,
       title: title,
@@ -36,9 +36,9 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateResourceTypeParser do
       description: description,
       is_active: is_active,
       source: source,
-      parent_code: parent_code,
       path: path,
       key_schema: key_schema,
+      access_flags: access_flags,
     }}
   end
 

@@ -28,10 +28,21 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateUserDataParser do
     {:ok, results}
   end
 
-  defp parse_row([user_id, user_data_id]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, user_data_id, user_id, first_name, middle_name, last_name, settings, preferences, custom_data, nrm_search_data]) do
     {:ok, %AuthUpdateUserDataModel{
-      user_id: user_id,
+      created_at: created_at,
+      created_by: created_by,
+      updated_at: updated_at,
+      updated_by: updated_by,
       user_data_id: user_data_id,
+      user_id: user_id,
+      first_name: first_name,
+      middle_name: middle_name,
+      last_name: last_name,
+      settings: settings,
+      preferences: preferences,
+      custom_data: custom_data,
+      nrm_search_data: nrm_search_data,
     }}
   end
 

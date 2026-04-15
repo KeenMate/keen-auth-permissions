@@ -84,10 +84,6 @@ defmodule KeenAuthPermissions.TenantsTest do
       assert updated.title == new_title
     end
 
-    @tag :skip
-    # Skip: auth.create_tenant creates default user_groups (Tenant Admins, Tenant Members)
-    # which block tenant deletion due to FK constraint. This is expected behavior.
-    # To delete a tenant, you must first delete all associated user_groups.
     test "deletes a tenant" do
       ctx = system_context()
 

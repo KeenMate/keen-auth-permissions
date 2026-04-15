@@ -7,11 +7,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthAddPermSetPermissionsModel do
   """
 
   @type t() :: %__MODULE__{
-    perm_set_id: integer(),
-    perm_set_code: String.t(),
-    permission_id: integer(),
-    permission_code: String.t()
-  }
+          perm_set_id: integer(),
+          perm_set_code: String.t(),
+          permission_id: integer(),
+          permission_code: String.t()
+        }
 
   @fields [:perm_set_id, :perm_set_code, :permission_id, :permission_code]
 

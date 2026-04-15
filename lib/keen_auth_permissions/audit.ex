@@ -217,7 +217,10 @@ defmodule KeenAuthPermissions.Audit do
   """
   @spec purge(RequestContext.t(), integer()) :: {:ok, map()} | {:error, any()}
   def purge(
-        %RequestContext{user: %User{username: username, user_id: user_id}, request_id: request_id},
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
         older_than_days
       ) do
     case db_context().purge_audit_data(

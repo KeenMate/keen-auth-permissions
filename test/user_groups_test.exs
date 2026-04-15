@@ -118,7 +118,7 @@ defmodule KeenAuthPermissions.UserGroupsTest do
     end
   end
 
-  describe "search/8" do
+  describe "search/6" do
     test "searches user groups with filters" do
       ctx = system_context()
 
@@ -130,10 +130,7 @@ defmodule KeenAuthPermissions.UserGroupsTest do
       assert {:ok, results} =
                UserGroups.search(
                  ctx,
-                 "SearchTest",
-                 nil,
-                 nil,
-                 nil,
+                 %{search_text: "SearchTest"},
                  1,
                  100,
                  default_tenant_id()
@@ -210,15 +207,17 @@ defmodule KeenAuthPermissions.UserGroupsTest do
 
       {:ok, group} = create_test_group(ctx)
 
-      # Check with a user that's not a member (use a high ID that's unlikely to exist)
+      # Use a real, existing user that simply isn't a member of this group.
+      # (A non-existent user id would trip `user_group_id_cache.user_id_fkey`.)
       assert {:ok, false} =
-               UserGroups.is_member?(999_999, group.user_group_id, default_tenant_id())
+               UserGroups.is_member?(ctx.user.user_id, group.user_group_id, default_tenant_id())
     end
   end
 
   describe "mapping operations" do
     test "create_mapping/7, list_mappings/3, and delete_mapping/3" do
       ctx = system_context()
+      provider = ensure_entra_provider()
 
       {:ok, group} = create_test_group(ctx, %{is_external: true})
 
@@ -227,7 +226,7 @@ defmodule KeenAuthPermissions.UserGroupsTest do
                UserGroups.create_mapping(
                  ctx,
                  group.user_group_id,
-                 "aad",
+                 provider,
                  "object-id-#{unique_string()}",
                  "Test AD Group",
                  nil,
@@ -307,12 +306,13 @@ defmodule KeenAuthPermissions.UserGroupsTest do
   describe "external group operations" do
     test "create_external/9 creates an external group" do
       ctx = system_context()
+      provider = ensure_entra_provider()
 
       assert {:ok, result} =
                UserGroups.create_external(
                  ctx,
                  "Test External Group #{unique_string()}",
-                 "aad",
+                 provider,
                  true,
                  true,
                  "object-id-#{unique_string()}",

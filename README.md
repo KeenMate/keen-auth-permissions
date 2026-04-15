@@ -24,6 +24,11 @@ A comprehensive Elixir library for authentication and authorization, extending [
 - **PostgreSQL NOTIFY Listener**: Real-time event broadcasting from database triggers via PgListener
 - **Service Accounts**: Purpose-specific accounts (system, registrator, authenticator, etc.) for meaningful audit trails
 - **Email Authentication**: Built-in support for email/password authentication with Pbkdf2 hashing
+- **Resource Roles**: Named bundles of access flags per resource type; assign/revoke roles to users or groups
+- **Journal**: Create and search application-owned audit entries (backend-originated events)
+- **Providers**: Declaratively upsert auth providers and external-group → internal-group mappings at startup
+- **Events**: Register application-owned event taxonomies (categories, codes, message templates in the 50000+ range)
+- **Translations**: Full i18n domain — translations CRUD + language catalog with frontend/backend/communication capability flags
 
 ## Installation
 
@@ -32,7 +37,7 @@ Add `keen_auth_permissions` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:keen_auth_permissions, "~> 1.0.0-rc.4"}
+    {:keen_auth_permissions, "~> 1.0.0-rc.7"}
   ]
 end
 ```
@@ -560,9 +565,9 @@ alias KeenAuthPermissions.ResourceAccess
 
 ctx = RequestContext.new(user)
 
-# Create a resource type
-ResourceAccess.create_resource_type(ctx, "project", "Project")
-ResourceAccess.create_resource_type(ctx, "project.documents", "Documents", "project")
+# Create a resource type (last arg is language_code for the stored title)
+ResourceAccess.create_resource_type(ctx, "project", "Project", nil, nil, nil, "en")
+ResourceAccess.create_resource_type(ctx, "project.documents", "Documents", "project", nil, nil, "en")
 
 # List resource types (optionally filter by source, parent_code, active_only)
 {:ok, types} = ResourceAccess.list_resource_types()
@@ -576,6 +581,7 @@ Each resource type has a `full_title` field that is automatically generated from
 ```elixir
 # Grant "read" and "write" flags to a user on project 42
 ResourceAccess.grant(ctx, "project", 42, user_id, nil, ["read", "write"], tenant_id)
+# Underlying SP is now `auth.assign_resource_access` — the facade name is kept for API stability.
 
 # Grant "read" to a group
 ResourceAccess.grant(ctx, "project", 42, nil, group_id, ["read"], tenant_id)
@@ -588,6 +594,27 @@ ResourceAccess.revoke(ctx, "project", 42, user_id, nil, ["write"], tenant_id)
 
 # Revoke all access on a resource (cleanup on resource delete)
 ResourceAccess.revoke_all(ctx, "project", 42, tenant_id)
+```
+
+### Access flag catalog
+
+Access flags (`read`, `write`, `delete`, ...) are application-defined. Manage the catalog and the per-resource-type attachment set via:
+
+```elixir
+# List the global catalog of access-flag definitions (code + title + description)
+{:ok, flags} = ResourceAccess.list_access_flags()
+{:ok, flags} = ResourceAccess.list_access_flags("my_app", "en")
+
+# Idempotently upsert a batch of access-flag definitions (safe on every bootstrap)
+flags = [
+  %{"code" => "read",  "title" => "Read",   "description" => "..."},
+  %{"code" => "write", "title" => "Write",  "description" => "..."}
+]
+ResourceAccess.ensure_access_flags(ctx, flags, "my_app", tenant_id, "en")
+
+# Sync the set of access flags attached to a given resource type
+# (attaches anything new, detaches anything missing from the list)
+ResourceAccess.ensure_resource_type_flags(ctx, "project", ["read", "write", "delete"], tenant_id)
 ```
 
 ### Checking access
@@ -738,6 +765,11 @@ perm_sets_json = Jason.encode!([
   %{code: "admin_set", title: "Admin Set", permissions: ["users.read", "users.write"]}
 ])
 PermSets.ensure(ctx, perm_sets_json, true, "my_app", tenant_id)
+```
+
+> Titles are stored as translations keyed by the `code` column; `PermSets.update/5` updates `is_assignable` and writes a new title translation but does not mutate `code`.
+
+```elixir
 
 # Ensure user groups
 groups_json = Jason.encode!([
@@ -831,12 +863,22 @@ Templates define reusable invitation configurations:
 :ok = Invitations.delete_template(ctx, template_id)
 ```
 
+## Internationalization
+
+The `KeenAuthPermissions.Translations` facade covers the full i18n domain — translations CRUD plus a language catalog with frontend / backend / communication capability flags. Titles for permissions, perm sets, resource types, and roles are stored as translations keyed by `code` and a `language_code`.
+
+Stored procedures that accept a `language_code` parameter honor the `RequestContext.language_code` plumbing, so once you set it on the request context the correct language is picked up automatically:
+
+```elixir
+ctx = RequestContext.new(user) |> RequestContext.with_field(:language_code, "cs")
+```
+
 ## Facade Modules
 
 The library provides high-level facade modules for common operations:
 
 - `KeenAuthPermissions.Auth` - Authentication, registration, tokens
-- `KeenAuthPermissions.Users` - User management, search, provider lookup, ensure user info
+- `KeenAuthPermissions.Users` - User management, search, provider lookup, ensure user info; `Users.assign_default_groups/3` and `Users.add_to_default_groups/3` (sibling wrapper) assign all active default groups to a user
 - `KeenAuthPermissions.UserGroups` - Group management, membership, bulk ensure groups & mappings
 - `KeenAuthPermissions.Permissions` - Permission CRUD, search, assignment, bulk ensure
 - `KeenAuthPermissions.Tenants` - Multi-tenant operations
@@ -847,7 +889,12 @@ The library provides high-level facade modules for common operations:
 - `KeenAuthPermissions.Resolver` - Translate UUIDs/codes to internal IDs (user, tenant, group)
 - `KeenAuthPermissions.Mfa` - Multi-factor authentication (enroll, challenge, verify, policies, recovery codes)
 - `KeenAuthPermissions.Invitations` - Phase-based invitations with templates, actions, and lifecycle management
-- `KeenAuthPermissions.Audit` - Audit trail, security events, journal search
+- `KeenAuthPermissions.Audit` - Audit trail + security events
+- `KeenAuthPermissions.ResourceRoles` - Resource-role CRUD, assign/revoke roles on resources
+- `KeenAuthPermissions.Journal` - Application-created audit journal entries + search + formatted rendering
+- `KeenAuthPermissions.Providers` - Provider and group-mapping upsert helpers for bootstrap
+- `KeenAuthPermissions.Events` - Application-owned event categories, codes, and message templates
+- `KeenAuthPermissions.Translations` - Translations and language-catalog management (i18n)
 - `KeenAuthPermissions.SysParams` - Database-level system parameters (setup only)
 - `KeenAuthPermissions.PermissionsMap` - In-memory permission code translation (GenServer)
 
@@ -935,6 +982,9 @@ The [postgresql-permissions-model](https://github.com/KeenMate/postgresql-permis
 # Read a parameter
 {:ok, param} = KeenAuthPermissions.SysParams.get("journal", "level")
 param.text_value  # => "update"
+
+# Unknown parameters return {:error, :not_found}
+{:error, :not_found} = KeenAuthPermissions.SysParams.get("unknown", "code")
 
 # Update a parameter (only user_id 1 can do this)
 KeenAuthPermissions.SysParams.update("journal", "level", "all")

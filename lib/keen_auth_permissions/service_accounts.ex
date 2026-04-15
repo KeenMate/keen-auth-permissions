@@ -158,7 +158,8 @@ defmodule KeenAuthPermissions.ServiceAccounts do
   @spec names() :: [account_name()]
   def names do
     configured = Application.get_env(:keen_auth_permissions, :service_accounts, %{}) |> Map.keys()
-    (@defaults |> Map.keys()) ++ (configured -- Map.keys(@defaults))
+
+    ((@defaults |> Map.keys()) ++ (configured -- Map.keys(@defaults)))
     |> Enum.uniq()
   end
 end

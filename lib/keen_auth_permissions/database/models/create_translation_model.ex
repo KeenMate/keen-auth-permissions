@@ -17,12 +17,13 @@ defmodule KeenAuthPermissions.Database.Models.CreateTranslationModel do
     data_group: String.t(),
     data_object_code: String.t() | nil,
     data_object_id: integer() | nil,
+    context: String.t(),
     value: String.t(),
     nrm_search_data: String.t() | nil,
     ts_search_data: String.t() | nil
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :translation_id, :language_code, :tenant_id, :data_group, :data_object_code, :data_object_id, :value, :nrm_search_data, :ts_search_data]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :translation_id, :language_code, :tenant_id, :data_group, :data_object_code, :data_object_id, :context, :value, :nrm_search_data, :ts_search_data]
 
   @enforce_keys @fields
   defstruct @fields
