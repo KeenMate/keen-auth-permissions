@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsureAccessFlagsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthEnsureAccessFlagsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure ensure_access_flags: #{inspect(reason)}")
+    Logger.debug("Stored procedure ensure_access_flags returned error: #{inspect(reason)}")
 
     err
   end

@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetJournalEntryParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetJournalEntryModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_journal_entry: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_journal_entry returned error: #{inspect(reason)}")
 
     err
   end

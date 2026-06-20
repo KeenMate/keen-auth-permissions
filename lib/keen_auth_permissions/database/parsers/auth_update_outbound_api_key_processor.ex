@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateOutboundApiKeyParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthUpdateOutboundApiKeyModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure update_outbound_api_key: #{inspect(reason)}")
+    Logger.debug("Stored procedure update_outbound_api_key returned error: #{inspect(reason)}")
 
     err
   end

@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateLanguageParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [CreateLanguageModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_language: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_language returned error: #{inspect(reason)}")
 
     err
   end

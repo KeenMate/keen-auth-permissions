@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.InternalResolveGroupParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [InternalResolveGroupModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure resolve_group: #{inspect(reason)}")
+    Logger.debug("Stored procedure resolve_group returned error: #{inspect(reason)}")
 
     err
   end

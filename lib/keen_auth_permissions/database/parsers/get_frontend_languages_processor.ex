@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.GetFrontendLanguagesParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [GetFrontendLanguagesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_frontend_languages: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_frontend_languages returned error: #{inspect(reason)}")
 
     err
   end

@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsureUserFromProviderParser 
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthEnsureUserFromProviderModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure ensure_user_from_provider: #{inspect(reason)}")
+    Logger.debug("Stored procedure ensure_user_from_provider returned error: #{inspect(reason)}")
 
     err
   end

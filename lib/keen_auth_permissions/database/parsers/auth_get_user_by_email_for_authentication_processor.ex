@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserByEmailForAuthenticati
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserByEmailForAuthenticationModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_user_by_email_for_authentication: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_user_by_email_for_authentication returned error: #{inspect(reason)}")
 
     err
   end

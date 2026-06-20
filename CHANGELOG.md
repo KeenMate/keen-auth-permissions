@@ -5,7 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0-rc.7] - 2026-04-15
+## [1.0.0-rc.8] - 2026-06-20
+
+### Added
+- **`resource_path` (ltree) lookup** — `ResourceAccess` (`has_access?`, `filter_accessible`, `grant`, `deny`, `revoke`, `revoke_all`, `get_flags`, `get_matrix`, `get_grants`) and `ResourceRoles` (`assign`, `revoke`, `revoke_all`) accept a trailing optional `resource_path` parameter as an alternative to `resource_id`. Either identifier may be passed; callers using positional args keep working. Specs and docstrings updated.
+- **`event_id` preserved on every parsed DB error** — `ErrorParsers.parse_error/1` now sets `metadata: %{event_id: <pg_code>}` on the `ErrorStruct` for every Postgres error, including `:unknown` fallbacks. Lets callers disambiguate codes for which no atom mapping exists yet.
+- **`_ltree` type mapping** in `db-gen.json` — db-gen previously aborted on procs taking `_ltree` (array of ltree); now mapped to `list(String.t())`.
+- **22 new resource-facing tests** across `resource_access_test.exs` and `resource_roles_test.exs` covering: `resource_path` round-trips, the previously untested facades (`filter_accessible`, `deny`, `revoke_all`, `get_matrix`, `get_grants`, `get_user_resources`, `update_resource_type`, `get_assignments`, `ensure`, `ensure_flags`), and negative-path assertions including the DB's new "must supply an identifier" contract on reads.
+
+### Changed
+- **db-gen regenerated** — picks up upstream ppm signature changes: 12 resource-access procs (`assign_resource_access`, `assign_resource_role`, `deny_resource_access`, `filter_accessible_resources`, `get_resource_access_flags`, `get_resource_access_matrix`, `get_resource_grants`, `has_resource_access`, `revoke_all_resource_access`, `revoke_all_resource_roles`, `revoke_resource_access`, `revoke_resource_role`) gained an optional trailing `_resource_path` and made `_resource_id` optional. `auth.get_user_accessible_resources` row shape grew to `(resource_id, resource_path, access_flags, source)` — the `AuthGetUserAccessibleResourcesModel` reflects the new fields. Resource-type `__path` on `create_resource_type` / `ensure_resource_types` / `get_resource_types` / `update_resource_type` switched from `ltree` to `text` at the DB boundary.
+- **`error_parser.ex` rewritten end-to-end** — replaced 33 dead `5xxxx` mappings (PostgreSQL reserves the entire 5xxxx range for built-ins; this project's procs raise in `3xxxx`) with the canonical 67 project event codes spanning 9 categories: Security/Auth (30xxx), Validation (31xxx), Permissions (32xxx), User/Identity/Group (33xxx), Tenant (34xxx), Resource access/roles (35xxx), Token config (36xxx), Language (37xxx), MFA (38xxx), Invitation (39xxx). Atom names mirror the SQL `err_*` names minus the prefix (e.g., `:user_not_found`, `:resource_identifier_required`). Existing pattern-match callers were unaffected because only `:no_permission` had real callers (constructed in `PermissionHelpers`, not from the DB) and it still maps cleanly to code `32001`.
+- **Parser template log level lowered** — `db-gen/parser.gotmpl` now emits `Logger.debug` instead of `Logger.error` for procedure-returned `{:error, _}` tuples. The library no longer screams at `:error` level for values it's already returning as ordinary error tuples; logging is the caller's decision. All 229 regenerated parsers updated.
+- **`CLAUDE.md` function count** synced from 245 → 247 (was already stale at HEAD; this regen made no net function additions).
+
+### Fixed
+- **Read-side DB validation asymmetry** (closed via upstream ppm change consumed here) — `auth.has_resource_access`, `auth.get_resource_access_flags`, `auth.get_resource_access_matrix`, and `auth.get_resource_grants` previously silently returned `false` (or `true` for the system user, short-circuiting at priority 1 of the access algorithm) when both `_resource_id` and `_resource_path` were null. This masked caller bugs by passing in tests run as the system user and failing in production as real users. The DB now raises `35010` (`:resource_identifier_required`) before the system-user shortcut on all four read functions, matching the long-standing rejection in the write-side procs.
+
+### Tests
+- 251 passing, 0 failures, 1 excluded.
+
+
 
 ### Added
 - **Facade modules** — `ResourceRoles`, `Journal`, `Providers`, `Events`, `Translations` round out the facade layer on top of db_context

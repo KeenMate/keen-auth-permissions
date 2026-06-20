@@ -210,17 +210,20 @@ defmodule KeenAuthPermissions.ResourceRoles do
   @doc """
   Assigns one or more roles on a resource to a user or group.
 
-  Pass `target_user_id` for a user assignment, `user_group_id` for a group assignment — set
-  the other to `nil`. Calls `auth.assign_resource_role`.
+  Identify the resource by either `resource_id` (JSONB map) or `resource_path` (ltree
+  path string) — at least one must be provided. Pass `target_user_id` for a user
+  assignment, `user_group_id` for a group assignment — set the other to `nil`.
+  Calls `auth.assign_resource_role`.
   """
   @spec assign(
           RequestContext.t(),
           String.t(),
-          map(),
+          map() | nil,
           integer() | nil,
           integer() | nil,
           list(String.t()),
-          integer()
+          integer(),
+          String.t() | nil
         ) :: {:ok, list(map())} | {:error, any()}
   def assign(
         %RequestContext{user: %User{username: u, user_id: uid}, request_id: rid},
@@ -229,7 +232,8 @@ defmodule KeenAuthPermissions.ResourceRoles do
         target_user_id,
         user_group_id,
         role_codes,
-        tenant_id
+        tenant_id,
+        resource_path \\ nil
       ) do
     db_context().auth_assign_resource_role(
       u,
@@ -240,20 +244,27 @@ defmodule KeenAuthPermissions.ResourceRoles do
       target_user_id,
       user_group_id,
       role_codes,
-      tenant_id
+      tenant_id,
+      resource_path
     )
     |> ErrorParsers.parse_if_error()
   end
 
-  @doc "Revokes specific roles from a user or group on a resource. Calls `auth.revoke_resource_role`."
+  @doc """
+  Revokes specific roles from a user or group on a resource.
+
+  Identify the resource by either `resource_id` (JSONB map) or `resource_path` (ltree
+  path string) — at least one must be provided. Calls `auth.revoke_resource_role`.
+  """
   @spec revoke(
           RequestContext.t(),
           String.t(),
-          map(),
+          map() | nil,
           integer() | nil,
           integer() | nil,
           list(String.t()),
-          integer()
+          integer(),
+          String.t() | nil
         ) :: {:ok, integer()} | {:error, any()}
   def revoke(
         %RequestContext{user: %User{username: u, user_id: uid}, request_id: rid},
@@ -262,7 +273,8 @@ defmodule KeenAuthPermissions.ResourceRoles do
         target_user_id,
         user_group_id,
         role_codes,
-        tenant_id
+        tenant_id,
+        resource_path \\ nil
       ) do
     case db_context().auth_revoke_resource_role(
            u,
@@ -273,7 +285,8 @@ defmodule KeenAuthPermissions.ResourceRoles do
            target_user_id,
            user_group_id,
            role_codes,
-           tenant_id
+           tenant_id,
+           resource_path
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [%{revoke_resource_role: count}]} -> {:ok, count}
@@ -282,14 +295,25 @@ defmodule KeenAuthPermissions.ResourceRoles do
     end
   end
 
-  @doc "Revokes every role assignment on a resource (cleanup on delete). Calls `auth.revoke_all_resource_roles`."
-  @spec revoke_all(RequestContext.t(), String.t(), map(), integer()) ::
-          {:ok, integer()} | {:error, any()}
+  @doc """
+  Revokes every role assignment on a resource (cleanup on delete).
+
+  Identify the resource by either `resource_id` (JSONB map) or `resource_path` (ltree
+  path string) — at least one must be provided. Calls `auth.revoke_all_resource_roles`.
+  """
+  @spec revoke_all(
+          RequestContext.t(),
+          String.t(),
+          map() | nil,
+          integer(),
+          String.t() | nil
+        ) :: {:ok, integer()} | {:error, any()}
   def revoke_all(
         %RequestContext{user: %User{username: u, user_id: uid}, request_id: rid},
         resource_type,
         resource_id,
-        tenant_id
+        tenant_id,
+        resource_path \\ nil
       ) do
     case db_context().auth_revoke_all_resource_roles(
            u,
@@ -297,7 +321,8 @@ defmodule KeenAuthPermissions.ResourceRoles do
            rid,
            resource_type,
            resource_id,
-           tenant_id
+           tenant_id,
+           resource_path
          )
          |> ErrorParsers.parse_if_error() do
       {:ok, [%{revoke_all_resource_roles: count}]} -> {:ok, count}

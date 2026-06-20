@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateTokenParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreateTokenModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_token: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_token returned error: #{inspect(reason)}")
 
     err
   end

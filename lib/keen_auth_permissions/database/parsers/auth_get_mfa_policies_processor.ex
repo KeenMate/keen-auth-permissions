@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetMfaPoliciesParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetMfaPoliciesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_mfa_policies: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_mfa_policies returned error: #{inspect(reason)}")
 
     err
   end

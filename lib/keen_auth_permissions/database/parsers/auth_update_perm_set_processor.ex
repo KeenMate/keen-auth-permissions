@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdatePermSetParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthUpdatePermSetModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure update_perm_set: #{inspect(reason)}")
+    Logger.debug("Stored procedure update_perm_set returned error: #{inspect(reason)}")
 
     err
   end

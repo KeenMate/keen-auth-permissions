@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateMfaPolicyParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreateMfaPolicyModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_mfa_policy: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_mfa_policy returned error: #{inspect(reason)}")
 
     err
   end

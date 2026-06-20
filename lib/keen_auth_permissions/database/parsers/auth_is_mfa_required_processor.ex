@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthIsMfaRequiredParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthIsMfaRequiredModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure is_mfa_required: #{inspect(reason)}")
+    Logger.debug("Stored procedure is_mfa_required returned error: #{inspect(reason)}")
 
     err
   end

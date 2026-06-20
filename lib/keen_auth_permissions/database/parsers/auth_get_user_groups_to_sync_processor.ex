@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserGroupsToSyncParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserGroupsToSyncModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_user_groups_to_sync: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_user_groups_to_sync returned error: #{inspect(reason)}")
 
     err
   end

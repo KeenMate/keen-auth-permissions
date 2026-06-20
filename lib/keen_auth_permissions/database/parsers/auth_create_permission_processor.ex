@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreatePermissionParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreatePermissionModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_permission: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_permission returned error: #{inspect(reason)}")
 
     err
   end

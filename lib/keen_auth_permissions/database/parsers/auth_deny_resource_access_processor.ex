@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDenyResourceAccessParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDenyResourceAccessModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure deny_resource_access: #{inspect(reason)}")
+    Logger.debug("Stored procedure deny_resource_access returned error: #{inspect(reason)}")
 
     err
   end

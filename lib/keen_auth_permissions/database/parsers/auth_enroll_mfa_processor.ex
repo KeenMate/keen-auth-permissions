@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnrollMfaParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthEnrollMfaModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure enroll_mfa: #{inspect(reason)}")
+    Logger.debug("Stored procedure enroll_mfa returned error: #{inspect(reason)}")
 
     err
   end

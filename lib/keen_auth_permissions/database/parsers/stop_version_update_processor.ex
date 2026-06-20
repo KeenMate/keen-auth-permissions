@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.StopVersionUpdateParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [StopVersionUpdateModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure stop_version_update: #{inspect(reason)}")
+    Logger.debug("Stored procedure stop_version_update returned error: #{inspect(reason)}")
 
     err
   end

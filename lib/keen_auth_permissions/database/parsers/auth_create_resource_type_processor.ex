@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateResourceTypeParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreateResourceTypeModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_resource_type: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_resource_type returned error: #{inspect(reason)}")
 
     err
   end

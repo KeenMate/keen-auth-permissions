@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.SearchTranslationsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [SearchTranslationsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure search_translations: #{inspect(reason)}")
+    Logger.debug("Stored procedure search_translations returned error: #{inspect(reason)}")
 
     err
   end

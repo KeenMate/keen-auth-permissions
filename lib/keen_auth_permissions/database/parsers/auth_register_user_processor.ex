@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthRegisterUserParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthRegisterUserModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure register_user: #{inspect(reason)}")
+    Logger.debug("Stored procedure register_user returned error: #{inspect(reason)}")
 
     err
   end

@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.PurgeAuditDataParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [PurgeAuditDataModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure purge_audit_data: #{inspect(reason)}")
+    Logger.debug("Stored procedure purge_audit_data returned error: #{inspect(reason)}")
 
     err
   end

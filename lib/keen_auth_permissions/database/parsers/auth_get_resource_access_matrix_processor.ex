@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetResourceAccessMatrixParser
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetResourceAccessMatrixModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_resource_access_matrix: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_resource_access_matrix returned error: #{inspect(reason)}")
 
     err
   end

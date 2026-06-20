@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetResourceGrantsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetResourceGrantsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_resource_grants: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_resource_grants returned error: #{inspect(reason)}")
 
     err
   end

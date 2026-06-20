@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeletePermSetPermissionsParse
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDeletePermSetPermissionsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure delete_perm_set_permissions: #{inspect(reason)}")
+    Logger.debug("Stored procedure delete_perm_set_permissions returned error: #{inspect(reason)}")
 
     err
   end

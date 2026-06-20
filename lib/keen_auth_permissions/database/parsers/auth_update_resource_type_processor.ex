@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateResourceTypeParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthUpdateResourceTypeModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure update_resource_type: #{inspect(reason)}")
+    Logger.debug("Stored procedure update_resource_type returned error: #{inspect(reason)}")
 
     err
   end

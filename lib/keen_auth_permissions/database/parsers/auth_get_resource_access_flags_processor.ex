@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetResourceAccessFlagsParser 
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetResourceAccessFlagsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_resource_access_flags: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_resource_access_flags returned error: #{inspect(reason)}")
 
     err
   end

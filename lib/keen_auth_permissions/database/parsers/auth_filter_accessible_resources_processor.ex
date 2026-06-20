@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthFilterAccessibleResourcesPars
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthFilterAccessibleResourcesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure filter_accessible_resources: #{inspect(reason)}")
+    Logger.debug("Stored procedure filter_accessible_resources returned error: #{inspect(reason)}")
 
     err
   end

@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CheckVersionParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [CheckVersionModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure check_version: #{inspect(reason)}")
+    Logger.debug("Stored procedure check_version returned error: #{inspect(reason)}")
 
     err
   end

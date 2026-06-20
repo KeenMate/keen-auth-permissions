@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeleteResourceRoleParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDeleteResourceRoleModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure delete_resource_role: #{inspect(reason)}")
+    Logger.debug("Stored procedure delete_resource_role returned error: #{inspect(reason)}")
 
     err
   end

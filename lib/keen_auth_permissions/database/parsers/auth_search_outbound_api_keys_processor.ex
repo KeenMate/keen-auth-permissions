@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthSearchOutboundApiKeysParser d
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthSearchOutboundApiKeysModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure search_outbound_api_keys: #{inspect(reason)}")
+    Logger.debug("Stored procedure search_outbound_api_keys returned error: #{inspect(reason)}")
 
     err
   end

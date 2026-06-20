@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthResetMfaParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthResetMfaModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure reset_mfa: #{inspect(reason)}")
+    Logger.debug("Stored procedure reset_mfa returned error: #{inspect(reason)}")
 
     err
   end

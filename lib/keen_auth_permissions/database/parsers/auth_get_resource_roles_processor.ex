@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetResourceRolesParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetResourceRolesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_resource_roles: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_resource_roles returned error: #{inspect(reason)}")
 
     err
   end

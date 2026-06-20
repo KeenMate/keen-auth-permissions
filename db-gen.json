@@ -154,6 +154,11 @@
       "MappingFunction": "string"
     },
     {
+      "DatabaseTypes": ["_ltree"],
+      "MappedType": "list(String.t())",
+      "MappingFunction": "list"
+    },
+    {
       "DatabaseTypes": ["tsvector"],
       "MappedType": "String.t()",
       "MappingFunction": "string"

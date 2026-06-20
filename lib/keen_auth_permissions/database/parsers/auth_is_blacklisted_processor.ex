@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthIsBlacklistedParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthIsBlacklistedModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure is_blacklisted: #{inspect(reason)}")
+    Logger.debug("Stored procedure is_blacklisted returned error: #{inspect(reason)}")
 
     err
   end

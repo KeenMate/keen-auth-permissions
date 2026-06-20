@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetSysParamParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetSysParamModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_sys_param: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_sys_param returned error: #{inspect(reason)}")
 
     err
   end

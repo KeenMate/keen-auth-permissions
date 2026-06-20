@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreateUserEventParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthCreateUserEventModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_user_event: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_user_event returned error: #{inspect(reason)}")
 
     err
   end

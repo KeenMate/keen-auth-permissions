@@ -8,11 +8,12 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetUserAccessibleResourcesMode
 
   @type t() :: %__MODULE__{
     resource_id: map() | list(),
+    resource_path: String.t(),
     access_flags: list(String.t()),
     source: String.t()
   }
 
-  @fields [:resource_id, :access_flags, :source]
+  @fields [:resource_id, :resource_path, :access_flags, :source]
 
   @enforce_keys @fields
   defstruct @fields

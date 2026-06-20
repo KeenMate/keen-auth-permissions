@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthAcceptInvitationParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthAcceptInvitationModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure accept_invitation: #{inspect(reason)}")
+    Logger.debug("Stored procedure accept_invitation returned error: #{inspect(reason)}")
 
     err
   end

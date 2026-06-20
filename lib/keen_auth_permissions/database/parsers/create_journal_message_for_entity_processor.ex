@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.CreateJournalMessageForEntityPars
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [CreateJournalMessageForEntityModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure create_journal_message_for_entity: #{inspect(reason)}")
+    Logger.debug("Stored procedure create_journal_message_for_entity returned error: #{inspect(reason)}")
 
     err
   end

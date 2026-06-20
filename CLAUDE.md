@@ -31,7 +31,7 @@ This library follows a database-first approach where business logic is implement
 ### Key Components
 
 #### 1. Database Layer (`lib/keen_auth_permissions/database/`)
-- **Auto-generated Database Context** (`db_context.ex`): Contains 245 stored procedures (238 facade-reachable, 7 intentionally left at raw db_context — see README for the list). Each function corresponds to a stored procedure in the `auth` schema.
+- **Auto-generated Database Context** (`db_context.ex`): Contains 247 generated wrapper functions across the `auth`, `public`, and `internal` schemas. Each function corresponds to a stored procedure; resource-access procs now accept an optional `resource_path` (ltree) parameter as an alternative to `resource_id`.
 - **Models** (`models/`): Data structures representing return types from stored procedures (e.g., `AuthCreateUserItem`, `AuthGetUserPermissionsItem`)
 - **Parsers** (`parsers/`): Convert raw database results into structured Elixir data
 
@@ -76,7 +76,7 @@ The system is designed with multi-tenancy in mind - most operations require a `t
 ## Database Code Generation System
 
 ### Overview
-This project includes a sophisticated code generation system for automatically creating Elixir code from PostgreSQL stored procedures. The system uses Go templates and database introspection to maintain the 245 database wrapper functions.
+This project includes a sophisticated code generation system for automatically creating Elixir code from PostgreSQL stored procedures. The system uses Go templates and database introspection to maintain the 247 database wrapper functions.
 
 ### Configuration (`db-gen.json`)
 The main configuration file specifies:

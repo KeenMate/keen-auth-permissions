@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.ValidateTokenParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [ValidateTokenModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure validate_token: #{inspect(reason)}")
+    Logger.debug("Stored procedure validate_token returned error: #{inspect(reason)}")
 
     err
   end

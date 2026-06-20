@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.InternalResolveTenantParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [InternalResolveTenantModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure resolve_tenant: #{inspect(reason)}")
+    Logger.debug("Stored procedure resolve_tenant returned error: #{inspect(reason)}")
 
     err
   end

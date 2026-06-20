@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.InternalResolveUserParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [InternalResolveUserModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure resolve_user: #{inspect(reason)}")
+    Logger.debug("Stored procedure resolve_user returned error: #{inspect(reason)}")
 
     err
   end

@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetTenantGroupsParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetTenantGroupsModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_tenant_groups: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_tenant_groups returned error: #{inspect(reason)}")
 
     err
   end

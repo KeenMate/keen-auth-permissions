@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDeleteOutboundApiKeyParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDeleteOutboundApiKeyModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure delete_outbound_api_key: #{inspect(reason)}")
+    Logger.debug("Stored procedure delete_outbound_api_key returned error: #{inspect(reason)}")
 
     err
   end

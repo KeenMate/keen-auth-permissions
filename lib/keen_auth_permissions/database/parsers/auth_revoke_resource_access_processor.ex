@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthRevokeResourceAccessParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthRevokeResourceAccessModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure revoke_resource_access: #{inspect(reason)}")
+    Logger.debug("Stored procedure revoke_resource_access returned error: #{inspect(reason)}")
 
     err
   end

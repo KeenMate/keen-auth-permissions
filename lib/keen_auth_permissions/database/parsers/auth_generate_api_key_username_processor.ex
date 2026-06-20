@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGenerateApiKeyUsernameParser 
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGenerateApiKeyUsernameModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure generate_api_key_username: #{inspect(reason)}")
+    Logger.debug("Stored procedure generate_api_key_username returned error: #{inspect(reason)}")
 
     err
   end

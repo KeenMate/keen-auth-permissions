@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.StartVersionUpdateParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [StartVersionUpdateModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure start_version_update: #{inspect(reason)}")
+    Logger.debug("Stored procedure start_version_update returned error: #{inspect(reason)}")
 
     err
   end

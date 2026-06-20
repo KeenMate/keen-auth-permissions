@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.FormatJournalMessageParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [FormatJournalMessageModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure format_journal_message: #{inspect(reason)}")
+    Logger.debug("Stored procedure format_journal_message returned error: #{inspect(reason)}")
 
     err
   end

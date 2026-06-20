@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthProcessExternalGroupMemberSyn
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthProcessExternalGroupMemberSyncByMappingModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure process_external_group_member_sync_by_mapping: #{inspect(reason)}")
+    Logger.debug("Stored procedure process_external_group_member_sync_by_mapping returned error: #{inspect(reason)}")
 
     err
   end

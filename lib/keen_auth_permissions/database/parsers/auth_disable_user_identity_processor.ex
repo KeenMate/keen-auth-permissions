@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthDisableUserIdentityParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthDisableUserIdentityModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure disable_user_identity: #{inspect(reason)}")
+    Logger.debug("Stored procedure disable_user_identity returned error: #{inspect(reason)}")
 
     err
   end

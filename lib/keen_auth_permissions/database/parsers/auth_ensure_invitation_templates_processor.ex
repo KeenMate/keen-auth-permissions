@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsureInvitationTemplatesPars
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthEnsureInvitationTemplatesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure ensure_invitation_templates: #{inspect(reason)}")
+    Logger.debug("Stored procedure ensure_invitation_templates returned error: #{inspect(reason)}")
 
     err
   end

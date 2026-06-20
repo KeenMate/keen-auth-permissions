@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserAccessibleResourcesPar
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserAccessibleResourcesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_user_accessible_resources: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_user_accessible_resources returned error: #{inspect(reason)}")
 
     err
   end
@@ -28,9 +28,10 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserAccessibleResourcesPar
     {:ok, results}
   end
 
-  defp parse_row([resource_id, access_flags, source]) do
+  defp parse_row([resource_id, resource_path, access_flags, source]) do
     {:ok, %AuthGetUserAccessibleResourcesModel{
       resource_id: resource_id,
+      resource_path: resource_path,
       access_flags: access_flags,
       source: source,
     }}

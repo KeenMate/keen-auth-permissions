@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.{{pascalCased .Routine.FunctionNa
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [{{pascalCased .Routine.ModelName}}.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure {{.Routine.DbFunctionName}}: #{inspect(reason)}")
+    Logger.debug("Stored procedure {{.Routine.DbFunctionName}} returned error: #{inspect(reason)}")
 
     err
   end

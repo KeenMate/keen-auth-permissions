@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthVerifyUserByEmailParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthVerifyUserByEmailModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure verify_user_by_email: #{inspect(reason)}")
+    Logger.debug("Stored procedure verify_user_by_email returned error: #{inspect(reason)}")
 
     err
   end

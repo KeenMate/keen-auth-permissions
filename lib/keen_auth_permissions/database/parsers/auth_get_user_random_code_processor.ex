@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserRandomCodeParser do
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthGetUserRandomCodeModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure get_user_random_code: #{inspect(reason)}")
+    Logger.debug("Stored procedure get_user_random_code returned error: #{inspect(reason)}")
 
     err
   end

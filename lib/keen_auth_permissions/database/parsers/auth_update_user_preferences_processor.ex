@@ -13,7 +13,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthUpdateUserPreferencesParser d
   @spec parse_result({:ok, Postgrex.Result.t()} | {:error, any()}) ::
           {:ok, [AuthUpdateUserPreferencesModel.t()]} | {:error, any()}
   def parse_result({:error, reason} = err) do
-    Logger.error("Error calling stored procedure update_user_preferences: #{inspect(reason)}")
+    Logger.debug("Stored procedure update_user_preferences returned error: #{inspect(reason)}")
 
     err
   end
