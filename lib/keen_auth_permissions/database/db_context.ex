@@ -26,22 +26,6 @@ defmodule KeenAuthPermissions.Database do
       @doc """
       Calls database function public.check_version
       """
-      @spec check_version(String.t(), String.t()) ::
-              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
-      def check_version(version, component) do
-        Logger.debug("Calling stored procedure", procedure: "check_version")
-
-        query(
-          "select * from public.check_version($1, $2)",
-          [version, component]
-        )
-        |> Parsers.CheckVersionParser.parse_result()
-      end
-
-
-      @doc """
-      Calls database function public.check_version
-      """
       @spec check_version(String.t(), String.t(), boolean()) ::
               {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
       def check_version(version, component, throw_err) do
@@ -50,6 +34,22 @@ defmodule KeenAuthPermissions.Database do
         query(
           "select * from public.check_version($1, $2, $3)",
           [version, component, throw_err]
+        )
+        |> Parsers.CheckVersionParser.parse_result()
+      end
+
+
+      @doc """
+      Calls database function public.check_version
+      """
+      @spec check_version(String.t(), String.t()) ::
+              {:ok, [Models.CheckVersionModel.t()]} | {:error, any()}
+      def check_version(version, component) do
+        Logger.debug("Calling stored procedure", procedure: "check_version")
+
+        query(
+          "select * from public.check_version($1, $2)",
+          [version, component]
         )
         |> Parsers.CheckVersionParser.parse_result()
       end

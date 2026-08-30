@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.10] - 2026-08-30
+
+### Added
+- **`deleted_at` / `purged_at` on `get_tenant_by_id`** — `auth.get_tenant_by_id` now returns the soft-delete markers, so `Tenants.get_by_id/1` (and `AuthGetTenantByIdModel`) can signal a tenant's soft-deleted / purged state on the single-fetch path. This closes the asymmetry noted in rc.9, where only the list models (`auth_get_tenants`) exposed those columns. Regenerated against a fresh full deploy of the ppm database; no net function-count change (still 249).
+
 ## [1.0.0-rc.9] - 2026-08-30
 
 ### Added

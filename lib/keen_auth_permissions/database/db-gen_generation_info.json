@@ -1,41 +1,9 @@
 {
   "version": "v0.8.0-rc.4",
-  "time": "2026-08-30T17:56:53.0138875+02:00",
+  "time": "2026-08-30T23:15:34.6747888+02:00",
   "routines": [
     {
       "RowNumber": 1,
-      "RoutineSchema": "public",
-      "RoutineNameWithParams": "check_version(text,text)",
-      "HasOverload": true,
-      "RoutineName": "check_version",
-      "SpecificName": "",
-      "DataType": "boolean",
-      "UdtTypeScheme": "pg_catalog",
-      "UdtTypeName": "bool",
-      "ParamCount": 2,
-      "FuncType": "function",
-      "InParameters": [
-        {
-          "OrdinalPosition": 1,
-          "Name": "_version",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": false
-        },
-        {
-          "OrdinalPosition": 2,
-          "Name": "_component",
-          "Mode": "IN",
-          "UDTName": "text",
-          "IsNullable": false,
-          "IsOptional": true
-        }
-      ],
-      "OutParameters": null
-    },
-    {
-      "RowNumber": 2,
       "RoutineSchema": "public",
       "RoutineNameWithParams": "check_version(text,text,bool)",
       "HasOverload": true,
@@ -68,6 +36,38 @@
           "Name": "_throw_err",
           "Mode": "IN",
           "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": true
+        }
+      ],
+      "OutParameters": null
+    },
+    {
+      "RowNumber": 2,
+      "RoutineSchema": "public",
+      "RoutineNameWithParams": "check_version(text,text)",
+      "HasOverload": true,
+      "RoutineName": "check_version",
+      "SpecificName": "",
+      "DataType": "boolean",
+      "UdtTypeScheme": "pg_catalog",
+      "UdtTypeName": "bool",
+      "ParamCount": 2,
+      "FuncType": "function",
+      "InParameters": [
+        {
+          "OrdinalPosition": 1,
+          "Name": "_version",
+          "Mode": "IN",
+          "UDTName": "text",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 2,
+          "Name": "_component",
+          "Mode": "IN",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": true
         }
@@ -5082,7 +5082,7 @@
     {
       "RowNumber": 2,
       "RoutineSchema": "internal",
-      "RoutineNameWithParams": "throw_no_permission(int8,_text,int4)",
+      "RoutineNameWithParams": "throw_no_permission(int8,text,int4)",
       "HasOverload": true,
       "RoutineName": "throw_no_permission",
       "SpecificName": "",
@@ -5102,9 +5102,9 @@
         },
         {
           "OrdinalPosition": 2,
-          "Name": "_permission_full_codes",
+          "Name": "_permission_full_code",
           "Mode": "IN",
-          "UDTName": "_text",
+          "UDTName": "text",
           "IsNullable": false,
           "IsOptional": false
         },
@@ -5154,7 +5154,7 @@
     {
       "RowNumber": 4,
       "RoutineSchema": "internal",
-      "RoutineNameWithParams": "throw_no_permission(int8,text,int4)",
+      "RoutineNameWithParams": "throw_no_permission(int8,_text,int4)",
       "HasOverload": true,
       "RoutineName": "throw_no_permission",
       "SpecificName": "",
@@ -5174,9 +5174,9 @@
         },
         {
           "OrdinalPosition": 2,
-          "Name": "_permission_full_code",
+          "Name": "_permission_full_codes",
           "Mode": "IN",
-          "UDTName": "text",
+          "UDTName": "_text",
           "IsNullable": false,
           "IsOptional": false
         },
@@ -16057,7 +16057,7 @@
       "DataType": "record",
       "UdtTypeScheme": "pg_catalog",
       "UdtTypeName": "record",
-      "ParamCount": 11,
+      "ParamCount": 13,
       "FuncType": "function",
       "InParameters": [
         {
@@ -16147,6 +16147,22 @@
           "Name": "__is_assignable",
           "Mode": "OUT",
           "UDTName": "bool",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 12,
+          "Name": "__deleted_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
+          "IsNullable": false,
+          "IsOptional": false
+        },
+        {
+          "OrdinalPosition": 13,
+          "Name": "__purged_at",
+          "Mode": "OUT",
+          "UDTName": "timestamptz",
           "IsNullable": false,
           "IsOptional": false
         }

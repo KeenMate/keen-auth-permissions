@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetTenantByIdParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, tenant_id, uuid, title, code, is_removable, is_assignable]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, tenant_id, uuid, title, code, is_removable, is_assignable, deleted_at, purged_at]) do
     {:ok, %AuthGetTenantByIdModel{
       created_at: created_at,
       created_by: created_by,
@@ -40,6 +40,8 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetTenantByIdParser do
       code: code,
       is_removable: is_removable,
       is_assignable: is_assignable,
+      deleted_at: deleted_at,
+      purged_at: purged_at,
     }}
   end
 
