@@ -15,15 +15,13 @@ defmodule KeenAuthPermissions.Database.Models.UpdateTranslationModel do
     language_code: String.t(),
     tenant_id: integer(),
     data_group: String.t(),
-    data_object_code: String.t() | nil,
-    data_object_id: integer() | nil,
+    data_object_code: String.t(),
+    data_object_id: integer(),
     context: String.t(),
-    value: String.t(),
-    nrm_search_data: String.t() | nil,
-    ts_search_data: String.t() | nil
+    value: String.t()
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :translation_id, :language_code, :tenant_id, :data_group, :data_object_code, :data_object_id, :context, :value, :nrm_search_data, :ts_search_data]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :translation_id, :language_code, :tenant_id, :data_group, :data_object_code, :data_object_id, :context, :value]
 
   @enforce_keys @fields
   defstruct @fields

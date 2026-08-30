@@ -10,10 +10,10 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreatePermSetPermissionsModel 
     perm_set_id: integer(),
     perm_set_code: String.t(),
     permission_id: integer(),
-    permission_code: String.t()
+    permission_full_code: String.t()
   }
 
-  @fields [:perm_set_id, :perm_set_code, :permission_id, :permission_code]
+  @fields [:perm_set_id, :perm_set_code, :permission_id, :permission_full_code]
 
   @enforce_keys @fields
   defstruct @fields

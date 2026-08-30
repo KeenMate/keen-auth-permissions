@@ -12,9 +12,9 @@ defmodule KeenAuthPermissions.Database.Models.AuthEnsureUserGroupMappingsModel d
     user_group_mapping_id: integer(),
     user_group_id: integer(),
     provider_code: String.t(),
-    mapped_object_id: String.t() | nil,
-    mapped_object_name: String.t() | nil,
-    mapped_role: String.t() | nil
+    mapped_object_id: String.t(),
+    mapped_object_name: String.t(),
+    mapped_role: String.t()
   }
 
   @fields [:created_at, :created_by, :user_group_mapping_id, :user_group_id, :provider_code, :mapped_object_id, :mapped_object_name, :mapped_role]

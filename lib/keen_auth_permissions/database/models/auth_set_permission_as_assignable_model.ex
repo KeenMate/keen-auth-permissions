@@ -10,11 +10,11 @@ defmodule KeenAuthPermissions.Database.Models.AuthSetPermissionAsAssignableModel
     created_at: DateTime.t(),
     created_by: String.t(),
     assignment_id: integer(),
-    tenant_id: integer() | nil,
-    user_group_id: integer() | nil,
-    user_id: integer() | nil,
-    perm_set_id: integer() | nil,
-    permission_id: integer() | nil
+    tenant_id: integer(),
+    user_group_id: integer(),
+    user_id: integer(),
+    perm_set_id: integer(),
+    permission_id: integer()
   }
 
   @fields [:created_at, :created_by, :assignment_id, :tenant_id, :user_group_id, :user_id, :perm_set_id, :permission_id]

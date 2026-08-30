@@ -84,18 +84,57 @@ defmodule KeenAuthPermissions.TenantsTest do
       assert updated.title == new_title
     end
 
-    test "deletes a tenant" do
+    test "soft-deletes a tenant" do
       ctx = system_context()
 
       # Create a tenant first
       {:ok, created} = create_test_tenant(ctx)
 
-      # Delete it
+      # Delete it (soft delete)
       assert {:ok, _deleted} = Tenants.delete(ctx, created.uuid)
 
-      # Verify it's gone
+      # Soft delete: the tenant is still fetchable, not hard-removed
+      assert {:ok, _tenant} = Tenants.get_by_id(created.tenant_id)
+
+      # ...and it is marked as deleted in the listing
+      assert %{deleted_at: deleted_at} = find_in_list(ctx, created.tenant_id)
+      refute is_nil(deleted_at)
+    end
+  end
+
+  describe "restore/2" do
+    test "restores a soft-deleted tenant" do
+      ctx = system_context()
+
+      {:ok, created} = create_test_tenant(ctx)
+      assert {:ok, _} = Tenants.delete(ctx, created.uuid)
+      assert %{deleted_at: deleted_at} = find_in_list(ctx, created.tenant_id)
+      refute is_nil(deleted_at)
+
+      # Restore clears the soft-delete marker
+      assert {:ok, _restored} = Tenants.restore(ctx, created.uuid)
+      assert %{deleted_at: nil} = find_in_list(ctx, created.tenant_id)
+      assert {:ok, _tenant} = Tenants.get_by_id(created.tenant_id)
+    end
+  end
+
+  describe "purge/2" do
+    test "permanently purges a tenant" do
+      ctx = system_context()
+
+      {:ok, created} = create_test_tenant(ctx)
+      assert {:ok, _} = Tenants.delete(ctx, created.uuid)
+
+      # Purge hard-deletes the tenant
+      assert {:ok, _purged} = Tenants.purge(ctx, created.uuid)
       assert {:error, _} = Tenants.get_by_id(created.tenant_id)
     end
+  end
+
+  # Finds a tenant by id in the user's tenant listing, or fails the assertion.
+  defp find_in_list(ctx, tenant_id) do
+    {:ok, tenants} = Tenants.list(ctx.user.user_id)
+    Enum.find(tenants, fn t -> t.tenant_id == tenant_id end)
   end
 
   describe "list_users/2" do

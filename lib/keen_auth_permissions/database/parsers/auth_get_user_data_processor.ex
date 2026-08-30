@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserDataParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, user_data_id, user_id, first_name, middle_name, last_name, settings, preferences, custom_data, nrm_search_data]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, user_data_id, user_id, first_name, middle_name, last_name, settings, preferences, custom_data]) do
     {:ok, %AuthGetUserDataModel{
       created_at: created_at,
       created_by: created_by,
@@ -42,7 +42,6 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetUserDataParser do
       settings: settings,
       preferences: preferences,
       custom_data: custom_data,
-      nrm_search_data: nrm_search_data,
     }}
   end
 

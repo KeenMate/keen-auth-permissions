@@ -12,13 +12,13 @@ defmodule KeenAuthPermissions.Database.Models.AuthEnsureInvitationTemplatesModel
     updated_at: DateTime.t(),
     updated_by: String.t(),
     template_id: integer(),
-    tenant_id: integer() | nil,
+    tenant_id: integer(),
     code: String.t(),
     title: String.t(),
-    description: String.t() | nil,
+    description: String.t(),
     is_active: boolean(),
-    default_message: String.t() | nil,
-    source: String.t() | nil
+    default_message: String.t(),
+    source: String.t()
   }
 
   @fields [:created_at, :created_by, :updated_at, :updated_by, :template_id, :tenant_id, :code, :title, :description, :is_active, :default_message, :source]

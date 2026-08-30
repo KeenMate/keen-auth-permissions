@@ -13,14 +13,14 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetApiKeyPermissionsModel do
     user_group_member_id: integer(),
     user_group_title: String.t(),
     permission_inheritance_type: String.t(),
-    permission_code: String.t(),
+    permission_full_code: String.t(),
     permission_title: String.t(),
     tenant_id: integer(),
     tenant_code: String.t(),
     tenant_title: String.t()
   }
 
-  @fields [:assignment_id, :perm_set_code, :perm_set_title, :user_group_member_id, :user_group_title, :permission_inheritance_type, :permission_code, :permission_title, :tenant_id, :tenant_code, :tenant_title]
+  @fields [:assignment_id, :perm_set_code, :perm_set_title, :user_group_member_id, :user_group_title, :permission_inheritance_type, :permission_full_code, :permission_title, :tenant_id, :tenant_code, :tenant_title]
 
   @enforce_keys @fields
   defstruct @fields

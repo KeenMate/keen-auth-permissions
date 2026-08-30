@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.UpdateTranslationParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, translation_id, language_code, tenant_id, data_group, data_object_code, data_object_id, context, value, nrm_search_data, ts_search_data]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, translation_id, language_code, tenant_id, data_group, data_object_code, data_object_id, context, value]) do
     {:ok, %UpdateTranslationModel{
       created_at: created_at,
       created_by: created_by,
@@ -42,8 +42,6 @@ defmodule KeenAuthPermissions.Database.Parsers.UpdateTranslationParser do
       data_object_id: data_object_id,
       context: context,
       value: value,
-      nrm_search_data: nrm_search_data,
-      ts_search_data: ts_search_data,
     }}
   end
 

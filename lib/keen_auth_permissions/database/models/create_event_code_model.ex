@@ -12,7 +12,7 @@ defmodule KeenAuthPermissions.Database.Models.CreateEventCodeModel do
     category_code: String.t(),
     is_read_only: boolean(),
     is_system: boolean(),
-    source: String.t() | nil
+    source: String.t()
   }
 
   @fields [:event_id, :code, :category_code, :is_read_only, :is_system, :source]

@@ -23,7 +23,7 @@ defmodule KeenAuthPermissions.Database.Models.CreateLanguageModel do
     is_default_frontend: boolean(),
     is_default_backend: boolean(),
     is_default_communication: boolean(),
-    custom_data: map() | list() | nil
+    custom_data: map() | list()
   }
 
   @fields [:created_at, :created_by, :updated_at, :updated_by, :code, :value, :tenant_id, :is_frontend_language, :is_backend_language, :is_communication_language, :frontend_logical_order, :backend_logical_order, :communication_logical_order, :is_default_frontend, :is_default_backend, :is_default_communication, :custom_data]

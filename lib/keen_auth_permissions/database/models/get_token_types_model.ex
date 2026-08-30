@@ -8,7 +8,7 @@ defmodule KeenAuthPermissions.Database.Models.GetTokenTypesModel do
 
   @type t() :: %__MODULE__{
     code: String.t(),
-    default_expiration_in_seconds: integer() | nil,
+    default_expiration_in_seconds: integer(),
     is_system: boolean()
   }
 

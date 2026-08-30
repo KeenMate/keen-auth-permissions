@@ -243,6 +243,62 @@ defmodule KeenAuthPermissions.Tenants do
     end
   end
 
+  @doc """
+  Restores a soft-deleted tenant by UUID.
+
+  Calls `auth.restore_tenant`.
+  """
+  @spec restore(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
+  def restore(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        tenant_uuid,
+        tenant_id \\ 1
+      ) do
+    case db_context().auth_restore_tenant(
+           username,
+           user_id,
+           request_id,
+           tenant_uuid,
+           tenant_id
+         )
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result]} -> {:ok, result}
+      {:ok, []} -> {:error, :restore_failed}
+      error -> error
+    end
+  end
+
+  @doc """
+  Permanently purges a tenant by UUID (hard delete).
+
+  Calls `auth.purge_tenant`.
+  """
+  @spec purge(RequestContext.t(), String.t()) :: {:ok, map()} | {:error, any()}
+  def purge(
+        %RequestContext{
+          user: %User{username: username, user_id: user_id},
+          request_id: request_id
+        },
+        tenant_uuid,
+        tenant_id \\ 1
+      ) do
+    case db_context().auth_purge_tenant(
+           username,
+           user_id,
+           request_id,
+           tenant_uuid,
+           tenant_id
+         )
+         |> ErrorParsers.parse_if_error() do
+      {:ok, [result]} -> {:ok, result}
+      {:ok, []} -> {:error, :purge_failed}
+      error -> error
+    end
+  end
+
   # ============================================================================
   # Tenant User/Member Operations
   # ============================================================================

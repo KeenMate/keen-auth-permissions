@@ -12,7 +12,7 @@ defmodule KeenAuthPermissions.Database.Models.AuthEnsureUserGroupsModel do
     updated_at: DateTime.t(),
     updated_by: String.t(),
     user_group_id: integer(),
-    tenant_id: integer() | nil,
+    tenant_id: integer(),
     title: String.t(),
     code: String.t(),
     is_system: boolean(),
@@ -24,11 +24,10 @@ defmodule KeenAuthPermissions.Database.Models.AuthEnsureUserGroupsModel do
     can_members_see_others: boolean(),
     is_synced: boolean(),
     create_missing_users_on_sync: boolean(),
-    nrm_search_data: String.t() | nil,
-    source: String.t() | nil
+    source: String.t()
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :user_group_id, :tenant_id, :title, :code, :is_system, :is_external, :is_assignable, :is_active, :is_default, :can_members_manage_others, :can_members_see_others, :is_synced, :create_missing_users_on_sync, :nrm_search_data, :source]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :user_group_id, :tenant_id, :title, :code, :is_system, :is_external, :is_assignable, :is_active, :is_default, :can_members_manage_others, :can_members_see_others, :is_synced, :create_missing_users_on_sync, :source]
 
   @enforce_keys @fields
   defstruct @fields

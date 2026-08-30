@@ -12,15 +12,14 @@ defmodule KeenAuthPermissions.Database.Models.AuthUpdatePermSetModel do
     updated_at: DateTime.t(),
     updated_by: String.t(),
     perm_set_id: integer(),
-    tenant_id: integer() | nil,
+    tenant_id: integer(),
     code: String.t(),
     is_system: boolean(),
     is_assignable: boolean(),
-    nrm_search_data: String.t() | nil,
-    source: String.t() | nil
+    source: String.t()
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :perm_set_id, :tenant_id, :code, :is_system, :is_assignable, :nrm_search_data, :source]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :perm_set_id, :tenant_id, :code, :is_system, :is_assignable, :source]
 
   @enforce_keys @fields
   defstruct @fields

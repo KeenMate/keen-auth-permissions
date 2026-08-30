@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetApiKeyPermissionsParser do
     {:ok, results}
   end
 
-  defp parse_row([assignment_id, perm_set_code, perm_set_title, user_group_member_id, user_group_title, permission_inheritance_type, permission_code, permission_title, tenant_id, tenant_code, tenant_title]) do
+  defp parse_row([assignment_id, perm_set_code, perm_set_title, user_group_member_id, user_group_title, permission_inheritance_type, permission_full_code, permission_title, tenant_id, tenant_code, tenant_title]) do
     {:ok, %AuthGetApiKeyPermissionsModel{
       assignment_id: assignment_id,
       perm_set_code: perm_set_code,
@@ -36,7 +36,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthGetApiKeyPermissionsParser do
       user_group_member_id: user_group_member_id,
       user_group_title: user_group_title,
       permission_inheritance_type: permission_inheritance_type,
-      permission_code: permission_code,
+      permission_full_code: permission_full_code,
       permission_title: permission_title,
       tenant_id: tenant_id,
       tenant_code: tenant_code,

@@ -55,7 +55,7 @@
         "ensure_user_from_provider": {
           "Parameters": {
             "_user_data": {
-              "MappedType": "map()"
+              "MappedType": "map() | list()"
             }
           }
         }

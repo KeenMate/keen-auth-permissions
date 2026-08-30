@@ -9,14 +9,14 @@ defmodule KeenAuthPermissions.Database.Models.CreateJournalMessageForEntityModel
   @type t() :: %__MODULE__{
     created_at: DateTime.t(),
     created_by: String.t(),
-    correlation_id: String.t() | nil,
+    correlation_id: String.t(),
     journal_id: integer(),
-    tenant_id: integer() | nil,
+    tenant_id: integer(),
     event_id: integer(),
-    user_id: integer() | nil,
-    keys: map() | list() | nil,
-    data_payload: map() | list() | nil,
-    request_context: map() | list() | nil
+    user_id: integer(),
+    keys: map() | list(),
+    data_payload: map() | list(),
+    request_context: map() | list()
   }
 
   @fields [:created_at, :created_by, :correlation_id, :journal_id, :tenant_id, :event_id, :user_id, :keys, :data_payload, :request_context]

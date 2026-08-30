@@ -16,10 +16,12 @@ defmodule KeenAuthPermissions.Database.Models.AuthGetTenantsModel do
     title: String.t(),
     code: String.t(),
     is_removable: boolean(),
-    is_assignable: boolean()
+    is_assignable: boolean(),
+    deleted_at: DateTime.t(),
+    purged_at: DateTime.t()
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :tenant_id, :uuid, :title, :code, :is_removable, :is_assignable]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :tenant_id, :uuid, :title, :code, :is_removable, :is_assignable, :deleted_at, :purged_at]
 
   @enforce_keys @fields
   defstruct @fields

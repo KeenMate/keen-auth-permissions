@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.0-rc.9] - 2026-08-30
+
+### Added
+- **Tenant soft-delete lifecycle** — `auth.restore_tenant` (undelete) and `auth.purge_tenant` (hard delete) stored procedures are now generated and surfaced as `Tenants.restore/2` and `Tenants.purge/2` (mirroring `Tenants.delete/3`). `auth.delete_tenant` is now a soft delete: the row stays fetchable via `get_by_id` and is marked with `deleted_at` in the tenant listings; `restore` clears it; `purge` removes the row entirely. Function count grew from 247 to 249.
+- **`deleted_at` / `purged_at` columns** on the `auth_get_tenants` and related tenant list models, reflecting the new lifecycle at the DB boundary.
+- **Tenant lifecycle tests** — rewrote the old hard-delete test into soft-delete semantics and added `restore/2` and `purge/2` coverage (`deleted_at` toggling verified via `list/1`, hard removal via `get_by_id`).
+
+### Changed
+- **db-gen upgraded** `v0.6.0-beta3` → `v0.8.0-rc.4`. The new version no longer accepts a `MappingFunction` on a parameter override; an override's `MappedType` must instead resolve against a global `Mappings` entry. `db-gen.json`'s `ensure_user_from_provider._user_data` override was realigned from `map()` to the json mapping's `map() | list()` (functionally identical for jsonb encoding).
+- **db-gen regenerated** — picks up upstream ppm signature changes: `__`-prefixed parameter renames and nullability/optional tightening across perm-set, user-data, journal, translation, event, and token-type functions; `update_perm_set` (`source` → `__source`); `update_user_data` (`nrm_search_data` param dropped, `_provider` → `_provider_code`).
+
+### Tests
+- 253 passing, 0 failures, 1 excluded.
+
 ## [1.0.0-rc.8] - 2026-06-20
 
 ### Added

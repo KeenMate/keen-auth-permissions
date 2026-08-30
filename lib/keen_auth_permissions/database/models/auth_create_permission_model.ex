@@ -13,16 +13,15 @@ defmodule KeenAuthPermissions.Database.Models.AuthCreatePermissionModel do
     updated_by: String.t(),
     permission_id: integer(),
     is_assignable: boolean(),
-    code: String.t() | nil,
-    full_code: String.t() | nil,
-    node_path: String.t() | nil,
+    code: String.t(),
+    full_code: String.t(),
+    node_path: String.t(),
     has_children: boolean(),
-    nrm_search_data: String.t() | nil,
-    short_code: String.t() | nil,
-    source: String.t() | nil
+    short_code: String.t(),
+    source: String.t()
   }
 
-  @fields [:created_at, :created_by, :updated_at, :updated_by, :permission_id, :is_assignable, :code, :full_code, :node_path, :has_children, :nrm_search_data, :short_code, :source]
+  @fields [:created_at, :created_by, :updated_at, :updated_by, :permission_id, :is_assignable, :code, :full_code, :node_path, :has_children, :short_code, :source]
 
   @enforce_keys @fields
   defstruct @fields

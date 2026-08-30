@@ -28,12 +28,12 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthCreatePermSetPermissionsParse
     {:ok, results}
   end
 
-  defp parse_row([perm_set_id, perm_set_code, permission_id, permission_code]) do
+  defp parse_row([perm_set_id, perm_set_code, permission_id, permission_full_code]) do
     {:ok, %AuthCreatePermSetPermissionsModel{
       perm_set_id: perm_set_id,
       perm_set_code: perm_set_code,
       permission_id: permission_id,
-      permission_code: permission_code,
+      permission_full_code: permission_full_code,
     }}
   end
 

@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsurePermissionsParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, permission_id, is_assignable, code, full_code, node_path, has_children, nrm_search_data, short_code, source]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, permission_id, is_assignable, code, full_code, node_path, has_children, short_code, source]) do
     {:ok, %AuthEnsurePermissionsModel{
       created_at: created_at,
       created_by: created_by,
@@ -40,7 +40,6 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsurePermissionsParser do
       full_code: full_code,
       node_path: node_path,
       has_children: has_children,
-      nrm_search_data: nrm_search_data,
       short_code: short_code,
       source: source,
     }}

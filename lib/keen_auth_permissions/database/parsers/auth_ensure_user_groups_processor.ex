@@ -28,7 +28,7 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsureUserGroupsParser do
     {:ok, results}
   end
 
-  defp parse_row([created_at, created_by, updated_at, updated_by, user_group_id, tenant_id, title, code, is_system, is_external, is_assignable, is_active, is_default, can_members_manage_others, can_members_see_others, is_synced, create_missing_users_on_sync, nrm_search_data, source]) do
+  defp parse_row([created_at, created_by, updated_at, updated_by, user_group_id, tenant_id, title, code, is_system, is_external, is_assignable, is_active, is_default, can_members_manage_others, can_members_see_others, is_synced, create_missing_users_on_sync, source]) do
     {:ok, %AuthEnsureUserGroupsModel{
       created_at: created_at,
       created_by: created_by,
@@ -47,7 +47,6 @@ defmodule KeenAuthPermissions.Database.Parsers.AuthEnsureUserGroupsParser do
       can_members_see_others: can_members_see_others,
       is_synced: is_synced,
       create_missing_users_on_sync: create_missing_users_on_sync,
-      nrm_search_data: nrm_search_data,
       source: source,
     }}
   end

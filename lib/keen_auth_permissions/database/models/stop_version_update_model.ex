@@ -11,9 +11,9 @@ defmodule KeenAuthPermissions.Database.Models.StopVersionUpdateModel do
     component: String.t(),
     version: String.t(),
     title: String.t(),
-    description: String.t() | nil,
+    description: String.t(),
     execution_started: DateTime.t(),
-    execution_finished: DateTime.t() | nil
+    execution_finished: DateTime.t()
   }
 
   @fields [:version_id, :component, :version, :title, :description, :execution_started, :execution_finished]
